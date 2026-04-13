@@ -52,7 +52,7 @@ import type { DataChangedEvent, IRowNode } from '../../interfaces/iRowNode';
 import type { RowPosition } from '../../interfaces/iRowPosition';
 import type { IRowStyleFeature } from '../../interfaces/iRowStyleFeature';
 import type { UserCompDetails } from '../../interfaces/iUserCompDetails';
-import type { ICellNotesFeature } from '../../interfaces/notes';
+import type { GetNoteParams, ICellNotesFeature } from '../../interfaces/notes';
 import { calculateRowLevel } from '../../styling/rowStyleService';
 import type { TooltipFeature } from '../../tooltip/tooltipFeature';
 import { _isStopPropagationForAgGrid } from '../../utils/gridEvent';
@@ -455,12 +455,17 @@ export class RowCtrl extends BeanStub<RowCtrlEvent> {
             gos,
             beans: { colModel },
         } = this;
-        const isStub =
-            rowNode.stub && !gos.get('suppressServerSideFullWidthLoadingRow') && !gos.get('groupHideOpenParents');
+        const suppressFullWidthLoading = gos.get('suppressServerSideFullWidthLoadingRow');
+        const groupHideOpenParents = gos.get('groupHideOpenParents');
+        const isStub = rowNode.stub && !suppressFullWidthLoading && !groupHideOpenParents;
         const isFullWidthCell = this.isNodeFullWidthCell();
         const isDetailCell = gos.get('masterDetail') && rowNode.detail;
         const pivotMode = colModel.isPivotMode();
         const isFullWidthGroup = _isFullWidthGroupRow(gos, rowNode, pivotMode);
+        // When suppressServerSideFullWidthLoadingRow is set, stub group rows (groupDisplayType='groupRows')
+        // fall through to Normal so they render per-cell skeletons, consistent with leaf row stubs.
+        const isSuppressedGroupStub =
+            suppressFullWidthLoading && rowNode.stub && isFullWidthGroup && !groupHideOpenParents;
 
         if (isStub) {
             this.rowType = 'FullWidthLoading';
@@ -468,7 +473,7 @@ export class RowCtrl extends BeanStub<RowCtrlEvent> {
             this.rowType = 'FullWidthDetail';
         } else if (isFullWidthCell) {
             this.rowType = 'FullWidth';
-        } else if (isFullWidthGroup) {
+        } else if (isFullWidthGroup && !isSuppressedGroupStub) {
             this.rowType = 'FullWidthGroup';
         } else {
             this.rowType = 'Normal';
@@ -1642,8 +1647,27 @@ export class RowCtrl extends BeanStub<RowCtrlEvent> {
         );
     }
 
-    public announceDescription(): void {
+    public announceDescription(cellCtrl?: CellCtrl): void {
         this.beans.selectionSvc?.announceAriaRowSelection(this.rowNode);
+        this.announceNoteDescription(cellCtrl);
+    }
+
+    private announceNoteDescription(cellCtrl?: CellCtrl): void {
+        const { notesSvc, ariaAnnounce } = this.beans;
+        if (!notesSvc || !ariaAnnounce) {
+            return;
+        }
+
+        const baseParams = { rowNode: this.rowNode };
+        const suffixParams = cellCtrl ? { column: cellCtrl.column } : { location: 'fullWidthRow' };
+        const params = { ...baseParams, ...suffixParams } as GetNoteParams;
+
+        const access = notesSvc.getCellNoteAccess(params);
+
+        if (access?.canView) {
+            const translate = this.getLocaleTextFunc();
+            ariaAnnounce.announceValue(translate('ariaCellHasNote', 'This cell has a note.'), 'cellNote');
+        }
     }
 
     protected addHoverFunctionality(eGui: RowGui): void {
