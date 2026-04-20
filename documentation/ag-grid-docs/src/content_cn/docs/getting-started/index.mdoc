@@ -1,0 +1,477 @@
+---
+title: "快速开始"
+description: "使用 AG Grid 构建 $framework 表格，这是最好的免费、快速且灵活的 $framework 数据表格。具有排序、筛选、分页、自定义组件等功能。"
+---
+
+{% if isFramework("vue") %}
+AG Grid 是一个高性能的 {% getFrameworkCapitalised() %} 数据表格库，用于构建具有无与伦比的性能和数百项功能的 {% getFrameworkCapitalised() %} 表格。提供社区版和企业版。访问 [社区版与企业版对比](./community-vs-enterprise/) 了解更多信息。
+{% /if %}
+
+{% if isFramework("react") %}
+{% videoSection id="6hxbPqziELk" title="React 数据表格快速入门视频教程" playlist="PLsZlhayVgqNwHNHeqpCkSgdRV08xrKtzW" showHeader=true %}
+AG Grid 是一个高性能的 {% getFrameworkCapitalised() %} 数据表格库，用于构建具有无与伦比的性能和数百项功能的 [React 表格](/react-table/)。提供社区版和企业版。访问 [社区版与企业版对比](./community-vs-enterprise/) 了解更多信息。
+{% /videoSection %}
+{% /if %}
+
+{% if isFramework("angular") %}
+{% videoSection id="X_Ip_jGDtho" title="Angular 数据表格快速入门视频教程" playlist="PLsZlhayVgqNw6VHFn4j6FcJM5vLACsf0x" showHeader=true %}
+AG Grid 是一个高性能的 {% getFrameworkCapitalised() %} 数据表格库，用于构建具有无与伦比的性能和数百项功能的 {% getFrameworkCapitalised() %} 表格。提供社区版和企业版。访问 [社区版与企业版对比](./community-vs-enterprise/) 了解更多信息。
+{% /videoSection %}
+{% /if %}
+
+{% if isFramework("javascript") %}
+{% videoSection id="Ww7-LC6rU6U" title="JavaScript 数据表格快速入门视频教程" playlist="PLsZlhayVgqNxijfRQxg5Mc6W4MzZHQ9MK" showHeader=true %}
+AG Grid 是一个高性能的 {% getFrameworkCapitalised() %} 数据表格库，用于构建具有无与伦比的性能和数百项功能的 {% getFrameworkCapitalised() %} 表格。提供社区版和企业版。访问 [社区版与企业版对比](./community-vs-enterprise/) 了解更多信息。
+{% /videoSection %}
+{% /if %}
+
+{% if isFramework("react") %}
+
+## 创建 React 数据表格
+
+{% /if %}
+
+{% if isFramework("angular") %}
+
+## 创建 Angular 数据表格
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+
+## 创建 JavaScript 数据表格
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+## 创建 Vue 数据表格
+
+{% /if %}
+
+在 60 秒内将 AG Grid 添加到您的应用程序中：
+
+{% if isFramework("react", "angular", "vue") %}
+
+{% numberHeading number="1" title="NPM 安装" level="h3" %}
+
+{% if isFramework("react") %}
+
+<!-- Install React -->
+
+安装 `ag-grid-react` 包，这也会安装 `ag-grid-community`：
+
+```bash
+npm install ag-grid-react
+```
+
+{% /if %}
+
+{% if isFramework("angular") %}
+
+<!-- Install Angular -->
+
+安装 `ag-grid-angular` 包，这也会安装 `ag-grid-community`：
+
+```bash
+npm install ag-grid-angular
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+<!-- Install Vue3 -->
+
+安装 `ag-grid-vue3` 包，这也会安装 `ag-grid-community`：
+
+```bash
+npm install ag-grid-vue3
+```
+
+{% /if %}
+
+{% /numberHeading %}
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+{% numberHeading number="1" title="提供容器" level="h3" %}
+
+<!-- Create JavaScript -->
+
+加载 AG Grid 库并创建一个容器 div。该 div 应该有高度，因为数据表格将填充父容器的大小：
+
+```html
+<html lang="en">
+    <head>
+        <!-- 包含 JavaScript 数据表格的所有 JS 和 CSS -->
+        <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+    </head>
+    <body>
+        <!-- 您的数据表格容器 -->
+        <div id="myGrid" style="height: 500px"></div>
+    </body>
+</html>
+```
+
+{% note %}
+如果您使用 TypeScript，则需要导入并注册要使用的模块。有关更多信息，请参阅 [NPM 安装](./installation/#npm-installation) 文档。
+{% /note %}
+
+{% /numberHeading %}
+{% /if %}
+
+{% if isFramework("javascript") %}
+{% numberHeading number="2" title="实例化 JavaScript 数据表格" level="h3" %}
+
+使用 `createGrid` 在容器 div 内创建数据表格。
+
+```js
+// Grid Options：包含所有数据表格配置
+const gridOptions = {};
+
+// 您的 JavaScript 代码用于创建数据表格
+const myGridElement = document.querySelector('#myGrid');
+agGrid.createGrid(myGridElement, gridOptions);
+```
+
+{% /numberHeading %}
+{% /if %}
+
+{% if isFramework("javascript") %}
+{% numberHeading number="3" title="定义行和列" level="h3" %}
+
+```js
+// Grid Options：包含所有数据表格配置
+const gridOptions = {
+    // Row Data：要显示的数据。
+    rowData: [
+        { make: "Tesla", model: "Model Y", price: 64950, electric: true },
+        { make: "Ford", model: "F-Series", price: 33850, electric: false },
+        { make: "Toyota", model: "Corolla", price: 29600, electric: false },
+    ],
+    // Column Definitions：定义要显示的列。
+    columnDefs: [
+        { field: "make" },
+        { field: "model" },
+        { field: "price" },
+        { field: "electric" }
+    ]
+};
+```
+
+{% /numberHeading %}
+{% /if %}
+
+{% if isFramework("react") %}
+
+<!-- Create React -->
+
+{% numberHeading number="2" title="提供模块" level="h3" %}
+
+将 `AllCommunityModule` 传递给 `AgGridProvider` 以访问所有社区功能：
+
+```js
+import { AllCommunityModule } from 'ag-grid-community';
+import { AgGridProvider } from 'ag-grid-react';
+
+const modules = [AllCommunityModule];
+
+function App() {
+    return (
+        <AgGridProvider modules={modules}>
+            {/* 您的 AgGridReact 组件放在这里 */}
+        </AgGridProvider>
+    );
+}
+```
+
+{% note %}
+为了最小化包大小，只提供您想要使用的模块。有关更多信息，请参阅 [模块](./modules/) 文档。
+{% /note %}
+{% /numberHeading %}
+
+{% numberHeading number="3" title="导入 React 数据表格" level="h3" %}
+
+```js
+import { AgGridReact } from 'ag-grid-react'; // React 数据表格组件
+```
+
+{% /numberHeading %}
+
+{% numberHeading number="4" title="定义行和列" level="h3" %}
+
+```js
+const GridExample = () => {
+    // Row Data：要显示的数据。
+    const [rowData, setRowData] = useState([
+        { make: "Tesla", model: "Model Y", price: 64950, electric: true },
+        { make: "Ford", model: "F-Series", price: 33850, electric: false },
+        { make: "Toyota", model: "Corolla", price: 29600, electric: false },
+    ]);
+
+    // Column Definitions：定义要显示的列。
+    const [colDefs, setColDefs] = useState([
+        { field: "make" },
+        { field: "model" },
+        { field: "price" },
+        { field: "electric" }
+    ]);
+
+    // ...
+}
+```
+
+{% /numberHeading %}
+
+{% numberHeading number="5" title="React 数据表格组件" level="h3" %}
+
+在 `AgGridProvider` 内返回 `AgGridReact` 组件，包装在一个具有固定高度的父容器 `div` 中：
+
+```jsx
+const modules = [AllCommunityModule];
+
+return (
+    <AgGridProvider modules={modules}>
+        {/* 数据表格将填充父容器的大小 */}
+        <div style={{ height: 500 }}>
+            <AgGridReact
+                rowData={rowData}
+                columnDefs={colDefs}
+            />
+        </div>
+    </AgGridProvider>
+)
+```
+
+{% /numberHeading %}
+{% /if %}
+
+{% if isFramework("angular") %}
+{% numberHeading number="2" title="注册模块" level="h3" %}
+
+注册 `AllCommunityModule` 以访问所有社区功能：
+
+```js
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+
+// 注册所有社区功能
+ModuleRegistry.registerModules([AllCommunityModule]);
+```
+
+{% note %}
+为了最小化包大小，只注册您想要使用的模块。有关更多信息，请参阅 [模块](./modules/) 页面。
+{% /note %}
+{% /numberHeading %}
+{% /if %}
+
+{% if isFramework("angular") %}
+{% numberHeading number="3" title="导入 Angular 数据表格" level="h3" %}
+
+```js
+import { AgGridAngular } from 'ag-grid-angular'; // Angular 数据表格组件
+import type { ColDef } from 'ag-grid-community'; // 列定义类型接口
+```
+
+{% /numberHeading %}
+{% /if %}
+
+{% if isFramework("angular") %}
+{% numberHeading number="4" title="定义行和列" level="h3" %}
+
+```jsx
+@Component({
+    selector: 'app-root',
+    standalone: true,
+    imports: [AgGridAngular], // 添加 Angular 数据表格组件
+    styleUrls: ['./app.component.css'],
+    template: ``
+})
+
+export class AppComponent {
+    // Row Data：要显示的数据。
+    rowData = [
+        { make: "Tesla", model: "Model Y", price: 64950, electric: true },
+        { make: "Ford", model: "F-Series", price: 33850, electric: false },
+        { make: "Toyota", model: "Corolla", price: 29600, electric: false },
+    ];
+
+    // Column Definitions：定义要显示的列。
+    colDefs: ColDef[] = [
+        { field: "make" },
+        { field: "model" },
+        { field: "price" },
+        { field: "electric" }
+    ];
+}
+```
+
+{% /numberHeading %}
+{% /if %}
+
+{% if isFramework("angular") %}
+{% numberHeading number="5" title="Angular 数据表格组件" level="h3" %}
+
+将行和列设置为 `ag-grid-angular` 组件属性：
+
+```js
+template:
+`
+    <!-- AG Grid 组件 -->
+    <ag-grid-angular
+        [rowData]="rowData"
+        [columnDefs]="colDefs" />
+`
+```
+
+{% /numberHeading %}
+{% /if %}
+
+{% if isFramework("vue") %}
+{% numberHeading number="2" title="注册模块" level="h3" %}
+注册 `AllCommunityModule` 以访问所有社区功能：
+
+```js
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+
+// 注册所有社区功能
+ModuleRegistry.registerModules([AllCommunityModule]);
+```
+
+{% note %}
+为了最小化包大小，只注册您想要使用的模块。有关更多信息，请参阅 [模块](./modules/) 页面。
+{% /note %}
+
+{% /numberHeading %}
+{% /if %}
+
+{% if isFramework("vue") %}
+{% numberHeading number="3" title="导入 Vue 数据表格" level="h3" %}
+
+```html
+<script>
+import { AgGridVue } from "ag-grid-vue3"; // Vue 数据表格组件
+
+export default {
+    name: "App",
+    components: {
+        AgGridVue, // 添加 Vue 数据表格组件
+    },
+    setup() {},
+};
+</script>
+```
+
+{% /numberHeading %}
+{% /if %}
+
+{% if isFramework("vue") %}
+{% numberHeading number="4" title="定义行和列" level="h3" %}
+
+```js
+setup() {
+    // Row Data：要显示的数据。
+    const rowData = ref([
+        { make: "Tesla", model: "Model Y", price: 64950, electric: true },
+        { make: "Ford", model: "F-Series", price: 33850, electric: false },
+        { make: "Toyota", model: "Corolla", price: 29600, electric: false },
+    ]);
+
+    // Column Definitions：定义要显示的列。
+    const colDefs = ref([
+        { field: "make" },
+        { field: "model" },
+        { field: "price" },
+        { field: "electric" }
+    ]);
+
+    return {
+        rowData,
+        colDefs,
+    };
+},
+```
+
+{% /numberHeading %}
+{% /if %}
+
+{% if isFramework("vue") %}
+{% numberHeading number="5" title="Vue 数据表格组件" level="h3" %}
+
+将行和列设置为 `ag-grid-vue` 组件属性。通过 class 和 style 属性应用样式。
+
+```html
+<template>
+    <!-- AG Grid 组件 -->
+    <ag-grid-vue
+        :rowData="rowData"
+        :columnDefs="colDefs"
+        style="height: 500px"
+    >
+    </ag-grid-vue>
+</template>
+```
+
+{% /numberHeading %}
+{% /if %}
+
+{% if isFramework("angular") %}
+{% numberHeading number="6" title="Angular 数据表格示例" level="h3" %}
+下面是应用程序运行的实时示例。点击 `</> Code` 查看代码。
+{% gridExampleRunner title="快速开始示例" name="quick-start-example"  exampleHeight=303 /%}
+{% note %}
+要实时编辑代码，请使用右下角的按钮在 CodeSandbox 或 Plunker 中打开示例。
+{% /note %}
+{% /numberHeading %}
+{% /if %}
+
+{% if isFramework("react") %}
+{% numberHeading number="6" title="React 数据表格示例" level="h3" %}
+下面是应用程序运行的实时示例。点击 `</> Code` 查看代码。
+{% gridExampleRunner title="快速开始示例" name="quick-start-example"  exampleHeight=303 /%}
+{% note %}
+要实时编辑代码，请使用右下角的按钮在 CodeSandbox 或 Plunker 中打开示例。
+{% /note %}
+{% /numberHeading %}
+{% /if %}
+
+{% if isFramework("vue") %}
+{% numberHeading number="6" title="Vue 数据表格示例" level="h3" %}
+下面是应用程序运行的实时示例。点击 `</> Code` 查看代码。
+{% gridExampleRunner title="快速开始示例" name="quick-start-example"  exampleHeight=303 /%}
+{% note %}
+要实时编辑代码，请使用右下角的按钮在 CodeSandbox 或 Plunker 中打开示例。
+{% /note %}
+{% /numberHeading %}
+{% /if %}
+
+{% if isFramework("javascript") %}
+{% numberHeading number="4" title="JavaScript 数据表格示例" level="h3" %}
+下面是应用程序运行的实时示例。点击 `</> Code` 查看代码。
+{% gridExampleRunner title="快速开始示例" name="quick-start-example"  exampleHeight=303 /%}
+{% note %}
+要实时编辑代码，请使用右下角的按钮在 CodeSandbox 或 Plunker 中打开示例。
+{% /note %}
+{% /numberHeading %}
+{% /if %}
+
+## 下一步
+
+{% if isFramework("angular") %}
+现在您已经有了一个基本的 Angular 数据表格运行，选择以下选项之一继续您的学习之旅：
+{% /if %}
+
+{% if isFramework("react") %}
+现在您已经有了一个基本的 React 数据表格运行，选择以下选项之一继续您的学习之旅：
+{% /if %}
+
+{% if isFramework("vue") %}
+现在您已经有了一个基本的 Vue 数据表格运行，选择以下选项之一继续您的学习之旅：
+{% /if %}
+
+{% if isFramework("javascript") %}
+现在您已经有了一个基本的 JavaScript 数据表格运行，选择以下选项之一继续您的学习之旅：
+{% /if %}
+
+{% gettingStarted library="grid"/%}

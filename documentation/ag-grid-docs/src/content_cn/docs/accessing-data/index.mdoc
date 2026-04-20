@@ -1,0 +1,80 @@
+---
+title: "访问行"
+---
+
+本节介绍数据提供给表格后可以访问数据的方式。
+
+每次将数据传递给表格时，表格会用[行节点](./row-object/)对象包装每个数据项。例如，如果您的数据有20行，表格会创建20个行节点对象，每个行节点包装您数据的一个项目。
+
+有时访问这些行节点很方便。一个例子是如果您想选择一行，可以调用 `rowNode.setSelected(true)` 来选择它。本节详细介绍访问行节点的不同方式。
+
+以下方法用于访问单个行节点。这些方法的更详细解释以及示例在下面提供。
+
+## 访问行节点 API 方法
+
+{% apiDocumentation source="grid-api/api.json" section="rowNodes" /%}
+
+## 通过行 ID 访问行
+
+获取行节点最简单的方法是通过其行 ID。ID 由您使用表格回调 `getRowId()` 提供，或由表格使用内部序列生成。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    // 回调告诉表格使用 'id' 属性作为 ID，ID 应该始终是字符串
+    getRowId: params => params.data.id
+}
+```
+
+要查找行节点，请在表格 API 上使用 `getRowNode()`：
+
+```{% frameworkTransform=true %}
+// 获取 ID 为 55 的行节点
+const rowNode = api.getRowNode('55');
+
+// 对行进行操作，例如选择它
+rowNode.setSelected(true);
+```
+
+## 迭代行
+
+有时您可能想要遍历表格中的所有行节点。这可以使用表格的迭代 API 完成。迭代 API 遍历每个行节点，无论行节点是否显示。例如，如果分组且组已关闭，组的子项不会由表格显示，但子项包含在迭代 'for-each' 方法中。
+
+```{% frameworkTransform=true %}
+// 遍历表格中的每个节点
+api.forEachNode((rowNode, index) => {
+    console.log('节点 ' + rowNode.data.athlete + ' 在表格中');
+});
+
+// 仅遍历通过筛选器的节点
+api.forEachNodeAfterFilter((rowNode, index) => {
+    console.log('节点 ' + rowNode.data.athlete + ' 通过筛选器');
+});
+
+// 仅遍历通过筛选器并按排序顺序排序的节点
+api.forEachNodeAfterFilterAndSort((rowNode, index) => {
+    console.log('节点 ' + rowNode.data.athlete + ' 通过筛选器并按此顺序');
+});
+
+// 遍历表格中的每个叶子节点
+api.forEachLeafNode((rowNode) => {
+    console.log('节点 ' + rowNode.data.athlete + ' 不是组！');
+});
+```
+
+{% note %}
+上述所有方法都适用于客户端行模型，即默认的[行模型](./row-models/)。
+对于所有其他行模型（即[视口](./viewport/)、[无限滚动](./infinite-scrolling/)和[服务器端](./server-side-model/)），唯一支持的方法是 `api.forEachNode()`，并且它只会返回加载到浏览器内存中的行节点（因为每个行模型都使用数据源延迟加载行）。
+{% /note %}
+
+## 使用 For-Each 方法示例
+
+下面的示例显示了不同的 For-Each API 方法：
+
+-   **For-Each Node**: 打印表格中的每一行。它忽略筛选和排序。
+-   **For-Each Node After Filter**: 打印表格中的每一行，除了被筛选掉的行。
+-   **For-Each Node After Filter and Sort**: 打印表格中的每一行，除了被筛选掉的行，并按屏幕上显示的顺序（如果应用了排序）。
+-   **For-Each Leaf Node**: 打印表格中的每一行，除了组行。
+
+在示例中，尝试应用一些排序和筛选，看看这如何影响开发者控制台中的不同操作。
+
+{% gridExampleRunner title="使用 For-Each" name="using-for-each"  exampleHeight=590 /%}

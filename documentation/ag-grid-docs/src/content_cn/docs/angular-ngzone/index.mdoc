@@ -1,0 +1,87 @@
+---
+title: "AG Grid 和 NgZone"
+frameworks: ["angular"]
+---
+
+推荐的 NgZoneOptions 和 AG Grid 性能优化详情，以避免[区域污染](https://angular.dev/best-practices/zone-pollution)。
+
+{% note %}
+从 Angular 21 开始，新应用程序默认是无区域的。此页面上的优化仅适用于基于 Zone 的应用程序。有关更多详细信息，请参阅 [Angular Zoneless](https://angular.dev/guide/zoneless)。
+{% /note %}
+
+## 推荐的 NgZoneOptions
+
+Angular 通过 [NgZoneOptions](https://angular.dev/api/core/NgZoneOptions) 支持变更检测周期的合并。这可以在引导应用程序时通过 `provideZoneChangeDetection` 设置。我们建议启用 `eventCoalescing` 和 `runCoalescing` 以获得最佳的 AG Grid 性能。
+
+```ts
+bootstrapApplication(AppComponent, {
+    providers: [
+        provideZoneChangeDetection({
+            eventCoalescing: true,
+            runCoalescing: true,
+        }),
+    ],
+})
+```
+
+{% note %}
+上述应用程序配置是获得最佳 AG Grid 性能的推荐配置。
+{% /note %}
+
+## NgZone 和变更检测
+
+Angular 使用 Zone.js 通过捕获所有异步操作并安排变更检测在它们完成时运行来管理变更检测。但是，如果应用程序/库使用不需要运行变更检测的异步操作，在 NgZone 外部运行这些操作可能是有益的。
+
+Angular 文档中的官方术语是[区域污染](https://angular.dev/best-practices/zone-pollution)。
+
+## AG Grid 功能在 NgZone 内/外运行
+
+AG Grid 通过在 NgZone 外部运行所有内部操作来最小化不必要的变更检测，同时确保 AG Grid 可能触发 Angular 应用程序更改的任何地方，此代码都将在 NgZone 内部执行。此行为对绝大多数开发人员应该是不可见的。
+
+### 在 NgZone 内部运行的操作
+
+AG Grid 运行的大多数应用程序代码将在 NgZone 内部执行，包括：
+
+-   事件处理程序，表格、行、列等
+-   菜单操作触发器
+-   自定义组件
+    -   Angular 生命周期方法
+    -   agInit、refresh 等
+
+```html
+onCellClicked(event: CellClickedEvent) {
+  // 此代码将在 NgZone 内部运行
+  console.log("在 NgZone 内部", NgZone.isInAngularZone())
+}
+
+<ag-grid-angular (cellClicked)="onCellClicked($event)">
+```
+
+### 在 NgZone 外部运行的操作
+
+为了获得性能提升，以下操作在 NgZone 外部运行：
+
+-   表格回调
+
+```html
+getRowId(params: GetRowIdParams) {
+  // 此代码将在 NgZone 外部运行
+  console.log("在 NgZone 外部", NgZone.isInAngularZone());
+  return String(params.data.id);
+}
+
+<ag-grid-angular [getRowId]="getRowId">
+```
+
+表格回调应仅用于向表格提供配置，不应用于更新应用程序状态。但是，如果您需要解决此限制，可以使用 `NgZone.run` 强制代码在 NgZone 内部执行。
+
+```ts
+gridCallback(params: GridCallbackParams) {
+  this.ngZone.run(() => {
+    // 此代码将在 NgZone 内部运行
+    console.log("在 NgZone 内部", NgZone.isInAngularZone());
+  });
+}
+```
+
+大多数开发人员不需要担心这一点，因为表格设计为与 Angular 应用程序无缝协作。但是，如果您遇到变更检测或性能问题，可能需要考虑上述信息。

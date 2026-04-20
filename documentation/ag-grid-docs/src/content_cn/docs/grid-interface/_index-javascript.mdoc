@@ -1,0 +1,21 @@
+{% if isFramework("javascript") %}
+`gridOptions` 对象用于配置网格。以下示例显示了 `gridOptions` 上可用的不同类型的项目。
+
+```js
+const gridOptions = {
+    // 属性
+    columnDefs: myColDefs,
+    pagination: true,
+
+    // 事件
+    onRowClicked: event => console.log('行被点击'),
+
+    // 回调
+    getRowHeight: (params) => 25
+}
+
+// 将 gridOptions 传递给 createGrid
+const api = createGrid(gridDiv, gridOptions)
+```
+
+{% /if %}

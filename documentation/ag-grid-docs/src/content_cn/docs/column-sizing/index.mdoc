@@ -1,0 +1,186 @@
+---
+title: "列大小调整"
+description: "列大小调整控制 $framework 数据网格中列的大小调整方式。使用自动调整大小或列弹性来以编程方式控制列大小。"
+---
+
+可以通过拖动列标题的右边缘或使用键盘来调整列的大小。
+
+## 大小调整
+
+默认情况下，所有列都启用了列大小调整。要控制单个列的大小调整，请在列定义中设置布尔值 `resizable` 属性。
+
+下面的代码片段允许调整除 Address 之外的所有列的大小。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'name' },
+        { field: 'age' },
+        { field: 'address', resizable: false },
+    ],
+}
+```
+
+下面的代码片段显示了如何通过在默认列定义上设置 `resizable=false`，然后在 Address 列上设置 `resizable=true` 来仅允许调整 Address 列的大小。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    defaultColDef: {
+        resizable: false,
+    },
+    columnDefs: [
+        { field: 'name' },
+        { field: 'age' },
+        { field: 'address', resizable: true },
+    ],
+}
+```
+
+## 列弹性
+
+通常需要一个或多个列填充网格中的所有可用空间。对于这种情况，可以使用 `flex` 配置。某些列可以设置为常规 `width` 配置，而其他列则具有弹性配置。
+
+弹性大小调整的工作原理是将网格中的剩余空间按比例分配给所有弹性列。例如，假设网格的总宽度为 450px，并且它有三列：第一列 `width: 150`；第二列 `flex: 1`；第三列 `flex: 2`。第一列将是 150px 宽，剩余 300px。`flex: 2` 的列大小是 `flex: 1` 的两倍。因此最终大小将是：150px、100px、200px。
+
+如果列没有设置宽度或弹性属性，它将默认为 200px。
+
+{% note %}
+弹性配置**不**适用于同一列中的 `width` 配置。如果您需要为列提供最小宽度，您应该使用弹性和 `minWidth` 配置。弹性也会考虑 `maxWidth`。
+{% /note %}
+
+{% note %}
+如果您通过 API 或拖动调整大小手柄手动调整具有弹性的列的大小，该列的弹性将自动禁用。
+{% /note %}
+
+下面的示例显示了弹性的实际应用。需要注意的事项如下：
+
+-   列 A 是固定大小。您可以使用拖动手柄调整其大小，其他两列将调整以填充可用空间。
+-   列 B 具有 `flex: 2`、`minWidth: 200` 和 `maxWidth: 350`，因此它应该被限制在这个最大/最小宽度内。
+-   列 C 具有 `flex: 1`，因此它应该是列 B 大小的一半，除非列 B 受到其 `minWidth`/`maxWidth` 规则的限制，在这种情况下它应该占用剩余的可用空间。
+
+{% gridExampleRunner title="Column Flex" name="flex-columns" /%}
+
+## 自动调整列大小
+
+列可以通过两种主要方式自动调整大小：
+
+1. 自动调整列以适应网格 - 列将缩放以适应可用的网格宽度（如果需要，也可以适应提供的宽度）。
+1. 自动调整列以适应单元格内容 - 列将调整大小以适应其可见的单元格内容。
+
+### 自动调整列以适应网格
+
+可以调整列的大小以适应网格的宽度。列将缩放（增长或缩小）以适应可用宽度，除非它们设置了 `suppressSizeToFit=true`。在下面的示例中，当列被调整以适应网格时，Athlete 列不会受到影响，因为它设置了 `suppressSizeToFit=true`。
+
+{% gridExampleRunner title="Auto-Size Columns to Fit Grid" name="column-sizing-to-fit" /%}
+
+提供网格选项 `autoSizeStrategy` 以在加载网格时调整列的大小以适应。这可以设置为适应实际的网格宽度（`type = 'fitGridWidth'`），或者适应提供的固定宽度（`type = 'fitProvidedWidth'`）。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    autoSizeStrategy: {
+        type: 'fitGridWidth',
+        defaultMinWidth: 100,
+        columnLimits: [
+            {
+                colId: 'country',
+                minWidth: 900
+            }
+        ]
+    }
+}
+```
+
+{% apiDocumentation source="grid-options/properties.json" section="columnSizing" names=["autoSizeStrategy", "animateColumnResizing"] /%}
+
+也可以通过 `api.sizeColumnsToFit(params)` 按需调整列的大小。
+
+{% apiDocumentation source="grid-api/api.json" section="columnSizing" names=["sizeColumnsToFit"] /%}
+
+如果您不希望将特定列包含在自动调整大小中，请设置列定义 `suppressSizeToFit=true`。例如，如果您希望第一列保持固定宽度，但所有其他列填充表格的宽度，这很有帮助。
+
+网格在计算新列宽度时保持列默认宽度的比例。例如，如果列 A 的默认大小是列 B 的两倍，那么在执行大小调整后，列 A 仍然将是列 B 的两倍，假设没有违反列的最小宽度或最大宽度约束。
+
+在计算新宽度时使用列默认宽度，而不是当前宽度。这确保结果是确定性的，并且不依赖于用户可能手动进行的任何列大小调整。
+
+可以提供一个参数对象，其中包含所有列或特定列的最小和最大宽度，以进一步限制该函数调用的列结果宽度。这些宽度不会超过列定义的最小和最大宽度。
+
+{% note %}
+例如，假设一个有三列的网格，算法将如下所示：
+
+`scale = availableWidth / (w1 + w2 + w3)`
+
+`w1 = round(w1 * scale)`
+
+`w2 = round(w2 * scale)`
+
+`w3 = totalGridWidth - (w1 + w2)`
+
+假设网格宽 1,200 像素，列的默认宽度为 `50`、`120` 和 `300`，
+那么计算如下：
+
+`availableWidth = 1,198`（可用宽度通常较小，因为网格通常有左右边框）
+
+`scale = 1198 / (50 + 120 + 300) = 2.54`
+
+`col1 = round(50 * 2.54) = 127`
+
+`col2 = round(120 * 2.54) = 306`
+
+`col3 = 1198 - (127 + 306) = 765`（最后一列获得剩余的任何空间，这确保使用所有空间，因此没有舍入问题）
+{% /note %}
+
+### 自动调整列以适应单元格内容
+
+可以调整列的大小以适应单元格的内容。默认情况下，网格将调整列的大小以适应标题。如果您不希望将标题包含在自动大小计算中，请设置网格属性 `skipHeaderOnAutoSize = true`，或将 `skipHeader = true` 传递给 `autoSizeStrategy` 参数或 API 方法。如果您不希望将特定列包含在自动调整大小中，请设置列定义 `suppressAutoSize = true`。网格还提供 `scaleUpToFitGridWidth` 选项，该选项在自动调整列大小后按比例放大列以填充网格中的任何空白空间。
+
+下面的示例演示了使用 `autoSizeStrategy` 默认调整列的大小。示例按钮可以随时通过 API 重新应用此大小调整。还提供了控件来切换 `skipHeader` 和 `scaleUpToFitGridWidth` 参数。"Athlete" 列设置了 `suppressAutoSize = true`。
+
+{% gridExampleRunner title="Auto-Size Columns to Fit Cell Contents" name="column-resizing" /%}
+
+提供网格选项 `autoSizeStrategy` 并设置 `type = 'fitCellContents'`，以便在网格中渲染第一批数据时调整列的大小以适应其内容。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    autoSizeStrategy: {
+        type: 'fitCellContents',
+    }
+}
+```
+
+{% apiDocumentation source="grid-options/properties.json" section="columnSizing" names=["autoSizeStrategy", "animateColumnResizing"] /%}
+
+这也可以通过以下 API 方法按需执行：
+
+{% apiDocumentation source="grid-api/api.json" section="columnSizing" names=["autoSizeColumns", "autoSizeAllColumns"] /%}
+
+在计算列宽度时，从不考虑[列组](./column-groups/)。
+
+就像 Excel 一样，每个列也可以通过双击标题的右侧而不是拖动它来自动调整大小。当您这样做时，网格将计算出最适合列中单元格内容的宽度。
+
+{% note %}
+
+-   网格通过仅考虑虚拟渲染的行来计算最佳宽度。例如，如果您的网格有 10,000 行，但由于行的虚拟化只渲染了 50 行，那么只有这 50 行将被考虑用于计算显示宽度。渲染的行是您可以通过垂直滚动在屏幕上看到的所有行加上一个小缓冲区（默认缓冲区大小为 20）。
+-   只考虑屏幕上渲染的单元格，网格根据它看到的内容计算宽度。它无法看到由于列虚拟化而未渲染的列。因此，无法自动调整屏幕上不可见的列的大小。
+-   列虚拟化是网格用于渲染大量列而不降低性能的技术，方法是仅渲染由于水平滚动位置而可见的列。例如，如果水平滚动仅显示 10 列，则网格可以有 1,000 列，其中只有 10 列被渲染。要解决此问题，您可以通过设置网格属性 `suppressColumnVirtualisation=true` 来关闭列虚拟化。您可以选择是否希望列虚拟化工作或使用屏幕外列进行自动调整大小工作。
+-   请注意，当使用 `scaleUpToFitGridWidth` 时，[固定列](./column-pinning)、[选择列](./row-selection-multi-row/#customising-the-checkbox-column)和[行号](./row-numbers)列不会被放大以填充任何空白空间。
+
+{% /note %}
+
+## 通过键盘调整大小
+
+可以使用键盘调整列标题的大小。当列标题聚焦时，按 {% kbd "⌥ Alt" /%} + {% kbd "←" /%} / {% kbd "→" /%} 在该方向调整列的大小。
+
+有关标题键盘交互的完整列表，请参阅[列标题导航](./keyboard-navigation/#column-header-navigation)。
+
+## Shift 调整大小
+
+如果在拖动调整大小手柄时按住 {% kbd "⇧ Shift" /%} 键，列将从与其相邻的列中获取空间。这意味着所有列的总宽度将保持不变。
+
+您还可以更改调整大小的默认行为。设置网格属性 `colResizeDefault='shift'` 以将 shift 调整大小作为默认值，并在按下 {% kbd "⇧ Shift" /%} 键时进行正常调整大小。
+
+在下面的示例中，请注意以下几点：
+
+-   网格属性 `colResizeDefault='shift'`，因此默认列调整大小的行为就像按下了 {% kbd "⇧ Shift" /%} 键一样。
+-   按住 {% kbd "⇧ Shift" /%} 将以正常的默认方式调整大小。
+
+{% gridExampleRunner title="Shift Resizing" name="shift-resizing" /%}

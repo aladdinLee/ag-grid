@@ -1,0 +1,118 @@
+---
+title: '单元格编辑验证'
+---
+
+## 标准验证
+
+表格为所有[提供的单元格编辑器](./provided-cell-editors/)提供内置验证，例如文本、大文本、数字和日期编辑器。
+这些编辑器通过检查列配置中定义的约束自动支持验证。例如：
+
+-   `文本`和`大文本`编辑器将遵守 `maxLength` 属性。
+-   `数字`编辑器根据最小和最大约束进行验证。
+-   `日期`编辑器确保值是有效的日期字符串。
+
+编辑结束时执行验证，表格将根据选择的[验证模式](#validation-modes)处理无效值。
+
+{% gridExampleRunner title="单元格编辑器验证" name="cell-editor-validation" /%}
+
+## 覆盖验证
+
+要向提供的编辑器添加自定义验证逻辑，请在 `ICellEditorParams` 中使用 `getValidationErrors()` 回调。这允许您定义特定于您的应用程序的附加规则。
+
+{% interfaceDocumentation interfaceName="ICellEditorParams" names=["getValidationErrors"] /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'athlete',
+            cellEditorParams: {
+                getValidationErrors: (params) => {
+                    const { value } = params;
+                    if (!value || value.length < 3) {
+                        return ['该值必须至少为 3 个字符长。'];
+                    }
+
+                    return null;
+                },
+            },
+        },
+    ]
+}
+```
+
+如果回调返回错误，表格将在悬停编辑器时在工具提示中显示错误，并在完成之前丢弃编辑值（取决于[验证模式](#validation-modes)）。
+
+这在以下示例中演示，请注意：
+
+-   `运动员`必须至少为 `3` 个字符。
+-   `年龄`必须不同于 `18`。
+
+{% gridExampleRunner title="单元格编辑器验证覆盖" name="cell-editor-validation-override" /%}
+
+## 验证模式
+
+表格支持两种处理无效编辑的模式，通过表格选项 `invalidEditValueMode` 配置：
+
+| 模式                 | 描述                                                                                                                                         |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `'revert'`（默认）   | 如果值无效，取消编辑并将单元格恢复为其原始值。                                                                                                |
+| `'block'`            | 防止编辑器关闭，直到提供有效值。在当前编辑完成或取消之前，无法启动其他编辑器。                                                               |
+
+当您希望在允许用户继续之前严格执行有效输入时，请使用 `'block'` 模式。
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    invalidEditValueMode: 'block',
+}
+```
+
+{% gridExampleRunner title="单元格编辑器验证模式" name="cell-editor-validation-modes" /%}
+
+## 全行编辑验证
+
+使用[全行编辑](./cell-editing-full-row/)时，表格将单独验证行中的每个单元格编辑器，使用前面部分中描述的相同机制。
+
+此外，表格还可以通过使用可选回调 `getFullRowEditValidationErrors(params)` 执行跨字段验证。这允许您实现检查字段之间关系的逻辑 —— 例如，确保一个字段大于另一个字段。
+
+如果行处于无效状态，此回调应返回错误字符串数组。如果未发现错误，则应返回 `null`。
+
+{% apiDocumentation source="grid-options/properties.json" section="editing" names=["getFullRowEditValidationErrors"] /%}
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    getFullRowEditValidationErrors: (params) => {
+        const { data } = params;
+        if (data.min > data.max) {
+            return ['最小值不能大于最大值'];
+        }
+        return null;
+    }
+}
+```
+
+只有当**单个单元格编辑器**和**全行验证**都不返回错误时，行编辑才会成功完成。
+
+这在以下示例中演示。请注意以下验证规则：
+
+-   `体重`必须是低于 `500` 的正值。
+-   `身高`必须是低于 `300` 的正值。
+-   **全行编辑验证**确保使用身高和体重计算的身体质量指数（BMI）在 `10` 和 `80` 之间。
+
+{% gridExampleRunner title="全行编辑验证" name="full-row-editing-validation" /%}
+
+## 自定义编辑器的验证
+
+自定义单元格编辑器可以通过选择性地实现以下方法来参与表格的验证系统：
+
+{% interfaceDocumentation interfaceName="ICellEditor" names=["getValidationElement", "getValidationErrors"] /%}
+
+这些方法在表格尝试完成编辑之前自动调用。您还可以通过调用 cellEditorParams 中可用的 validate() 方法手动触发验证，例如：
+
+```
+cellEditorParams.validate();
+```
+
+如果您希望在编辑期间验证输入，例如响应自定义电话编辑器中的 onInput 事件，这很有用。
+
+{% gridExampleRunner title="组件编辑器验证" name="component-editor-validation" /%}

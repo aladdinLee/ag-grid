@@ -1,0 +1,104 @@
+---
+title: "自定义详细信息"
+enterprise: true
+---
+
+当主行展开时，网格使用默认详细信息单元格渲染器在主网格的一行内创建并显示详细信息网格。如果默认详细信息单元格渲染器不能满足您的需求，您可以提供自定义详细信息单元格渲染器来显示其他内容。
+
+使用网格属性 `detailCellRenderer` 配置网格使用自定义详细信息单元格渲染器。
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    // 通常留空，网格将使用默认详细信息单元格渲染器
+    detailCellRenderer: 'myCellRendererComp',
+    // 发送到详细信息单元格渲染器的参数，在本例中是您的 MyCellRendererComp
+    detailCellRendererParams: {},
+}
+```
+
+详细信息单元格渲染器应该是[单元格渲染器](./component-cell-renderer/)组件。有关如何构建和向网格注册单元格渲染器，请参阅[单元格渲染器](./component-cell-renderer/)。
+
+以下示例演示了极简的自定义详细信息单元格渲染器。请注意，通常显示详细信息网格的位置现在只显示消息"My Custom Detail"。
+
+{% gridExampleRunner title="简单详细信息单元格渲染器" name="simple-custom-detail"  exampleHeight=545 /%}
+
+## 带表单的自定义详细信息
+
+在详细信息部分显示网格不是强制性的。由于您提供的是自定义组件，因此自定义组件内可以显示的内容没有限制。
+
+此示例显示了使用表单而不是网格的自定义详细信息单元格渲染器。
+
+{% gridExampleRunner title="带表单的自定义详细信息单元格渲染器" name="custom-detail-with-form" /%}
+
+## 带网格的自定义详细信息
+
+可以提供与默认详细信息单元格渲染器类似的自定义详细信息网格。此示例演示将自定义网格显示为详细信息。详细信息将记录到开发者控制台。
+
+{% gridExampleRunner title="带网格的自定义详细信息单元格渲染器" name="custom-detail-with-grid"  exampleHeight=545 /%}
+
+## 注册详细信息网格
+
+为了使详细信息网格的 API 可以通过主网格访问（如[访问详细信息网格](./master-detail-grids/#accessing-detail-grids)中所述），需要向主网格注册网格信息对象。
+
+{% apiDocumentation source="grid-api/api.json" section="masterDetail" names=["addDetailGridInfo", "removeDetailGridInfo"] /%}
+
+创建详细信息网格时，通过 `masterGridApi.addDetailGridInfo(id, info)` 注册它，销毁详细信息网格时，通过 `masterGridApi.removeDetailGridInfo(id)` 注销它。调用这些方法时需要详细信息 ID。可以使用任何唯一 ID，但为了与默认详细信息单元格渲染器的工作方式保持一致，建议使用详细信息行节点的 ID。
+
+```js
+//////////////////////////////
+// 向主网格注册
+const detailId = params.node.id;
+
+// 创建网格信息对象
+const detailGridInfo = {
+    id: detailId,
+    api: params.api,
+};
+
+this.masterGridApi.addDetailGridInfo(detailId, detailGridInfo);
+
+//////////////////////////////
+// 从主网格注销
+this.masterGridApi.removeDetailGridInfo(detailId);
+```
+
+## 自定义详细信息高度
+
+使用自定义详细信息单元格渲染器时，可以按[详细信息高度](./master-detail-height/)中所述自定义详细信息部分的高度。
+
+## 刷新
+
+{% if isFramework("javascript", "angular", "vue") %}
+当使用[事务更新](./data-update-transactions/)更新网格中的数据时，网格将在所有详细信息单元格渲染器上调用刷新。
+
+详细信息单元格渲染器是否要对刷新进行操作取决于它自己。如果 `refresh()` 方法返回 `true`，网格将假定详细信息单元格渲染器已成功刷新，不会再发生任何事情。但是，如果返回 `false`，网格将销毁详细信息单元格渲染器并再次重新创建它。
+
+此模式与普通网格单元格渲染器的刷新工作方式类似。
+
+下面的示例显示了组件如何在更新时刷新。示例每秒刷新第一行。应用事务后，会在相应的详细信息单元格渲染器上调用 `refresh()` 方法。详细信息单元格渲染器刷新方法从参数中读取最新的调用计数，最后更新时间也会更改。
+{% /if %}
+
+{% if isFramework("react") %}
+当使用[事务更新](./data-update-transactions/)更新网格中的数据时，详细信息单元格渲染器将使用更新的属性刷新。下面的示例演示了这一点。
+{% /if %}
+
+{% gridExampleRunner title="带刷新的自定义详细信息" name="custom-detail-with-refresh"  exampleHeight=545 /%}
+
+## 键盘导航
+
+要向自定义详细信息面板添加键盘导航，必须在自定义详细信息单元格渲染器中实现。这有几个部分：
+
+1. 为 `focus` 事件创建监听器函数，当自定义详细信息面板获得焦点时触发。在此函数中，事件对象 `target` 值是自定义详细信息行元素，事件对象 `relatedTarget` 值是先前获得焦点的元素。您需要找到具有 `role=row` 属性的 `relatedTarget` 的父元素以获取先前的行元素。有了当前行元素和先前的行元素，检查 `row-index` 属性可以让您看到用户是从前一行还是当前行进入焦点（即，从前一个到当前 `row-index` 增加或相同）还是从下一行（即，从前一个到当前 `row-index` 减少）。有了这些知识，您可以使用 `element.focus()` 在自定义详细信息面板中的相关元素上设置焦点
+1. 在组件初始化时将上述函数附加到 `eParentOfValue` 参数值的 `focus` 监听器
+1. 在组件销毁或卸载方法中从 `focus` 监听器中删除上述函数
+
+以下示例显示了自定义详细信息面板中键盘导航的实现：
+
+-   单击 `Mila Smith` 主行中的单元格并按 {% kbd "⇥ Tab" /%} 键将焦点移动到 `Mila Smith` 主行的自定义详细信息面板输入框。
+-   单击 `Evelyn Taylor` 主行中的单元格并按 {% kbd "⇧ Shift" /%}+{% kbd "⇥ Tab" /%} 将焦点移动到 `Mila Smith` 主行的自定义详细信息面板输入框。
+
+{% note %}
+此示例说明了主要概念，但自定义键盘导航的实际实现将因特定的自定义详细信息面板而异。
+{% /note %}
+
+{% gridExampleRunner title="自定义详细信息单元格渲染器键盘导航" name="custom-detail-keyboard-navigation" /%}

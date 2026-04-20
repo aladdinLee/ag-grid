@@ -1,0 +1,55 @@
+---
+title: "全宽行"
+---
+
+在正常操作下，AG Grid 将每行呈现为单元格的水平列表。行中的每个单元格将对应一个列定义。可以关闭此功能，并允许您提供一个组件来跨越网格的整个宽度而不使用列。如果您想在网格内嵌入复杂组件而不是呈现单元格列表，这很有用。此技术可用于显示信息面板。
+
+{% note %}
+请参阅[主从](./master-detail/)以将全宽行作为另一行的子项包含在内。
+{% /note %}
+
+## 全宽行示例
+
+下面显示了使用全宽的示例。可以注意以下内容：
+
+-   国家 France、Italy 和 Peru 的行具有全宽组件而不是单元格。
+
+-   排序和过滤的工作方式就像数据正常显示一样。
+
+{% gridExampleRunner title="简单全宽" name="simple-full-width"  exampleHeight=580 /%}
+
+## 理解全宽
+
+`fullWidth`（全宽）组件占据网格的整个宽度。全宽组件：
+
+-   不受水平滚动影响。
+-   是网格的宽度，无论存在哪些列。
+-   不受网格的固定部分影响，无论如何都会跨越左右固定区域。
+-   不参与主网格的导航、[单元格选择](./cell-selection)（AG Grid Enterprise）或[上下文菜单](./context-menu)（AG Grid Enterprise）。
+
+要使用 `fullWidth`，您必须：
+
+1. 实现 `isFullWidthRow(params)` 回调，以告诉网格哪些行应被视为 `fullWidth`。
+1. 提供 `fullWidthCellRenderer`，以告诉网格在进行 `fullWidth` 呈现时使用什么 `cellRenderer`。
+
+{% apiDocumentation source="grid-options/properties.json" section="styling" names=["isFullWidthRow"] config={"overrideBottomMargin":"0rem"} /%}
+
+{% apiDocumentation source="grid-options/properties.json" section="fullWidth" names=["fullWidthCellRenderer"] /%}
+
+单元格渲染器可以是任何 AG Grid 单元格渲染器。有关如何构建单元格渲染器，请参阅[单元格渲染](./component-cell-renderer/)。
+`fullWidth` 的单元格渲染器与普通单元格渲染器有一个区别：传递的参数缺少值和列信息，因为单元格渲染器不绑定到特定列。相反，您应该使用 `data` 参数，它表示整行的值。
+
+`isFullWidthRow(params)` 回调接收一个包含 `rowNode` 的 `params` 对象作为输入，应返回 `true` 以使用 `fullWidth` 或 `false` 以正常呈现。
+
+## 排序和过滤
+
+排序和过滤不受全宽影响；全宽是呈现时功能。应用于数据的排序和过滤在呈现之前完成，不受影响。
+
+## 详细全宽示例
+
+下面的示例演示了具有固定行和列的全宽。
+示例的数据是简约的，以专注于全宽如何影响行。为了演示，固定行以蓝色阴影显示（全宽为更深的蓝色阴影），非固定全宽行为绿色。
+
+应注意以下几点：
+
+-   全宽可以应用于任何行，包括固定行。示例演示了固定顶部、固定底部和主体行中的全宽。

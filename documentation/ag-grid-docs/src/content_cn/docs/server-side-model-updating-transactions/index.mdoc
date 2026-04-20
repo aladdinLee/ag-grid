@@ -1,0 +1,123 @@
+---
+title: "SSRM 事务"
+enterprise: true
+---
+
+本节展示如何使用服务端事务 API 添加、删除和更新行。
+
+{% note %}
+服务端事务需要向网格提供[行 ID](./server-side-model-configuration/#providing-row-ids)。
+{% /note %}
+
+## 事务 API
+
+SSRM 事务 API 允许在网格中添加、删除或更新行：
+
+{% apiDocumentation source="grid-api/api.json" section="serverSideRowModel" names=["applyServerSideTransaction"] /%}
+
+{% note %}
+当服务端存储具有已知的最后一行索引时，删除事务仅删除当前在缓存中的行。如果重复删除或针对已加载范围之外的行，网格将忽略它并保持当前存储大小。要显式设置新的存储大小，请在事务中提供 `rowCount`。
+{% /note %}
+
+这些操作在下面的代码片段中显示：
+
+```{% frameworkTransform=true %}
+api.applyServerSideTransaction({
+    add: [
+        { tradeId: 101, portfolio: 'Aggressive', product: 'Aluminium', book: 'GL-62472', current: 57969 }
+    ],
+    update: [
+        { tradeId: 102,  portfolio: 'Aggressive', product: 'Aluminium', book: 'GL-624723', current: 58927 }
+    ],
+    remove: [
+        { tradeId: 103 }
+    ]
+});
+```
+
+以下示例演示通过服务端事务 API 进行添加/更新和删除操作。请注意以下几点：
+
+-   单击任何按钮时，控制台会记录应用于网格的每个事务。
+-   **Add Above Selected** - 使用 `addIndex` 属性在选定行上方添加一行，因为默认情况下行添加在末尾。
+-   **Updated Selected** - 更新选定行上的 'current' 值。
+-   **Removed Selected** - 删除选定的行。
+
+{% gridExampleRunner title="服务端事务 API" name="transactions-simple"  exampleHeight=615 /%}
+
+## 行分组
+
+要在使用行分组时使用事务，需要将事务应用于特定的行组。这是通过在应用事务时提供 `route` 来完成的。还需要在更新、添加或删除组行时通知网格。
+
+下面的代码片段演示为作为其组中第一行的行创建组行事务，因为展开组时将通过 `getRows` 请求叶行。
+
+```{% frameworkTransform=true %}
+// 在根级别创建组行（仅当它是此组的第一行时）
+api.applyServerSideTransaction({
+	route: [],
+	add: [{ portfolio: 'Aggressive' }]
+});
+
+// 否则，在 'Aggressive' 组内创建叶节点
+api.applyServerSideTransaction({
+	route: ['Aggressive'],
+	add: [row]
+});
+```
+
+在下面的示例中，请注意以下几点：
+
+-   单击任何按钮时，控制台会记录应用于网格的每个事务。
+-   要添加新行，如果组之前不存在，则省略路由并添加组行。如果之前存在，则提供组路由并添加叶节点。
+-   要删除行，如果要删除组行，则需要应用事务来删除此组行而不是叶行。
+-   要在组之间移动行，需要使用一个事务从旧组中删除该行，并使用另一个事务将其添加到新组。
+
+{% gridExampleRunner title="带分组的事务" name="transactions-grouping"  exampleHeight=615 /%}
+
+## 异步更新
+
+当快速处理许多更新时，如果批量处理更改，网格将执行得更流畅（因为这可以防止过度渲染）。网格可以为您批量处理这些更改，而不会对用户体验产生负面影响，并且在大多数情况下会改善它。
+
+{% apiDocumentation source="grid-api/api.json" section="serverSideRowModel" names=["applyServerSideTransactionAsync"] /%}
+
+使用异步事务时，网格会延迟在时间窗口内（使用 `asyncTransactionWaitMillis` 指定）收到的任何事务，并在窗口过去后一起执行它们。
+
+下面的代码片段演示按顺序应用的三个异步事务，但是由于这些事务是异步批处理的，网格只会更新 DOM 一次。
+
+```{% frameworkTransform=true %}
+// 由于异步批处理，以下事务一起应用，防止不必要的 DOM 更新
+api.applyServerSideTransactionAsync({
+    add: [{ tradeId: 101, portfolio: 'Aggressive', product: 'Aluminium', book: 'GL-62472', current: 57969 }],
+});
+
+api.applyServerSideTransactionAsync({
+    update: [{ tradeId: 102,  portfolio: 'Aggressive', product: 'Aluminium', book: 'GL-624723', current: 58927 }],
+});
+
+api.applyServerSideTransactionAsync({
+    remove: [{ tradeId: 103 }],
+});
+```
+
+在下面的示例中，请注意以下几点：
+
+-   开始更新后，每 10 毫秒创建 1 行、更新 10 行、删除 1 行。
+-   事务被批处理，仅每秒执行一次。
+
+{% gridExampleRunner title="异步示例" name="transactions-async"  exampleHeight=615 /%}
+
+## 展示示例
+
+以下演示了一个更复杂的事务示例，它显示订阅更新源以提供更改，同时使用动态行分组、聚合和子计数。所有这些都响应事务引起的更改。
+
+在下面的示例中，请注意以下几点：
+
+-   开始更新后，每秒创建 2 行、更新 5 行、删除 2 行。
+-   通过使用事务在必要时创建或销毁组。
+-   组面板已启用，允许动态配置组。
+-   组子计数和聚合与叶行的更改同步更新。
+
+{% gridExampleRunner title="展示示例" name="transactions-showcase"  exampleHeight=670 /%}
+
+## 树形数据
+
+使用树形数据时也支持事务。请参阅 [SSRM 树形数据](./server-side-model-tree-data/#transactions-with-tree-data)页面上的文档。

@@ -1,0 +1,25 @@
+{% if isFramework("vue") %}
+任何有效的 Vue 组件都可以作为工具面板组件，但也可以实现以下可选方法：
+{% /if %}
+
+{% if isFramework("vue") %}
+
+```ts
+interface IToolPanel {
+    // 当调用 `api.refreshToolPanel()` 时调用（使用当前参数）。
+    // 当更新 `sideBar` 网格选项时也会调用（使用更新后的参数）。
+    // 当更新 `sideBar` 时，如果此方法返回 `true`，
+    // 则网格不会采取进一步操作。
+    // 否则，工具面板将被销毁并重新创建。
+    refresh(params: IToolPanelParams): boolean | void;
+
+    // 如果保存和恢复状态，此方法应返回当前状态
+    getState(): any;
+}
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+当自定义工具面板组件被实例化时，以下内容将在 `this.params` 上可用：
+{% /if %}

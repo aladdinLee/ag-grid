@@ -1,0 +1,51 @@
+---
+title: "行分组 - 行拖动"
+description: "将行分组与托管或非托管行拖动结合使用，以在组之间移动记录或重新排序整个组分支。"
+enterprise: true
+---
+
+行拖动可以与[行分组](./grouping/)结合使用。
+本页重点介绍分组特定的配置；有关该功能的一般功能和限制，请参阅[行拖动](./row-dragging/)概述。
+
+## 托管行拖动
+
+[托管行拖动](./row-dragging-managed/)可以自动更新分组数据。
+网格移动拖动的行或组并更新基础行数据。
+
+在此示例中，用户可以在国家/地区之间拖动运动员和运动员组。
+
+{% gridExampleRunner title="跨区域的托管行组拖动" name="managed-row-group-drag-multi-level" /%}
+
+## 配置
+
+将托管行拖动与分组一起使用时，需要以下配置：
+
+-   需要 `getRowId` 来唯一标识行。
+-   需要 `rowDragManaged=true` 以启用托管拖动。
+-   需要 `refreshAfterGroupEdit=true`，以便网格在拖动更改分组列值后立即重新评估组。
+-   需要在列或自动组列定义中设置 `rowDrag=true`，或在网格选项中设置 `rowDragEntireRow=true`。
+-   `suppressMoveWhenRowDragging=true` 以避免拖动时重建整个层次结构的性能损失，并避免网格在拖动过程中重新排序行，否则当父分支移动时会导致大的视觉跳跃。
+-   建议使用 `BatchEditModule`，以及 `TextEditorModule`（或您首选的编辑器模块）并处理编辑和批量编辑事件。
+-   托管拖动仅适用于[客户端行模型](./row-models/#client-side)。
+
+有关编辑分组数据和 `refreshAfterGroupEdit` 的更多信息，请参阅[编辑组](./grouping-edit/)。
+
+## API 参考
+
+{% apiDocumentation source="grid-options/properties.json" section="rowDragging" names=["rowDragManaged","suppressMoveWhenRowDragging"] /%}
+
+{% apiDocumentation source="grid-options/properties.json" section="rowGrouping" names=["refreshAfterGroupEdit"] /%}
+
+## 使用组的非托管行拖动
+
+[非托管行拖动](./row-dragging-unmanaged/)可以通过处理行拖动事件和改变驱动网格的数据来更新应用程序代码中的组成员身份。
+这使所有行模型和网格功能保持可用，因为网格只是发出事件。
+
+下面的示例显示了与[行分组](./grouping/)的非托管行拖动，其中可以注意到以下几点：
+
+-   **Athlete** 列通过 `rowDrag` 的回调版本仅为叶行启用拖动手柄。
+-   由于网格不管理重新排序，即使应用了排序或过滤，拖动仍然可用。
+-   示例监听 `onRowDragMove` 以实时更改拖动行的 `country`，并使用 `api.applyTransaction({ update: [...] })` 提交更改。
+-   应用程序可以决定是在拖动期间还是在 `rowDragEnd` 之后更新行，并且可以允许更改而不考虑排序和过滤状态。
+
+{% gridExampleRunner title="使用分组的非托管行拖动" name="unmanaged-row-group-drag" exampleHeight=640 /%}

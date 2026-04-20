@@ -1,0 +1,26 @@
+## 混合主题方法
+
+在 v33 版本中，AG Grid 的默认主题方法已更新为使用[主题 API](./theming)。上述错误是由于新的默认主题（因为未提供明确的 `theme` 网格选项）与在应用程序中直接包含 CSS 文件的旧方法之间发生冲突的结果。
+
+{% note %}
+有关从 v32 迁移的全面指南，请参阅[迁移到主题 API](./theming-migration)。
+{% /note %}
+
+有两种方法可以解决此错误，要么采用新的主题 API，要么继续使用旧版主题。
+
+### 采用新的主题 API
+
+要采用新的主题 API，请遵循[采用主题 API](./theming-migration/#adopt-the-theming-api) 中概述的步骤。
+
+### 继续使用旧版主题
+
+设置网格选项：`theme='legacy'`。有关更多信息，请参阅[继续使用旧版主题](./theming-migration/#continue-with-legacy-themes)。
+
+如果您有多个网格，您可能会发现使用[全局网格选项](./grid-interface/#global-grid-options)是将应用程序中所有网格的主题设置为 `"legacy"` 的一种便捷方法。
+
+```ts
+import { provideGlobalGridOptions } from 'ag-grid-community';
+
+// 将所有网格标记为使用旧版主题
+provideGlobalGridOptions({ theme: "legacy" });
+```

@@ -1,0 +1,58 @@
+---
+title: "过滤器 API"
+---
+
+您可以通过网格 API 访问和设置过滤器的模型，或直接访问单个过滤器实例以获得更多控制。本页面详细介绍了如何执行这两种操作。
+
+{% note %}
+过滤器模型可以作为[网格状态](./grid-state/)的一部分保存和恢复。
+{% /note %}
+
+## 获取/设置所有过滤器模型
+
+可以使用网格 API 方法 `getFilterModel()` 获取所有过滤器的状态，并使用 `setFilterModel()` 设置状态。这些方法通过各个过滤器的 `getModel()` 和 `setModel()` 方法管理过滤器状态。
+
+{% apiDocumentation source="grid-api/api.json" section="filter" names=["getFilterModel", "setFilterModel"] /%}
+
+```{% frameworkTransform=true %}
+// 通过网格 API 获取过滤器模型
+const model = api.getFilterModel();
+
+// 通过网格 API 设置过滤器模型
+api.setFilterModel(model);
+```
+
+过滤器模型表示所有列的过滤器状态，具有以下结构：
+
+```js
+// 通过 getFilterModel() 的示例过滤器模型
+{
+    athlete: {
+        filterType: 'text',
+        type: 'startsWith',
+        filter: 'mich'
+    },
+    age: {
+        filterType: 'number',
+        type: 'lessThan',
+        filter: 30
+    }
+}
+```
+
+如果您想保存全局过滤器状态并在稍后应用它，这很有用。这对于服务器端过滤也很有用，您希望将过滤器状态传递给服务器。
+
+### 重置所有过滤器
+
+您可以通过以下方式重置所有过滤器：
+
+```{% frameworkTransform=true %}
+api.setFilterModel(null);
+```
+
+### 示例：获取/设置所有过滤器模型
+
+下面的示例显示了获取和设置所有过滤器模型的操作。
+
+-   `Save Filter Model` 保存当前过滤器状态，然后将显示该状态。
+-   `Restore Saved Filter Model` 将保存的过滤器状态恢复到网格中。

@@ -1,0 +1,101 @@
+---
+title: "行分组 - 展开组"
+enterprise: true
+---
+
+在使用树形数据时配置初始展开的组行状态。
+
+## 按组级别展开
+
+提供层次结构时，所有级别默认为折叠状态。可以通过设置 `groupDefaultExpanded` 网格选项来配置此行为。提供数字将展开该级别的所有组，或提供 -1 将展开所有组。
+
+{% gridExampleRunner title="组默认展开" name="group-default-expanded" /%}
+
+上面的示例使用以下配置展开第一级组，但不展开其他组：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupDefaultExpanded: 1,
+}
+```
+
+## 通过回调展开
+
+要精细确定默认应展开哪些组，请使用 `isGroupOpenByDefault` 网格回调。
+
+{% apiDocumentation source="grid-options/properties.json" section="rowGrouping" names=["isGroupOpenByDefault"] /%}
+
+{% gridExampleRunner title="默认打开" name="open-by-default" /%}
+
+上面的示例使用以下配置默认展开 `Australia` 及其子 `2004` 组：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    isGroupOpenByDefault: (params) => {
+        const route = params.rowNode.getRoute();
+        const destPath = ['Australia', '2004'];
+        return route.every((item, idx) => destPath[idx] === item);
+    }
+}
+```
+
+{% note %}
+行键仅在其组内唯一，因此建议改用整个[行路由](./row-object/#reference-serverSide-getRoute)来标识行。
+{% /note %}
+
+## 防止粘性组
+
+滚动展开的组时，组行会粘贴到网格顶部。要防止此行为，请将 `suppressGroupRowsSticky` 属性设置为 `true`。
+
+{% gridExampleRunner title="粘性组" name="suppress-sticky-groups" /%}
+
+上面的示例使用以下配置防止组粘贴：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    suppressGroupRowsSticky: true,
+}
+```
+
+## 将子行滚动到视图中
+
+展开组时，垂直滚动不会更改，这可能导致子行不可见。
+您可以使用 API 上的 `ensureIndexVisible()` 函数确保索引可见，如果需要则滚动表格。
+
+在下面的示例中，如果展开底部的组，网格将滚动以便该组的所有子行都可见。
+
+{% gridExampleRunner title="行组滚动" name="row-group-scroll" exampleHeight=261 /%}
+
+## API
+
+{% note %}
+行组展开状态可以作为[网格状态](./grid-state/)的一部分保存和恢复。
+{% /note %}
+
+网格公开了以编程方式展开或折叠组的 API 方法。
+{% apiDocumentation source="grid-api/api.json" section="rowExpansion" names=["setRowNodeExpanded", "expandAll", "collapseAll", "resetRowGroupExpansion"] /%}
+
+### 展开行祖先
+
+通过 API 展开行时，`setRowNodeExpanded` 函数可用于展开特定行及其所有祖先。
+
+{% gridExampleRunner title="展开到行" name="expand-collapse-api" /%}
+
+上面的示例使用[行 ID](./row-ids/#row-ids) 演示以下配置以展开 ID 为 `"2"` 的行的所有祖先：
+
+```
+const expandToRow = () => {
+  const node = gridApi.getRowNode('2');
+  if (node) {
+      gridApi.setRowNodeExpanded(node, true, true);
+  }
+}
+```
+
+### 重置组展开
+
+用户展开或折叠组后，`resetRowGroupExpansion()` 丢弃所有覆盖，并根据配置的默认值（`groupDefaultExpanded` 或 `isGroupOpenByDefault`）重新评估每个组。
+
+在下面的示例中，`isGroupOpenByDefault` 回调默认展开 `Australia > 2004` 路径。尝试展开或折叠组，然后单击 **Reset to Defaults** 以恢复原始展开状态。
+
+{% gridExampleRunner title="重置组展开" name="reset-group-expansion" /%}

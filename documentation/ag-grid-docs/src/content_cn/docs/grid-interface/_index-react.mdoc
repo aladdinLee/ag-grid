@@ -1,0 +1,20 @@
+{% if isFramework("react") %}
+网格通过 `AgGridReact` 组件上的属性进行配置。属性包括简单类型、数组、复杂对象和回调函数。
+
+```jsx
+<AgGridReact
+    // 简单属性
+    rowGroupPanelShow="always"
+    // 组件状态
+    columnDefs={columnDefs}
+    // 回调
+    getRowHeight={getRowHeight}
+    // 事件处理程序
+    onCellClicked={onCellClicked}
+/>
+```
+
+{% warning %}
+设置属性时，最好将非简单类型视为不可变对象（例如通过使用 `useState` 或 `useMemo`）。请参阅 [React 最佳实践](./react-hooks/)。
+{% /warning %}
+{% /if %}

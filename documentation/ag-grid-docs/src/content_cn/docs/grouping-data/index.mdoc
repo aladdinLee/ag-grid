@@ -1,0 +1,151 @@
+---
+title: "行分组 - 分组数据"
+description: "在 $framework 数据网格中启用行分组，以允许按列对行进行分组。定义行组、使用 Grid API 或使用 UI 对行进行分组。"
+enterprise: true
+---
+
+在列上启用分组以按等效值对行进行分组。
+
+## 启用行分组
+
+通过在一个或多个[列定义](./column-definitions/)上将 `rowGroup` 设置为 `true` 来启用行分组。
+然后为该列中的每个唯一值引入父行，包含具有该值的行。
+
+{% gridExampleRunner title="基本分组" name="basic-grouping" /%}
+
+上面的示例使用以下配置按 `country` 值对行进行分组：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroup: true },
+        // ...其他列定义
+    ],
+}
+```
+
+## 按多列分组
+
+当使用 `rowGroup` 在多列上分组时，列定义中列的顺序用于确定首先按哪列分组。
+可以通过在每个分组列定义中提供 `rowGroupIndex` 属性来使用自定义顺序覆盖此设置。
+
+{% gridExampleRunner title="按多列分组" name="row-group-index" /%}
+
+上面的示例演示了以下配置，用于首先按 `year` 分组行，然后按 `country` 分组：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroupIndex: 1 },
+        { field: 'year', rowGroupIndex: 0 },
+        // ...其他列定义
+    ],
+};
+```
+
+## 按对象数据分组
+
+当按对象数据分组时，网格需要一种方法来比较项以确定它们是否等效。
+在分组列定义上设置 `keyCreator` 为网格提供可以比较的字符串键。
+
+{% apiDocumentation source="column-properties/properties.json" section="columns" names=["keyCreator"] /%}
+
+以下示例使用一组自定义行，每行包含一个 `athlete` 字段，该字段映射到具有 `id` 和 `name` 属性的对象。
+
+{% gridExampleRunner title="按对象数据分组" name="grouping-object-data" /%}
+
+这演示了以下配置，用于按 `id` 属性对 `athlete` 对象进行分组：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'athlete',
+            rowGroup: true,
+            keyCreator: (params) => params.value.id,
+            valueFormatter: (params) => params.value.name,
+        },
+        // ...其他列定义
+    ],
+};
+```
+
+## 按日期和时间分组
+
+当按日期/时间值分组时，网格可以选择按日期/时间的组件分组。
+
+要为特定列启用按日期部分分组，请使用[列定义](./column-properties/#reference-grouping-groupHierarchy)的 `groupHierarchy` 属性。
+
+{% apiDocumentation source="column-properties/properties.json" section="grouping" names=["groupHierarchy"] /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'date',
+            rowGroup: true,
+            groupHierarchy: ['year', 'month']
+        },
+        // ...其他列定义
+    ],
+};
+```
+
+此代码片段在下面的示例中进行了说明。
+
+{% gridExampleRunner title="按日期和时间分组" name="grouping-date-time" /%}
+
+{% note %}
+默认情况下，网格要求日期时间值使用 ISO-8601 格式，以便正确解析为其组件。
+
+要使用其他日期格式，请为 `dateString` 和/或 `dateTimeString` 数据类型提供自定义[单元格数据类型定义](./cell-data-types/#providing-custom-cell-data-types)。
+{% /note %}
+
+## 定义自定义分组层次结构
+
+当使用[按日期和时间分组](./grouping-data/#grouping-by-dates-and-times)中演示的 `groupHierarchy` 时，网格为日期/时间值的几个组件提供内置支持。
+
+用户可以通过 `groupHierarchyConfig` 网格选项提供自己的组件定义。然后可以在列定义的 `groupHierarchy` 属性中使用这些定义。
+
+{% apiDocumentation source="grid-options/properties.json" section="rowGrouping" names=["groupHierarchyConfig"] /%}
+
+以下示例通过定义自定义分组层次结构组件来说明这一点，该组件允许按周数分组：
+
+{% gridExampleRunner title="按日期和时间分组" name="grouping-custom-date-time" /%}
+
+## 按 Null 和 Undefined 数据分组
+
+当分组 `null`、`undefined` 或 `""`（空字符串）值时，网格会将它们分组在标题 `(Blanks)` 下作为最后一组。
+
+通过将 `groupAllowUnbalanced` 属性设置为 `true`，网格将改为显示这些行而不进行分组。
+
+{% gridExampleRunner title="按 Null 和 Undefined 数据分组" name="grouping-null-undefined" /%}
+
+要启用不平衡分组，使用以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupAllowUnbalanced: true,
+};
+```
+
+## 隐藏单个行的父级
+
+可以通过将 `groupHideParentOfSingleChild` 网格选项设置为 `true` 来从网格中隐藏只有一个子级的组。
+要仅移除只有一个叶子的组，请将此选项设置为 `"leafGroupsOnly"`。
+
+过滤不会影响哪些组被移除。只有应用过滤之前包含单个子级的组才会被移除。
+
+{% gridExampleRunner title="移除单个子级" name="remove-single-children"  exampleHeight=540 /%}
+
+以下是用于隐藏单个行的所有父级的配置示例：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupHideParentOfSingleChild: true,
+}
+```
+
+{% note %}
+属性 `groupHideParentOfSingleChild` 和 `groupHideOpenParents` 是互斥的。
+{% /note %}

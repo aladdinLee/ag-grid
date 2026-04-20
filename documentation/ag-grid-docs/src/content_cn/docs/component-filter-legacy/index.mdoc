@@ -1,0 +1,77 @@
+---
+title: "筛选器组件 - 旧版"
+---
+
+{% warning %}
+本页面描述了在未设置网格选项 `enableFilterHandlers` 时声明自定义筛选器组件的旧方法。强烈建议改用[筛选器组件](./component-filter/)页面上描述的新行为。
+{% /warning %}
+
+下面的示例显示了两个自定义筛选器。第一个在 `Athlete` 列上，演示了具有"模糊"匹配的筛选器，第二个在 `Year` 列上，具有预设选项。
+
+{% gridExampleRunner title="Custom Filter Component" name="custom-filter-legacy" /%}
+
+## 实现筛选器组件
+
+{% partial file="./_component-interface-javascript.mdoc" /%}
+{% partial file="./_component-interface-angular.mdoc" /%}
+{% partial file="./_component-interface-react.mdoc" /%}
+{% partial file="./_component-interface-vue.mdoc" /%}
+
+## 自定义筛选器参数
+
+{% if isFramework("javascript") %}
+`init(params)` 方法接受一个包含下面列出的项目的参数对象。如果通过 `colDef.filterParams` 属性提供了自定义参数，
+这些参数将额外添加到参数对象中，如果存在名称冲突，将覆盖同名项目。
+{% /if %}
+
+{% if isFramework("angular") %}
+`agInit(params)` 方法接受一个包含下面列出的项目的参数对象。如果通过 `colDef.filterParams` 属性提供了自定义参数，
+这些参数将额外添加到参数对象中，如果存在名称冲突，将覆盖同名项目。
+{% /if %}
+
+{% if isFramework("vue") %}
+当实例化 Vue 组件时，网格将通过 `this.params` 使网格 API、许多实用方法以及单元格和行值可供您使用 - 下面记录了提供的内容的接口。
+
+如果通过 `colDef.filterParams` 属性提供了自定义参数，这些参数将额外添加到参数对象中，
+如果存在名称冲突，将覆盖同名项目。
+{% /if %}
+
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="IFilterParams" /%}
+{% /if %}
+
+{% if isFramework("javascript", "angular", "vue") %}
+
+### IDoesFilterPassParams
+
+方法 `doesFilterPass(params)` 接受以下内容作为参数：
+{% /if %}
+
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="IDoesFilterPassParams" /%}
+{% /if %}
+
+{% if isFramework("react") %}
+
+### 筛选器 Props
+
+以下 props 传递给自定义筛选器组件（`CustomFilterProps` 接口）。如果通过 `colDef.filterParams` 属性提供了自定义 props，
+这些 props 将额外添加到 props 对象中，如果存在名称冲突，将覆盖同名项目。
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="CustomFilterProps" config={ "description": "" } /%}
+{% /if %}
+
+{% if isFramework("react") %}
+
+### 筛选器回调
+
+以下回调可以传递给 `useGridFilter` 钩子（`CustomFilterCallbacks` 接口）。该钩子必须用于筛选器才能工作。`doesFilterPass` 回调是必需的，但所有其他回调都是可选的。
+
+请注意，`doesFilterPass` 仅针对[客户端行模型](./row-models/)调用。如果仅与其他行模型一起使用，它可以只返回 `true`，因为筛选逻辑在服务器上执行。
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="CustomFilterCallbacks" config={ "description": "" } /%}
+{% /if %}

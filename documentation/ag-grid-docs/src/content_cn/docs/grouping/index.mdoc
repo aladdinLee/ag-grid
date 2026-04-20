@@ -1,0 +1,34 @@
+---
+title: "行分组"
+description: "在 $framework 数据网格中启用行分组，以允许按列对行进行分组。定义行组、使用网格 API 或使用 UI 对行进行分组。"
+enterprise: true
+---
+
+网格可以将具有相同单元格值的行分组在共享的父行下。
+
+{% gridExampleRunner title="Kitchen Sink" name="kitchen-sink" /%}
+
+## 启用行分组
+
+通过在一个或多个[列定义](./column-definitions/)上将 `rowGroup` 设置为 `true` 来启用行分组。
+然后为该列中的每个唯一值引入组行，包含具有该值的行。
+
+上面的示例使用以下配置按 `country` 和 `year` 值对行进行分组：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroup: true },
+        { field: 'year', rowGroup: true },
+        // ...其他列定义
+    ],
+}
+```
+
+## API 参考
+
+{% note %}
+行分组状态可以作为[网格状态](./grid-state/)的一部分保存和恢复。
+{% /note %}
+
+{% apiDocumentation source="grid-options/properties.json" section="rowGrouping" /%}

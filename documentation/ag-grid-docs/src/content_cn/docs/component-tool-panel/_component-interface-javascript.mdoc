@@ -1,0 +1,35 @@
+{% if isFramework("javascript") %}
+实现此接口以创建工具面板组件。
+{% /if %}
+
+{% if isFramework("javascript") %}
+
+```ts
+interface IToolPanelComp {
+    // 必需方法
+
+    // 返回此工具面板的 DOM 元素
+    getGui(): HTMLElement;
+
+    // 可选方法
+
+    // init(params) 方法在组件初始化时在工具面板上调用一次。
+    init(params: IToolPanelParams): void;
+
+    // 当调用 `api.refreshToolPanel()` 时调用（使用当前参数）。
+    // 当更新 `sideBar` 网格选项时也会调用（使用更新后的参数）。
+    // 当更新 `sideBar` 时，如果此方法返回 `true`，
+    // 则网格不会采取进一步操作。
+    // 否则，工具面板将被销毁并重新创建。
+    refresh(params: IToolPanelParams): boolean | void;
+
+    // 如果保存和恢复状态，此方法应返回当前状态
+    getState(): any;
+}
+```
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+初始化参数的接口如下：
+{% /if %}

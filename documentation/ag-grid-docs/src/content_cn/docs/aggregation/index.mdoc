@@ -1,0 +1,74 @@
+---
+title: "聚合"
+enterprise: true
+---
+
+将自定义或提供的函数应用于值，以计算表格中的组值。
+
+{% gridExampleRunner title="聚合概述" name="aggregation-overview"  exampleHeight=540 /%}
+
+此示例还演示了使用内置的 `sum` 和 `avg` 聚合以及通过[自定义聚合函数](./aggregation-custom-functions/)实现的自定义 `mode`。还启用了[组和总计行](./aggregation-total-rows/)。
+
+## 启用聚合
+
+可以通过将 `aggFunc` 列定义值设置为以下之一来在表格中启用聚合：`sum`、`min`、`max`、`count`、`avg`、`first` 或 `last`。
+
+以下配置演示如何在列上启用聚合：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'gold', aggFunc: 'sum' },
+        { field: 'silver', aggFunc: 'max' },
+        { field: 'bronze', aggFunc: 'avg' },
+        // ... 其他列定义
+    ],
+}
+```
+
+## API 参考
+
+{% note %}
+聚合状态可以作为[表格状态](./grid-state/)的一部分保存和恢复。
+{% /note %}
+
+可以使用以下列属性配置聚合：
+
+{% apiDocumentation source="column-properties/properties.json" section="aggregation" /%}
+
+可以使用以下表格选项向表格注册聚合函数：
+
+{% apiDocumentation source="grid-options/properties.json" section="aggregation" /%}
+
+表格初始化后，可以通过 `api` 使用以下方法应用/检索/删除聚合：
+
+{% apiDocumentation source="grid-api/api.json" section="aggregation" /%}
+
+## 编辑聚合值
+
+显示聚合值的组行单元格可以设置为可编辑，允许用户编辑组总计并将更改分发回后代行。内置分发支持所有标准聚合函数，并可以按列自定义。
+
+有关 `groupRowEditable`、`groupRowValueSetter` 和分发策略的完整详细信息，请参阅[编辑组行](./grouping-edit/)。
+
+## 检索聚合子项
+
+使用客户端行模型时，方法 `rowNode.getAggregatedChildren(colKey)` 返回贡献于组行聚合的直接子项。这在基于聚合数据实现自定义逻辑或[编辑组行](./grouping-edit/)以相应更新子行时很有用。
+
+-   对于常规组列，返回用于聚合的直接子项（遵守 `suppressAggFilteredOnly` 和 `groupAggFiltering` 设置）。
+-   对于叶子组上的透视列，仅返回匹配列透视键的子项。
+-   对于叶子（非组）行返回空数组。
+
+### 检索所有叶子后代
+
+传递 `true` 作为第二个参数以递归收集所有后代叶子（数据）行：
+
+```ts
+const allLeaves = groupNode.getAggregatedChildren(colKey, true);
+```
+
+这将遍历完整的组层次结构，并返回最终贡献于组聚合值的每个非组行，遵守与非递归调用相同的筛选和透视规则。
+
+{% note %}
+调用 `getAggregatedChildren(colKey, true)` 会分配一个新数组并访问每个后代节点。
+在大型或深度嵌套的数据集上，这可能很昂贵，因此当只需要直接子项时，请使用非递归形式。
+{% /note %}

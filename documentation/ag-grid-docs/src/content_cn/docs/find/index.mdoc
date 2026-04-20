@@ -1,0 +1,148 @@
+---
+title: "查找"
+enterprise: true
+---
+
+查找允许在网格内搜索值，所有匹配项都会高亮显示并可以导航，类似于浏览器中的查找（{% kbd "^ Ctrl" /%} + {% kbd "F" /%}）。
+
+{% gridExampleRunner title="查找" name="find" /%}
+
+{% note %}
+查找仅与[客户端行模型](./row-models/)兼容。
+{% /note %}
+
+## 启用查找
+
+通过使用要搜索的文本设置网格选项 `findSearchValue` 来启用查找。
+
+{% apiDocumentation source="grid-options/properties.json" section="find" names=["findSearchValue"] /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    findSearchValue: 'rowing'
+}
+```
+
+可以使用网格 API 方法 `findNext()`、`findPrevious()` 和 `findGoTo(matchNumber)` 在匹配项之间移动，或者使用 `findClearActive()` 清除活动匹配项。
+
+{% apiDocumentation source="grid-api/api.json" section="find" names=["findNext", "findPrevious", "findGoTo", "findClearActive"] /%}
+
+更改查找搜索值、更改活动匹配项或导致可见单元格更改的网格更新（例如更改列/行）会触发 `findChanged` 事件。该事件包含有关活动匹配项以及匹配项总数的详细信息。
+
+{% apiDocumentation source="grid-events/events.json" section="find" names=["findChanged"] /%}
+
+也可以通过 API 检索活动匹配项和匹配项总数。
+
+{% apiDocumentation source="grid-api/api.json" section="find" names=["findGetActiveMatch", "findGetTotalMatches"] /%}
+
+## 将查找与单元格组件一起使用
+
+默认情况下，查找在单元格的[格式化值](./value-formatters/)内搜索，如果没有值格式化器，则在原始单元格值内搜索。这是默认情况下在单元格中显示的内容。
+
+[单元格组件](./component-cell-renderer/)可能显示单元格值中未出现的文本。要使查找能够在此附加文本内搜索，可以在列定义上实现 `getFindText` 回调。查找将在此值内搜索匹配项。
+
+{% apiDocumentation source="column-properties/properties.json" section="find" names=["getFindText"] /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'year',
+            getFindText: params => `Year is ${params.value}`,
+        }
+    ]
+}
+```
+
+提供自定义单元格组件时，组件负责高亮显示单元格内的任何匹配项和活动匹配项。网格 API 提供以下方法来帮助完成此操作。
+
+{% apiDocumentation source="grid-api/api.json" section="find" names=["findGetNumMatches", "findGetParts"] /%}
+
+以下示例演示了 `Year` 列中的自定义单元格组件，该组件使用了上述功能。自定义单元格组件重用网格 CSS 类 `ag-find-match` 和 `ag-find-active-match` 来应用与默认网格单元格组件相同的样式。
+
+{% gridExampleRunner title="使用单元格组件查找" name="find-cell-components" /%}
+
+{% note %}
+查找不适用于[动画显示更改单元格组件](./change-cell-renderers/#animate-show-changed-cells)或[动画滑动单元格组件](./change-cell-renderers/#animate-slide-cells)。如果使用这些，请提供返回 `null` 的 `getFindText` 以将它们从搜索结果中排除。如果手动指定 `agCheckboxCellRenderer`，也应使用相同的方法。
+{% /note %}
+
+## 自定义查找
+
+可以通过向网格选项 `findOptions` 提供类型为 `FindOptions` 的对象来自定义查找。
+
+{% interfaceDocumentation interfaceName="FindOptions" config={"description":""} /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    findOptions: {
+        caseSensitive: true,
+        currentPageOnly: true,
+    }
+}
+```
+
+以下示例演示了执行区分大小写的搜索，并仅在当前页面内查找匹配项：
+
+{% gridExampleRunner title="自定义查找" name="customising-find" /%}
+
+## 使用主/明细查找
+
+使用[主/明细](./master-detail/)时，查找默认情况下不会在明细行内搜索（[明细网格](./master-detail-grids/)或[自定义明细](./master-detail-custom-detail/)）。要使查找能够在明细行内搜索，请在 `findOptions` 中将 `searchDetail` 设置为 `true`：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    findOptions: {
+        searchDetail: true,
+    }
+}
+```
+
+### 明细网格
+
+如果展开包含明细网格的行，查找将自动在明细网格内搜索。如果主行未展开，则网格尚不存在，因此查找不知道有多少匹配项。查找无法创建所有明细网格，因为可能有大量明细网格。
+
+如果您希望查找在折叠的明细行内搜索，则必须向 `detailCellRendererParams` 网格选项提供 `getFindMatches` 回调。这告诉查找预期在明细网格中有多少匹配项。如果活动匹配项移动到明细网格内，明细网格将自动展开。
+
+{% interfaceDocumentation interfaceName="FindDetailGridCellRendererParams" config={"description":""} /%}
+
+以下示例演示了跨嵌套主/明细网格的查找：
+
+{% gridExampleRunner title="使用明细网格查找" name="find-detail-grid" /%}
+
+### 自定义明细
+
+要使查找与自定义明细单元格一起工作，查找需要知道明细行内有多少匹配项。这是通过向 `detailCellRendererParams` 网格选项提供 `getFindMatches` 回调来完成的。这告诉查找预期在自定义明细中有多少匹配项。如果活动匹配项移动到自定义明细内，自定义明细将自动展开。
+
+{% interfaceDocumentation interfaceName="FindDetailCellRendererParams" config={"description":""} /%}
+
+自定义明细单元格组件负责高亮显示匹配项，类似于[自定义单元格组件](#using-find-with-cell-components)。
+
+以下示例演示了跨自定义明细的查找：
+
+{% gridExampleRunner title="使用自定义明细查找" name="find-custom-detail" /%}
+
+## 使用全宽行查找
+
+要使查找与[全宽行](./full-width-rows/)一起工作，查找需要知道行内有多少匹配项。这是通过向 `fullWidthCellRendererParams` 网格选项提供 `getFindMatches` 回调来完成的。这告诉查找预期在全宽行中有多少匹配项。
+
+{% interfaceDocumentation interfaceName="FindFullWidthCellRendererParams" config={"description":""} /%}
+
+全宽行组件负责高亮显示匹配项，类似于[自定义单元格组件](#using-find-with-cell-components)。
+
+以下示例演示了使用全宽行的查找：
+
+{% gridExampleRunner title="使用全宽行查找" name="find-full-width" /%}
+
+## 使用自定义组行组件查找
+
+将查找与[自定义组行内部组件](./grouping-group-rows/#custom-inner-renderer)（`groupRowRendererParams.innerRenderer`）或[自定义组行组件](./grouping-group-rows/#custom-cell-renderer)（`groupRowRenderer`）一起使用类似于[将查找与单元格组件一起使用](#using-find-with-cell-components)。如果组件显示单元格值中未出现的文本，可以在 `groupRowRendererParams` 网格选项上实现 `getFindText` 回调。查找将在此值内搜索匹配项。
+
+{% interfaceDocumentation interfaceName="FindGroupRowRendererParams" config={"description":""} /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupRowRendererParams: {
+        getFindText: params => `Group value is ${params.value}`,
+    }
+}
+```

@@ -1,0 +1,170 @@
+---
+title: "列标题 - 样式和高度"
+description: "在 $framework 表格中设置列标题样式并配置标题高度。应用 CSS 类、内联样式，并控制标题行尺寸。"
+---
+
+可以使用 CSS 类和内联样式设置列标题样式。标题行高度可以静态配置或设置为根据内容自动调整。
+
+## 标题样式
+
+用于直接向标题提供 CSS 样式（不使用类）。可以是 CSS 样式对象，或返回 CSS 样式对象的函数。
+
+{% interfaceDocumentation interfaceName="ColDef" names=["headerStyle" ] /%}
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        // 应用于标题和浮动过滤器标题
+        {
+            headerName: '静态样式',
+            field: 'static',
+            headerStyle: { color: 'red', 'background-color': 'green' }
+        },
+        {
+            headerName: '动态样式',
+            field: 'dynamic',
+            headerStyle: params => {
+                // 仅设置浮动过滤器样式
+                if (params.floatingFilter) {
+                    return { backgroundColor: 'green' };
+                }
+                return null;
+            }
+        },
+    ]
+}
+```
+
+## 标题类
+
+为标题提供类。可以是字符串（一个类）、字符串数组（类数组），或函数（返回字符串或字符串数组）。
+
+{% interfaceDocumentation interfaceName="ColDef" names=["headerClass" ] /%}
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            headerName: '静态类',
+            field: 'static',
+            headerClass: 'my-class'
+        },
+        {
+            headerName: '静态类数组',
+            field: 'staticArray',
+            headerClass: ['my-class1','my-class2'],
+        },
+        {
+            headerName: '函数返回字符串',
+            field: 'function',
+            headerClass: params => {
+                return params.columnGroup ? 'my-custom-column-group' : 'my-custom-column';
+            },
+        }
+    ]
+}
+```
+
+### 标题类和样式示例
+
+下面显示了一个完整工作示例中的 headerStyle 和 headerClass。该示例演示以下内容：
+
+-   **运动员详情**：使用 `headerStyle` 静态对象。
+-   **运动员**：使用 `headerStyle` 静态对象。这也会导致浮动过滤器被设置样式。
+-   **国家**：使用 `headerStyle` 函数回调。这允许为标题和浮动过滤器设置不同的背景颜色。
+-   **运动**：使用 `headerClass` 将 `sport-header` 类添加到标题。
+-   **奖牌详情**：使用 `headerStyle` 回调函数在组展开或折叠时切换不同样式。
+
+{% gridExampleRunner title="标题样式" name="header-styles" /%}
+
+## 标题高度
+
+这些属性可用于更改标题中使用的不同高度。
+
+{% apiDocumentation source="grid-options/properties.json" section="headers" /%}
+
+如下面的示例所示，如果您更改任何标题高度，此更改将自动反映。请注意，如果值被清除（设置为 `undefined`），它可能会重用其他值。要查看所有交互，请查看页面顶部的属性描述。
+
+{% gridExampleRunner title="动态标题高度" name="dynamic-height" /%}
+
+## 自动标题高度
+
+列标题行可以根据标题单元格的内容自动设置高度。当与[自定义标题组件](./column-headers-components/)一起使用或使用 `wrapHeaderText` 列属性时，这最有用。
+
+要启用此功能，请在要调整标题高度的列定义上设置 `autoHeaderHeight=true`。如果多个列启用了此属性，则标题行将调整为这些列标题单元格的最大值，以便没有内容溢出。
+
+下面的示例演示将 `autoHeaderHeight` 属性与 `wrapHeaderText` 属性结合使用，以便完全显示长列名称。
+
+-   注意长列标题名称换行到另一行。
+-   尝试通过拖动列标题上的调整大小条使列变小，观察标题将扩展，以便完整的标题内容仍然可见。
+
+{% gridExampleRunner title="自动标题高度" name="auto-height" /%}
+
+## 文本方向
+
+默认情况下，标题的文本标签水平显示，即作为正常可读文本。要以其他方向显示文本，您必须提供自己的 CSS 来更改方向，并使用适当的表格属性提供足够的标题高度。
+
+以下示例显示如何为标题提供独特的外观和感觉。请注意：
+
+-   标题高度已通过表格选项全部更改：
+
+```{% frameworkTransform=true  %}
+    const gridOptions = {
+        // 组列
+        groupHeaderHeight: 75,
+        // 标签列
+        headerHeight: 150,
+        // 透视，需要开启透视模式。标签列
+        pivotHeaderHeight: 100,
+        // 透视，需要开启透视模式。组列
+        pivotGroupHeaderHeight: 50,
+    }
+```
+
+-   分组列标题 `运动员详情` 应用了特定样式使其更大。请注意，样式略有不同，取决于是否透视：
+
+```css
+.ag-pivot-off .ag-header-group-cell {
+    font-size: 50px;
+    color: red;
+}
+
+.ag-pivot-on .ag-header-group-cell {
+    font-size: 25px;
+    color: green;
+}
+```
+
+-   列标签应用了 CSS，以便它们垂直显示。
+
+```css
+.ag-header-cell-label {
+    /* 必要以允许文本垂直增长 */
+    height: 100%;
+    padding: 0 !important;
+}
+
+.ag-header-cell-label .ag-header-cell-text {
+    /* 强制宽度对应于文本垂直排列后所需的宽度 */
+    width: 30px;
+    transform: rotate(90deg);
+    margin-top: 50px;
+    /* 由于我们正在旋转 span */
+    display: inline-block;
+}
+```
+
+-   列标签的样式也根据是否透视进行了调整。
+
+```css
+.ag-pivot-off .ag-header-cell-label {
+    color: #8a6d3b;
+}
+
+.ag-pivot-on .ag-header-cell-label {
+    color: #1b6d85;
+    font-weight: bold;
+}
+```
+
+{% gridExampleRunner title="标题高度和文本方向" name="text-orientation" /%}

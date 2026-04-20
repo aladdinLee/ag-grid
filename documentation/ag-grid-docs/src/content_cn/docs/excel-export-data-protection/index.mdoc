@@ -1,0 +1,79 @@
+---
+title: "Excel 导出 - 数据保护"
+enterprise: true
+---
+
+Excel 导出允许您保护导出的工作表，以便用户只能编辑特定单元格。
+
+## 数据保护
+
+Excel 有两层保护：
+
+1. **单元格保护**控制单元格是否_锁定_以及公式是否_隐藏_（`ExcelStyle.protection`）。
+1. **工作表保护**启用锁定/解锁单元格状态的强制执行（`ExcelExportParams.protectSheet`）。
+
+{% note %}
+单元格锁定仅在工作表受保护时生效。如果锁定单元格但未启用工作表保护，则所有单元格在 Excel 中仍可编辑。
+{% /note %}
+
+通过在 [Excel 导出参数](./excel-export-api/#excelexportparams)中设置 `protectSheet`（或在 `defaultExcelExportParams` 中）来启用工作表保护：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    defaultExcelExportParams: {
+        protectSheet: true
+    }
+}
+```
+
+{% gridExampleRunner title="Excel 导出 - 数据保护（默认）" name="excel-export-data-protection-default" /%}
+
+## 工作表自定义保护
+
+要允许特定操作，或要求密码取消保护工作表，请提供 `ExcelSheetProtection` 配置对象：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    defaultExcelExportParams: {
+        protectSheet: {
+            password: 'secret',
+            autoFilter: true,
+            formatCells: true
+        }
+    }
+}
+```
+
+{% gridExampleRunner title="Excel 导出 - 数据保护（自定义工作表保护）" name="excel-export-data-protection-custom" /%}
+
+{% note %}
+Excel 使用混淆算法进行工作表保护密码。不应将其视为强安全性。
+{% /note %}
+
+## 解锁单元格
+
+启用工作表保护后，默认情况下所有导出的单元格都被锁定。要解锁特定单元格或列，请配置具有 `protection.protected = false` 的 Excel 样式，并通过 `cellClass` / `cellClassRules` 应用该样式：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'athlete', cellClass: 'unlocked' },
+        { field: 'country', cellClass: 'unlocked' }
+    ],
+    excelStyles: [
+        {
+            id: 'unlocked',
+            protection: { protected: false, hideFormula: false }
+        }
+    ],
+    defaultExcelExportParams: {
+        protectSheet: true
+    }
+}
+```
+
+{% gridExampleRunner title="Excel 导出 - 数据保护（解锁单元格）" name="excel-export-unlocking-cells" /%}
+
+## 接口
+
+### ExcelExportParams

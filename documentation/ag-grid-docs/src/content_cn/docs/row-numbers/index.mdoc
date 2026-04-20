@@ -1,0 +1,106 @@
+---
+title: "行号"
+enterprise: true
+---
+
+行号功能添加一个始终存在于网格开头的列，该列的每个单元格将作为行标题。
+以下示例演示了带有行号且没有额外配置的网格。
+
+要启用行号，请设置网格选项 `rowNumbers = true`。
+
+{% apiDocumentation source="grid-options/properties.json" section="miscellaneous" names=["rowNumbers"] /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowNumbers: true
+}
+```
+
+{% gridExampleRunner title="行号" name="row-numbers-default" /%}
+
+## 单元格选择
+
+当网格配置了[单元格选择](./cell-selection/)时，单击行号将选择该行中所有当前可见的单元格。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowNumbers: true,
+    cellSelection: {
+        enableColumnSelection: true
+    }
+}
+```
+
+{% gridExampleRunner title="带有单元格选择的行号" name="row-numbers-cell-selection" /%}
+
+### 禁用集成
+
+默认情况下，单击行号会选择包含该行中所有单元格的单元格范围。要防止此行为，请使用 `suppressCellSelectionIntegration` 选项。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowNumbers: {
+        suppressCellSelectionIntegration: true
+    },
+    cellSelection: true
+}
+```
+
+{% interfaceDocumentation interfaceName="RowNumbersOptions" config={ "description": "" } names=["suppressCellSelectionIntegration"] /%}
+
+## 行调整大小
+
+要允许行号功能调整行大小，可以使用 `enableRowResizer` 属性。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowNumbers: {
+        enableRowResizer: true
+    },
+}
+```
+
+{% interfaceDocumentation interfaceName="RowNumbersOptions" config={ "description": "" } names=["enableRowResizer"] /%}
+
+{% gridExampleRunner title="行号行调整器" name="row-numbers-row-resizer" /%}
+
+{% note %}
+当列配置了[自动行高](./row-height/#auto-row-height)时，行调整器功能不起作用。
+{% /note %}
+
+### 行调整大小事件
+
+行调整大小操作开始和结束时触发以下事件。
+
+{% apiDocumentation source="grid-events/events.json" section="rowEvents" names=["rowResizeStarted", "rowResizeEnded"] /%}
+
+## 值导出
+
+默认情况下，当使用 [CSV 导出](./csv-export/)或 [Excel 导出](./excel-export/)等导出器时，行号列的值不会被导出。
+可以通过切换导出参数的 `exportRowNumbers` 来更改此行为。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowNumbers: true,
+    cellSelection: true,
+    defaultCsvExportParams: {
+        exportRowNumbers: true,
+    },
+    defaultExcelExportParams: {
+        exportRowNumbers: true,
+    },
+}
+```
+
+### ExportParams
+
+{% interfaceDocumentation interfaceName="ExportParams" config={ "description": "" } names=["exportRowNumbers"] /%}
+
+{% gridExampleRunner title="带有导出的行号" name="row-numbers-export" /%}
+
+## 自定义行号
+
+可以通过向 `rowNumbers` 网格选项提供 `RowNumbersOptions` 对象来自定义行号：
+
+{% interfaceDocumentation interfaceName="RowNumbersOptions" config={ "description": "" }
+/%}

@@ -1,0 +1,56 @@
+---
+title: "应用筛选器"
+---
+
+本节介绍应用列筛选器的不同方法。
+
+## 应用、清除、重置和取消按钮
+
+默认情况下，提供的筛选器 - [文本筛选器](./filter-text/)、[数字筛选器](./filter-number/)、[BigInt 筛选器](./filter-bigint/)、[日期筛选器](./filter-date/)和[集合筛选器](./filter-set/) - 支持不同的操作按钮。当 `enableFilterHandlers = true` 时，[多重筛选器](./filter-multi/#applying-multi-filters)和[自定义筛选器组件](./component-filter/#using-buttons)也可以支持操作按钮。
+
+四个支持的操作按钮是：
+
+-   **Apply** - 当使用 Apply 按钮时，只有在按下 Apply 按钮后才应用筛选器。如果筛选操作需要很长时间，因为数据集很大，或者使用服务器端筛选（从而防止对服务器的不必要调用），这很有用。按 {% kbd "↵ Enter" /%} 相当于按 Apply 按钮（[集合筛选器](./filter-set-mini-filter/#keyboard-shortcuts)除外）。
+-   **Clear** - Clear 按钮仅清除筛选器 UI。
+-   **Reset** - Reset 按钮清除筛选器 UI 并删除该列的任何活动筛选器。
+-   **Cancel** - Cancel 按钮将放弃在 UI 中所做的任何更改，将筛选器的状态恢复为与应用的模型匹配。
+
+按钮将按照它们在筛选器参数（`FilterWrapperParams`）的 `buttons` 数组中指定的顺序显示。
+
+如果筛选器在弹出窗口中，可以通过 `closeOnApply` 在使用按钮后关闭它。请注意单击筛选器弹出窗口按钮时的预期行为：
+
+-   Apply 仅在 `closeOnApply` 设置为 `true` 时关闭弹出窗口。
+-   Reset 仅在 `closeOnApply` 设置为 `true` 且存在 Apply 按钮时关闭弹出窗口。
+-   Cancel 仅在 `closeOnApply` 设置为 `true` 时关闭弹出窗口。
+-   Clear 从不关闭弹出窗口。
+
+### 示例：使用按钮
+
+下面的示例演示了使用不同的按钮。它还演示了按钮和筛选器事件之间的关系。请注意以下几点：
+
+-   **Athlete** 和 **Age** 列具有带有 Apply 和 Reset 按钮的筛选器，但顺序不同。
+-   **Country** 列具有带有 Apply 和 Clear 按钮的筛选器。
+-   **Year** 列具有带有 Apply 和 Cancel 按钮的筛选器。
+-   **Age** 和 **Year** 列将 `closeOnApply` 设置为 `true`，因此在应用或取消筛选器时，筛选器弹出窗口将立即关闭。按 {% kbd "↵ Enter" /%} 也将应用筛选器并关闭弹出窗口。
+-   在 **Age** 列中，由于存在 Apply 按钮，Reset 将关闭筛选器弹出窗口。
+
+请注意以下关于筛选器事件的信息：
+
+-   打开筛选器时调用 `onFilterOpened`。
+-   无论是否存在 Apply 按钮，筛选器更改时都会调用 `onFilterModified`。
+-   仅在应用新筛选器后调用 `onFilterChanged`。
+-   查看控制台，可以注意到当筛选器更改时，`getModel()` 和 `getModelFromUi()` 的结果不同。第一个反映活动筛选器，而第二个反映 UI 中的内容（尚未应用）。
+
+{% gridExampleRunner title="按钮和筛选器事件" name="buttons-and-filter-events"  exampleHeight=560 /%}
+
+## 应用 UI 模型
+
+筛选器维护一个单独的未应用模型，表示 UI 中显示的内容，该模型可能会更改而尚未应用，例如当存在 Apply 按钮且用户在 UI 中进行了更改但尚未单击 Apply 时。
+
+这适用于所有网格提供的筛选器，或当 `enableFilterHandlers = true` 时。
+
+调用 `api.getColumnFilterModel(column, true)` 将始终返回表示当前 UI 的模型，而 `api.getColumnFilterModel(column)` 将返回当前用于筛选的应用模型。
+
+也可以通过 API `doFilterAction(params)` 执行筛选器操作，例如应用模型。
+
+{% apiDocumentation source="grid-api/api.json" section="filter" names=["getColumnFilterModel", "doFilterAction"] /%}

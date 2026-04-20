@@ -1,0 +1,51 @@
+---
+title: "主/从 - 嵌套"
+enterprise: true
+---
+
+可以嵌套主/从网格。不需要特殊配置，您只需配置另一个从网格也作为主网格。
+
+以下代码片段说明了如何通过配置从网格也作为主网格来实现嵌套。
+
+```js
+// 第 3 级（最底层），仅从网格，没有主/从配置
+const gridOptionsLevel3 = {
+    ...
+}
+
+// 第 2 级，配置为主网格并使用第 3 级网格作为从网格，
+const gridOptionsLevel2 = {
+    masterDetail: true,
+    detailCellRendererParams: {
+        detailGridOptions: gridOptionsLevel3,
+        getDetailRowData: function (params) {
+            ...
+        }
+    }
+    ...
+}
+
+// 第 1 级，配置为主网格并使用第 2 级网格作为从网格，
+const gridOptionsLevel1 = {
+    masterDetail: true,
+    detailCellRendererParams: {
+        detailGridOptions: gridOptionsLevel2,
+        getDetailRowData: function (params) {
+            ...
+        }
+    }
+    ...
+}
+```
+
+下面显示了一个简单的主从设置，具有两个级别的主从。示例保持简短（很少的行和列），以便专注于嵌套。
+
+## 示例
+
+{% gridExampleRunner title="嵌套主/从" name="nesting"  exampleHeight=425 /%}
+
+## 示例：自动高度
+
+下一个示例与前一个相同，只是所有从网格都有属性 `detailRowAutoHeight=true`。请注意，这会从所有从网格中删除所有垂直滚动，只留下主网格具有垂直滚动。
+
+{% gridExampleRunner title="嵌套自动高度" name="nesting-autoheight"  exampleHeight=425 /%}

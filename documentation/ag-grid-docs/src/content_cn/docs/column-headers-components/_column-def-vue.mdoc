@@ -1,0 +1,16 @@
+{% if isFramework("vue") %}
+
+```js
+// 列定义列表
+this.columnDefs = [
+
+    // 未指定标题组件，使用提供的标题组件
+    {headerName: "运动员", field: "athlete"},
+    {headerName: "运动", field: "sport"},
+
+    // 使用自定义标题组件
+    {headerName: "年龄", field: "age", headerComponent: 'myHeaderComponent'}
+]
+```
+
+{% /if %}

@@ -1,0 +1,15 @@
+---
+title: "单元格文本选择"
+---
+
+表格可以配置为允许简单的文本选择。
+
+{% imageCaption imagePath="resources/cellTextSelection.png" alt="单元格文本选择" centered=true width="35rem" /%}
+
+## 启用单元格文本选择
+
+要启用文本选择，就像表格是常规表格一样，设置表格选项 `enableCellTextSelection = true`。为了使选择正常工作，DOM 内的行顺序必须与显示的内容匹配，通过设置表格选项 `ensureDomOrder = true`。
+
+{% gridExampleRunner title="单元格文本选择" name="cell-text-selection" /%}
+
+当 `enableCellTextSelection` 设置为 `true` 时，默认的[剪贴板](./clipboard/)行为被禁用，只复制选定的文本。

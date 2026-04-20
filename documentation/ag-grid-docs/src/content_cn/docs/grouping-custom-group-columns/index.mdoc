@@ -1,0 +1,58 @@
+---
+title: "行分组 - 自定义组列"
+enterprise: true
+---
+
+可以提供自定义组列以获得对组列的额外控制。
+
+{% warning %}
+我们建议不要使用自己的组列。仅在以下情况下这样做：
+
+-   需要将列定位在组列左侧的能力，而 `colDef.lockPosition` 或 `colDef.pinned` 不足。
+-   需要对每列的[多个组列](./grouping-multiple-group-columns/)配置进行精细控制，而不支持回调。
+
+{% /warning %}
+
+## 启用单一自定义组列
+
+可以通过将 `groupDisplayType` 网格选项设置为 `"custom"` 来配置[单一组列](./grouping-single-group-column/)。显示组的列还需要包含在 `columnDefs` 中，`colDef.showRowGroup` 设置为 `true`，`cellRenderer` 设置为 `'agGroupCellRenderer'`。
+
+{% gridExampleRunner title="自定义分组单一组列" name="custom-grouping-single-group-column" /%}
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroup: true, hide: true },
+        { field: 'year', rowGroup: true, hide: true },
+        { headerName: 'Groups', showRowGroup: true, cellRenderer: 'agGroupCellRenderer' },
+        // ...其他列定义
+    ],
+    groupDisplayType: 'custom',
+};
+```
+
+## 启用多个自定义组列
+
+可以通过将 `groupDisplayType` 网格选项设置为 `"custom"` 来配置[多个组列](./grouping-multiple-group-columns/)。
+
+每个显示组的列都需要包含在 `columnDefs` 中，`colDef.showRowGroup` 设置为它们显示的分组列的 `colId`。
+`colDef` 还需要将 `cellRenderer` 设置为 `'agGroupCellRenderer'`。
+
+{% gridExampleRunner title="自定义分组多个组列" name="custom-grouping-many-group-columns" /%}
+
+上面的示例演示了以下配置多个组列的配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { colId: 'country', field: 'country', rowGroup: true, hide: true },
+        { colId: 'year',  field: 'year', rowGroup: true, hide: true },
+        { headerName: 'Country Groups', showRowGroup: 'country', cellRenderer: 'agGroupCellRenderer', },
+        { headerName: 'Year Groups', showRowGroup: 'year', cellRenderer: 'agGroupCellRenderer', },
+        // ...其他列定义
+    ],
+    groupDisplayType: 'custom',
+};
+```

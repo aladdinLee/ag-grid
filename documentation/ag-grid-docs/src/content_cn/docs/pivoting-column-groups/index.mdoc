@@ -1,0 +1,173 @@
+---
+title: "透视列组"
+enterprise: true
+---
+
+网格生成表示每个唯一透视值的透视列组。
+
+{% gridExampleRunner title="列组摘要示例" name="column-group-summary"  /%}
+
+## 自定义组定义
+
+可以使用 `processPivotResultColGroupDef` 网格选项配置透视结果列组定义。
+
+{% apiDocumentation source="grid-options/properties.json" section="rowPivoting" names=["processPivotResultColGroupDef"] /%}
+
+在下面的示例中，`processPivotResultColGroupDef` 回调用于向组标题单元格应用类，随后使用该类以金色背景设置样式。
+
+{% gridExampleRunner title="列组定义示例" name="column-group-definitions-example"  /%}
+
+这演示了以下配置，用于向组标题单元格应用类：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    pivotMode: true,
+    processPivotResultColGroupDef: (colDef) => {
+        colDef.headerClass = 'pivot-gold'; // 参数直接修改，不返回
+    },
+}
+```
+
+## 排序组
+
+透视结果组最初按字母顺序显示。您可以通过向透视列的定义提供 `pivotComparator` 函数来更改此默认顺序。
+
+{% apiDocumentation source="column-properties/properties.json" section="pivoting" names=["pivotComparator"] /%}
+
+在下面的示例中，请注意已向 `sport` 列提供 `pivotComparator`，透视结果组改为按反向字母顺序排序。
+
+{% gridExampleRunner title="排序透视组" name="order-pivot-groups" /%}
+
+这演示了以下配置，用于修改组的生成顺序：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        // ...其他列定义
+        {
+            field: 'sport',
+            pivot: true,
+            pivotComparator: (a, b) => b.localeCompare(a),
+        },
+    ],
+    pivotMode: true,
+}
+```
+
+{% note %}
+如果 `pivotComparator` 返回 0，则组的顺序进一步由它们在数据中出现的顺序确定。
+
+这意味着编写始终返回 0 的 `pivotComparator` 函数将导致组按它们在数据中出现的顺序排序。
+{% /note %}
+
+### 更改数据、过滤器和配置
+
+当更改数据、过滤器或配置（如 `pivotRowTotals`）时，生成的列组及其顺序会受到影响。网格将在其父组的末尾添加新列和列组。这是为了维护用户可能对其列顺序进行的任何更改。
+
+可以通过将 `enableStrictPivotColumnOrder` 网格选项设置为 `true` 来切换此行为，以便在生成列时重置列顺序。
+
+下面的示例演示在透视模式下更改数据集。请注意，当 `enableStrictPivotColumnOrder` 设置为 `false` 时，新列被追加。当设置为 `true` 时，所有列根据 `pivotComparator` 重新排序（如果省略，则按字母数字排序）。
+{% gridExampleRunner title="严格列顺序" name="strict-column-order" exampleHeight=200 /%}
+
+这演示了以下配置，用于更改新列组的行为：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    enableStrictPivotColumnOrder: true,
+}
+```
+
+## 按日期和时间透视
+
+当按日期/时间值透视时，网格可以选择根据日期/时间的组件生成透视组列。
+
+要为特定列启用此功能，请使用[列定义](./column-properties/#reference-grouping-groupHierarchy)的 `groupHierarchy` 属性。
+
+{% apiDocumentation source="column-properties/properties.json" section="grouping" names=["groupHierarchy"] /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'date',
+            pivot: true,
+            groupHierarchy: ['year', 'month']
+        },
+        // ...其他列定义
+    ],
+};
+```
+
+此代码片段在下面的示例中说明。
+
+{% gridExampleRunner title="按日期和时间透视" name="pivoting-date-time" /%}
+
+{% note %}
+日期值必须格式化为 ISO-8601 日期，以便正确解析为其组件。
+{% /note %}
+
+## 过滤透视列
+
+当透视处于活动状态时，可以通过使用[过滤器工具面板](./tool-panel-filters/)和[过滤器 API](./grid-api/#reference-filter)将过滤器应用于列定义中定义的列。
+
+在下面的示例中，向 `Sport` 列（已透视）应用过滤器会影响生成的透视列组，而不是网格行或单元格值。
+
+{% gridExampleRunner title="过滤透视列" name="filter-pivoted-columns" /%}
+
+{% note %}
+过滤透视列时，生成的透视结果列组从网格中删除。如果随后删除过滤器，列组将重新添加到网格末尾。
+
+要配置此行为，请参考[更改数据、过滤器和配置](./pivoting-column-groups/#changing-data-filters-and-configurations)部分。
+{% /note %}
+
+## 默认展开
+
+可以配置透视列组默认展开，直到给定深度。可以使用 `pivotDefaultExpanded` 网格选项配置此深度。
+
+下面的示例演示使用 `pivotDefaultExpanded` 默认展开第一个透视组级别。提供 `-1` 将默认展开所有透视组级别。
+
+{% gridExampleRunner title="默认打开透视组" name="open-pivot-group-by-default" /%}
+
+上面的示例演示了以下配置，用于默认展开透视组：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    pivotDefaultExpanded: 1,
+}
+```
+
+## 防止展开组
+
+使用多个透视列时，组默认可展开。要防止这种情况并始终显示所有列，请设置网格选项 `suppressExpandablePivotGroups=true`。
+
+{% gridExampleRunner title="固定透视列组" name="fixed-pivot-column-groups" /%}
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    pivotMode: true,
+    suppressExpandablePivotGroups: true,
+}
+```
+
+## 隐藏具有单个值列的组
+
+当仅使用一个聚合列透视时，可以通过省略只有一个子列的透视列组来简化网格列标题布局。
+启用网格选项 `removePivotHeaderRowWhenSingleValueColumn=true`，当设置为 `true` 时，将跳过组并使用透视键标记透视结果列。
+
+{% gridExampleRunner title="隐藏重复的列标签" name="hidden-single-value-column-header" /%}
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroup: true },
+        { field: 'sport', pivot: true },
+        { field: 'gold', aggFunc: 'sum' },
+    ],
+    pivotMode: true,
+    removePivotHeaderRowWhenSingleValueColumn: true,
+};
+```

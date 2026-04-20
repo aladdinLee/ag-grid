@@ -1,0 +1,289 @@
+---
+title: "SSRM 行分组"
+enterprise: true
+---
+
+本节介绍服务端行模型 (SSRM) 中的行分组。
+
+## 启用行分组
+
+通过 `rowGroup` 列定义属性在网格中启用行分组。
+下面的示例演示如何按 'country' 对行进行分组：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroup: true },
+        { field: 'sport' },
+        { field: 'year' },
+    ]
+}
+```
+
+有关更多配置详细信息，请参阅[行分组](./grouping/)部分。
+
+## 服务端行分组
+
+使用 SSRM 时，行的实际分组在服务器上执行。当网格需要更多行时，它通过[服务端数据源](./server-side-model-datasource)上的 `getRows(params)` 发出请求，其中包含分组详细信息的元数据。
+
+请求中与行分组相关的属性如下所示：
+
+```ts
+type IServerSideGetRowsRequest = {
+    // 行组列
+    rowGroupCols: ColumnVO[];
+
+    // 用户正在查看的组
+    groupKeys: string[];
+
+    // ... // 其他参数
+}
+```
+
+请注意上面的代码片段中，属性 `rowGroupCols` 包含网格正在分组的所有列（维度），例如 'Country'、'Year'。属性 `groupKeys` 包含所选组键的列表，例如 `['Argentina', '2012']`。
+
+下面的示例演示服务端行分组。请注意以下几点：
+
+-   **Country** 和 **Sport** 列在其列定义上定义了 `rowGroup=true`。这告诉网格有两个级别的分组，一个用于 Country，一个用于 Sport。
+-   请求中的 `rowGroupCols` 和 `groupKeys` 属性由服务器用于执行分组。
+-   打开浏览器的开发者控制台以查看提供给数据源的请求。
+
+{% gridExampleRunner title="行分组" name="row-grouping"  exampleHeight=590 /%}
+
+## 默认打开
+
+可以让行在加载后立即打开。为此，请实现网格回调 `isServerSideGroupOpenByDefault`。
+
+{% apiDocumentation source="grid-options/properties.json" section="serverSideRowModel" names=["isServerSideGroupOpenByDefault"] /%}
+
+```js
+// 示例实现
+function isServerSideGroupOpenByDefault(params) {
+    var rowNode = params.rowNode;
+    var isZimbabwe = rowNode.field == 'country' && rowNode.key == 'Zimbabwe';
+    return isZimbabwe;
+}
+```
+
+{% note %}
+服务端默认打开需要向网格提供[行 ID](./server-side-model-configuration/#providing-row-ids)。
+{% /note %}
+
+使用[行节点](./row-object/) API `getRoute()` 检查行节点的路由也可能有帮助。
+
+{% apiDocumentation source="row-object/properties.json" section="serverSide" names=["getRoute"] /%}
+
+下面展示了 `isServerSideGroupOpenByDefault()` 和 `getRoute` 的实际应用。请注意以下几点：
+
+-   回调在加载这些路由后立即打开以下路由：
+    -   **\[Zimbabwe]**
+    -   **\[Zimbabwe, Swimming]**
+    -   **\[United States, Swimming]**
+-   请注意 **\[Zimbabwe]** 和 **\[Zimbabwe, Swimming]** 默认可见打开。
+-   请注意 **\[United States, Swimming]** 默认不可见打开，因为父组 'United States' 未打开。但是，当打开 'United States' 时，其 'Swimming' 组默认打开。
+-   选择组行并单击 'Route of Selected' 将所选节点的路由打印到开发者控制台。
+
+{% gridExampleRunner title="默认打开" name="open-by-default" /%}
+
+## 组总计行
+
+要启用[组总计行](./aggregation-total-rows/)，请将 `groupTotalRow` 属性设置为 'top' 或 'bottom'。
+
+{% gridExampleRunner title="组总计" name="group-footer" /%}
+
+组总计行也可以与 `groupDisplayType='multipleColumns'` 一起使用，如下面的示例所示。
+
+{% gridExampleRunner title="多个组列和页脚" name="group-footer-multiple-cols" /%}
+
+## 总计行
+
+要显示总计行，请将 `grandTotalRow` 属性设置为 `'top'`、`'bottom'`、`'pinnedTop'` 或 `'pinnedBottom'`。这适用于没有任何行分组的平面网格。
+
+### 提供总计数据
+
+当设置 `grandTotalRow` 时，对于尚无缓存总计数据的根级别请求，`getRows` 参数上的 `needsGrandTotal` 提示将为 `true`。服务器可以始终提供更新的总计数据，而不管此提示如何。
+
+在 `success` 回调参数上将 `grandTotalData` 字段设置为总计数据。将其设置为 `null` 以显式删除现有的总计行。
+
+下面的示例显示了一个平面网格（无分组），其总计通过 `getRows` 响应中的 `grandTotalData` 提供：
+
+{% gridExampleRunner title="通过 getRows 提供总计" name="grand-total-getrows" /%}
+
+或者，如果配置了 `getRowId`，则 `rowData` 中包含 ID 为 `GRAND_TOTAL_ROW_ID` 的行也将被视为总计（`grandTotalData` 字段优先）。
+
+### 通过事务更新总计行
+
+可以通过 `applyServerSideTransaction` 更新、添加或删除总计行：
+
+-   **更新**：在 `update` 数组中包含总计数据。此行的 `getRowId` 必须返回 `GRAND_TOTAL_ROW_ID`。
+-   **添加**：在 `add` 数组中包含总计数据。如果总计已存在，则将更新它。
+-   **删除**：在 `remove` 数组中包含 `getRowId` 返回 `GRAND_TOTAL_ROW_ID` 的行以删除它。
+
+{% gridExampleRunner title="使用事务的总计" name="grand-total-transactions" /%}
+
+### 访问总计和组总计行
+
+可以使用 `api.getRowNode()` 通过 ID 检索总计和各个组总计行。从 `ag-grid-community` 导出的两个常量定义了 ID 格式：
+
+-   `GRAND_TOTAL_ROW_ID`（`'rowGroupFooter_ROOT_NODE_ID'`）— 总计行的 ID。
+-   `GROUP_TOTAL_ROW_ID_PREFIX`（`'rowGroupFooter_'`）— 组总计行 ID 的前缀。组总计行 ID 为 `GROUP_TOTAL_ROW_ID_PREFIX + groupRowNode.id`。
+
+```js
+// 检索总计行节点
+const grandTotalNode = api.getRowNode(GRAND_TOTAL_ROW_ID);
+
+// 检索组总计行节点（例如，对于组 "Ireland"）
+const groupTotalNode = api.getRowNode(GROUP_TOTAL_ROW_ID_PREFIX + groupRowNode.id);
+```
+
+### 总计行 API 参考
+
+{% apiDocumentation source="grid-options/properties.json" section="aggregation" names=["grandTotalRow"] /%}
+
+## 隐藏打开的父级
+
+在某些配置中，可能希望在展开时隐藏组行，这可以通过将 `groupHideOpenParents` 属性设置为 true 来实现。
+
+下面的示例以演示组行为的方式进行了样式设置。请注意，展开组后，组行将被其第一个子行替换，只有在折叠时才再次显示组行。
+
+{% gridExampleRunner title="隐藏打开的父级" name="hide-open-parents" /%}
+
+{% note %}
+当 `groupHideOpenParents=true` 时，网格会自动禁用行的[粘性组](./grouping-opening-groups/#prevent-sticky-groups)行为以及[全宽加载](./component-loading-cell-renderer/#skeleton-loading)。
+{% /note %}
+
+## 不平衡组
+
+要在 SSRM 中启用不平衡组，请将 `groupAllowUnbalanced` 属性设置为 true。这会导致任何键为 `''` 的组表现得好像始终展开，并且组行始终隐藏。
+
+{% gridExampleRunner title="不平衡组" name="unbalanced-groups" /%}
+
+{% note %}
+使用 `groupAllowUnbalanced=true` 时，请记住仍然存在一个行组来包含不平衡节点，这在处理选择状态、刷新或组路径时可能是一个重要的考虑因素。
+这也意味着加载这些不平衡行会有额外的请求和延迟，因为它们不属于父行。
+{% /note %}
+
+## 全部展开 / 全部折叠
+
+可以使用 `expandAll()` 和 `collapseAll()` 网格 API 展开或折叠组行。默认情况下，这些操作仅适用于**已加载的组行**（而非所有组）。要展开/折叠**所有组**，包括尚未加载的组，请在网格选项中设置 `ssrmExpandAllAffectsAllRows: true`。
+
+下面的示例演示了此功能，请注意以下几点：
+
+-   第一个按钮展开所有已加载的组行
+-   选中复选框会在网格选项中启用 `ssrmExpandAllAffectsAllRows`
+-   现在单击第一个按钮会展开所有组行，包括尚未加载的组行
+-   第二个按钮折叠所有组行
+
+{% gridExampleRunner title="expand-all-affects-all-rows" name="expand-all-affects-all-rows"  exampleHeight=540 /%}
+
+要仅打开特定组，例如仅顶级组，请使用 `forEachNode()` 回调并使用 `setExpanded()` 打开/关闭行，如下所示：
+
+```{% frameworkTransform=true %}
+// 展开所有顶级行节点
+api.forEachNode(node => {
+    if (node.group && node.level == 0) {
+        node.setExpanded(true);
+    }
+});
+```
+
+下面的示例演示了这些技术。请注意以下几点：
+
+-   单击 'Expand All' 展开所有已加载的组行。在网格初始加载时执行此操作会展开所有 Year 组。第二次单击（在 Year 组加载后）会导致所有 Year 组及其子 Country 组展开 — 这是一个更繁重的操作，需要展开数百行。
+
+-   单击 'Collapse All' 折叠所有行。
+
+-   单击 'Expand Top Level Only' 仅展开 Years，即使加载了更多组行。
+
+{% gridExampleRunner title="全部展开" name="expand-all" /%}
+
+## 提供子计数
+
+默认情况下，网格不在组名称旁边显示行计数。如果确实需要行计数，则需要为网格实现 `getChildCount(dataItem)` 回调。回调为您提供行数据；您的应用程序负责知道子行计数是多少。建议将此信息设置到您提供给网格的行数据项中。
+
+{% apiDocumentation source="grid-options/properties.json" section="serverSideRowModel" names=["getChildCount"] /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    getChildCount: data => {
+        // 这里子计数存储在 'childCount' 属性中
+        return data.childCount;
+    }
+}
+```
+
+{% gridExampleRunner title="子计数" name="child-counts"  exampleHeight=590 /%}
+
+## 通过值获取器分组
+
+提供的数据可能具有复合对象，在这种情况下，网格更难提取组名称。可以使用值获取器或嵌入字段（即 field 属性具有点表示法）来处理此问题。
+
+在下面的示例中，所有行都被修改，使行看起来像这样：
+
+```js
+// 行数据示例内容
+const rowData = {
+    // country 字段是复杂对象
+    country: {
+        name: 'Ireland',
+        code: 'IRE'
+    },
+
+    // 其他字段正常
+    ...
+}
+```
+
+然后设置列，使 country 使用使用带点表示法的字段的 `valueGetter`，即 `data.country.name`
+
+{% gridExampleRunner title="复杂对象" name="complex-objects"  exampleHeight=590 /%}
+
+## 过滤器
+
+默认情况下，更改过滤器会完全清除网格。但是，可以通过启用 `serverSideOnlyRefreshFilteredGroups` 将其配置为仅在组受到直接影响时刷新。请注意，这可能意味着您的网格可能有空的组行。这是因为网格不会刷新它认为受过滤器影响的组上方的组。
+
+在下面的示例中，请注意以下几点：
+
+-   按 `Gold`、`Silver` 或 `Bronze` 过滤会完全清除网格，这是因为它们应用了聚合。
+-   对 `Year` 列应用过滤器不会清除整个网格，而是仅刷新 `Year` 组行。
+-   该示例启用了 `serverSideOnlyRefreshFilteredGroups`，请注意，如果使用值 `1900` 对 `Year` 应用过滤器，则任何组中都不存在叶行。
+
+{% gridExampleRunner title="过滤" name="filtering"  exampleHeight=590 /%}
+
+## 批量数据请求
+
+您可以将列工具面板配置为暂存更改，并在提交之前需要显式的 **Apply** 操作。这允许进行多个配置更改并在单个更新中应用，避免不必要的中间重新计算或请求。
+
+通过在 `toolPanelParams.buttons` 中包含 **Apply** 按钮来启用延迟更新。
+
+请注意，在下面的示例中：
+
+-   在列工具面板中所做的更改将暂存为待处理更改。
+-   **Apply** 在单个操作中提交所有待处理更改。
+-   **Cancel** 丢弃所有待处理更改并恢复上次应用的状态。
+
+{% gridExampleRunner title="延迟更新" name="deferred-apply-mode"  exampleHeight=830 /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    sideBar: {
+        toolPanels: [
+            {
+                id: 'columns',
+                labelDefault: 'Columns',
+                labelKey: 'columns',
+                iconKey: 'columns',
+                toolPanel: 'agColumnsToolPanel',
+                toolPanelParams: {
+                    buttons: ['cancel', 'apply'],
+                },
+            },
+        ],
+        defaultToolPanel: 'columns',
+    },
+};
+```
+
+{% note %}
+在列工具面板之外所做的更改 — 例如将列拖到行组或透视面板、使用列菜单或调用网格/列 API — 会立即应用并清除任何待处理更改。列固定、调整大小和组展开不会清除待处理更改。
+{% /note %}

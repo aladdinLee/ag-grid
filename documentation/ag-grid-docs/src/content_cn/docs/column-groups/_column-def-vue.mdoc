@@ -1,0 +1,16 @@
+{% if isFramework("vue") %}
+
+```js
+const colDefs = [{
+    {
+        headerName: "运动员详情",
+        headerGroupComponent: "MyCustomGroupComp", // 自定义组件
+        children: [
+            {field: "name"}
+            {field: "country"}
+        ]
+    }
+}]
+```
+
+{% /if %}

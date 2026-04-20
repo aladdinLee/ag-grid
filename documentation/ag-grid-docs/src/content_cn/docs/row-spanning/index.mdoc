@@ -1,0 +1,80 @@
+---
+title: "行跨越"
+---
+
+单个单元格可用于表示具有相等值的多个连续叶行。
+
+{% gridExampleRunner title="行跨越简单" name="row-spanning-simple" /%}
+
+## 启用行跨越
+
+上面的示例演示了将具有相等值的单元格合并为跨越多行的单个单元格。
+
+以下代码片段演示了通过将 `gridOptions.enableCellSpan` 设置为 true 来启用行跨越。
+然后，国家、年份和运动列通过将 `colDef.spanRows` 设置为 `true` 来配置行跨越。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'country',
+            spanRows: true,
+        },
+        {
+            field: 'year',
+            spanRows: true,
+        },
+        {
+            field: 'sport',
+            spanRows: true,
+        },
+        // 其他列定义...
+    ],
+    enableCellSpan: true,
+}
+```
+
+## 自定义行跨越
+
+可以通过向 `colDef.spanRows` 提供回调函数来自定义行跨越，如果两行应该跨越在一起，则返回 true。
+
+下面的示例演示了自定义行跨越，它防止任何值为 `"Algeria"` 的国家单元格被跨越。
+{% gridExampleRunner title="行跨越自定义" name="row-spanning-custom" /%}
+
+以下代码片段演示了如何在国家列上配置自定义行跨越：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'country',
+            spanRows: ({ valueA, valueB }) => valueA != 'Algeria' && valueA === valueB,
+        },
+        // 其他列定义...
+    ],
+    enableCellSpan: true,
+}
+```
+
+## 自动高度和行跨越
+
+行跨越可以与自动高度一起配置。请注意，这样做时，如果单元格高于行的组合高度，则跨越中的最后一行会获得任何额外所需的高度。
+
+{% gridExampleRunner title="行跨越自动高度" name="row-spanning-auto-height" /%}
+
+以下代码片段演示了如何配置自动高度和行跨越：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'lorem',
+            spanRows: true,
+            autoHeight: true,
+            wrapText: true,
+        },
+        // 其他列定义...
+    ],
+    enableCellSpan: true,
+}
+```

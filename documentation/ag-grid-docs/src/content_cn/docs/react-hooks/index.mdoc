@@ -1,0 +1,195 @@
+---
+title: "React 最佳实践"
+frameworks: ["react"]
+---
+
+本页面解释了在 AG Grid 中使用 React Hooks 的最佳实践。
+
+## 行数据
+
+设置行数据时，我们建议使用 `useState` 在渲染之间维护一致的数组引用。
+
+```jsx
+const App = () => {
+    const [rowData, setRowData] = useState([
+        {make: "Toyota", model: "Celica", price: 35000},
+        {make: "Ford", model: "Mondeo", price: 32000},
+        {make: "Porsche", model: "Boxster", price: 72000}
+    ]);
+
+    return <AgGridReact rowData={rowData} />;
+};
+```
+
+如果您不使用 `useState` 并在组件内定义行数据数组，则每次渲染组件时网格都会获得一个新数组。这将导致额外的网格渲染，并可能导致网格中的意外行为，例如行选择重置。
+
+对于不更新 rowData 的应用程序，`useMemo` 是 `useState` 的有效替代方案。
+
+### 不可变数据
+
+如果您的应用程序更新行数据，强烈建议实现 `getRowId` 回调。`getRowId` 回调为每行返回唯一 id，使网格能够在更新之间维护行状态。例如，如果选择了行然后更新行数据，网格能够使用提供的唯一 id 维护当前选择。
+
+有关更多信息和其他提供 `getRowId` 回调的好处，请参见[更新行数据](./data-update-row-data/)。
+
+## 列定义
+
+设置列定义时，我们建议使用 `useState` 或 `useMemo`。
+
+```jsx
+const App = () => {
+    const [columnDefs, setColumnDefs] = useState([
+        {field: 'make'},
+        {field: 'model'},
+    ]);
+
+    return <AgGridReact columnDefs={columnDefs} />;
+};
+```
+
+如果您不使用 `useState` 或 `useMemo`，则每次渲染组件时网格都会获得一组新的列定义。这可能导致网格中的意外行为，例如列状态（列顺序、宽度等）重置以匹配提供的列定义。
+
+{% note %}
+如果您的应用程序更改列定义，请使用 `useState`，否则使用 `useMemo`。
+{% /note %}
+
+## 对象属性
+
+对于所有对象属性，例如 `defaultColDef`、`sideBar` 和 `statusBar`，我们建议使用 `useState` 或 `useMemo`。如果不使用这些 hooks，则每次渲染时可能会重置网格的状态。
+
+例如，提供 `defaultColDef` 属性时，不要在组件上内联定义或作为简单对象定义，因为这将在每次渲染时创建新实例。
+
+```jsx
+const App = () => {
+    // 不好 - 每次渲染时新实例
+    const defaultColDef = { filter: true };
+
+    // 不好 - 每次渲染时新实例
+    return <AgGridReact defaultColDef={{filter: true}} />;
+};
+```
+
+而是使用 `useMemo` 或 `useState` 确保在渲染之间维护一致的引用。
+
+```jsx
+const App = () => {
+    // 好 - 只创建一个实例
+    const defaultColDef = useMemo( ()=> ({ filter: true }), []);
+
+    return <AgGridReact defaultColDef={defaultColDef} />;
+};
+```
+
+## 简单属性
+
+简单类型（字符串、布尔值和数字）的属性不需要使用 hooks，因为它们在渲染之间按值比较。
+
+```jsx
+const App = () => {
+
+    const rowBuffer = 0;
+
+    return (
+        <AgGridReact
+            // 好
+            rowBuffer={rowBuffer}
+
+            // 好
+            rowModelType='clientSide'
+            rowHeight={50}
+            />
+    );
+};
+```
+
+## 回调
+
+对于接受函数的[网格选项](./grid-options/)，即 `isRowSelectable`，我们强烈建议您使用 `useCallback` 以避免在每次渲染时重置网格状态。例如，如果不为 `isRowSelectable` 使用回调，则每次渲染时网格都会收到一个新函数，并且必须重新运行选择逻辑。
+
+使用 `useCallback()` 时，请确保设置正确的依赖项以避免陈旧的闭包。
+
+```jsx
+const App = () => {
+    const [count, setCount] = useState(0);
+
+    // 不好 - 每次渲染时都会重新运行选择逻辑
+    const isRowSelectable = (node) => node.data.value > count;
+
+    // 好 - 只在 count 更改时重新运行选择逻辑
+    const isRowSelectable = useCallback((node) => node.data.value > count, [count]);
+
+    return <AgGridReact isRowSelectable={isRowSelectable} />;
+};
+```
+
+## 事件监听器
+
+对于[事件监听器](./grid-events/)，不需要使用 `useCallback`，因为事件处理程序不会触发网格内的更新。但是，您可能会发现与回调保持一致并始终使用 `useCallback` 更容易。
+
+如果您使用 `useCallback()`，请确保设置正确的依赖项以避免陈旧的闭包。
+
+```jsx
+const App = () => {
+    const [clickedCount, setClickedCount] = useState(0);
+
+    // 好的回调，没有 hook，没有陈旧数据
+    const onCellClicked = () => setClickedRow(clickedCount++);
+
+    // 不好的回调 - 陈旧数据，缺少依赖项，将始终打印 0
+    const onCellValueChanged = useCallback( ()=> {
+        console.log(`number of clicks is ${clickedCount}`);
+    }, []);
+
+    // 好的回调，没有陈旧数据
+    const onFilterOpened = useCallback( ()=> {
+        console.log(`number of clicks is ${clickedCount}`);
+    }, [clickedCount]);
+
+    return <AgGridReact
+                onCellClicked={onCellClicked}
+                onCellValueChanged={onCellValueChanged}
+                onFilterOpened={onFilterOpened}
+            />;
+};
+```
+
+## 组件
+
+自定义组件可以通过名称或直接引用引用，请参见[注册组件](./components/)。当向组件提供直接引用时，AG Grid 将避免大多数不必要的渲染。但是，如果您的组件渲染次数超出预期，使用 `memo` 包装它可能会有所帮助。
+
+```jsx
+const MyCellRenderer = p => <span>{p.value}</span>;
+
+const App = () => {
+    const [columnDefs] = useState([
+
+        // 引用上面的单元格渲染器
+        { field: 'make', cellRenderer: MyCellRenderer },
+
+        // 或内联放置
+        { field: 'model', cellRenderer: p => <span>{p.value}</span> },
+
+        // 可选地，为了最佳性能，memo() 渲染器
+        { field: 'price', cellRenderer: memo(MyCellRenderer) }
+    ]);
+
+    return <AgGridReact columnDefs={columnDefs} />;
+};
+```
+
+## 调试模式
+
+诊断是否导致网格在每次渲染时更新的好方法是启用 `debug` 标志。在调试模式下，网格将向控制台记录额外的详细信息，包括属性何时更改。
+
+```jsx
+const App = () => {
+    return <AgGridReact debug />;
+};
+```
+
+例如，如果在组件上内联定义 `defaultColDef`，则在每次渲染时，启用 `debug` 时，您将在控制台中看到以下内容。
+
+```jsx
+const App = () => {
+    return <AgGridReact defaultColDef={{ filter: true}} debug />;
+};
+```

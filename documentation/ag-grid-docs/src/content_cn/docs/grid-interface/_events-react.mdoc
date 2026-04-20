@@ -1,0 +1,14 @@
+{% if isFramework("react") %}
+
+要监听事件，请为给定事件向 `AgGridReact` 组件传递回调。所有事件都以 `on` 为前缀，即 `cellClicked` 事件的属性名为 `onCellClicked`。
+我们建议使用 `useCallback` 以避免浪费渲染：请参阅 [React 最佳实践](./react-hooks/)。
+
+```ts
+const onCellClicked = useCallback((params: CellClickedEvent) => {
+  console.log('单元格被点击')
+}, []);
+
+<AgGridReact onCellClicked={onCellClicked}> </AgGridReact>
+```
+
+{% /if %}

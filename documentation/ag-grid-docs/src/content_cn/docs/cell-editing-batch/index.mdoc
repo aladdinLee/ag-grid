@@ -1,0 +1,212 @@
+---
+title: '批量编辑'
+enterprise: true
+---
+
+批量编辑允许您跨多个单元格或行排队编辑，然后一次性提交或丢弃它们。
+
+## 启用批量编辑
+
+1. **开始** — 调用 `api.startBatchEdit()` 开始批量编辑。
+2. **编辑** — 进行一个或多个编辑。待定值显示在表格中，但不会写入数据。
+3. **提交或取消** — 调用 `api.commitBatchEdit()` 将所有待定编辑应用于数据。要丢弃待定编辑并将显示恢复为原始数据值，请调用 `api.cancelBatchEdit()`。
+
+{% note %}
+批量编辑仅通过 API 可用，并且仅与[客户端行模型](./row-models/)兼容。
+{% /note %}
+
+{% gridExampleRunner title="批量编辑 API" name="batch-editing-api" exampleHeight=560 /%}
+
+## 批量编辑生命周期
+
+单元格和行编辑事件（`cellEditingStarted`、`cellEditingStopped` 等）在编辑器打开和关闭时正常触发。
+
+关键区别在于 `cellValueChanged` 和 `rowValueChanged` 被延迟 —— 它们仅在调用 `commitBatchEdit()` 时触发。如果改为调用 `cancelBatchEdit()`，则丢弃待定值，并且不会触发值更改事件。
+
+还有两个批量特定事件可用：
+
+{% apiDocumentation source="grid-events/events.json" section="editing" names=["batchEditingStarted", "batchEditingStopped"] /%}
+
+### 待定值
+
+批量期间进行的编辑存储为**待定值** —— 它们在提交之前不会应用于数据。
+
+-   **显示功能**（单元格渲染、复制/粘贴、填充句柄）立即反映待定值。
+-   **数据功能**（排序、筛选、分组、聚合）在批量提交之前使用已提交的数据。
+-   **剪贴板粘贴** — 批量期间粘贴的值被暂存为待定编辑，而不是写入数据。
+-   **取消时**，所有待定值被丢弃，表格恢复为原始数据。
+
+## 读取值
+
+有两个主要的 API 可以读取单元格值，但它们的默认行为不同。
+
+-   **`rowNode.getDataValue()`** — 默认为 `from: 'data'`（忽略待定编辑）。用于面向数据的读取。
+-   **`api.getCellValue()`** — 默认为 `from: 'edit'`（显示待定编辑）。用于面向 UI 的读取。
+
+### rowNode.getDataValue()
+
+{% apiDocumentation source="row-object/properties.json" section="data" names=["getDataValue"] /%}
+
+下表显示了 `from` 参数对返回值的影响。使用从左到右读取的第一个非空源。聚合列仅适用于带有 `aggFunc` 的组行。
+
+| `from`             | 活动编辑器（如果正在编辑） | 待定批量（如果正在批量） | 聚合（如果存在） | 已提交数据 |
+| ------------------ | -------------------------- | ------------------------ | ---------------- | ---------- |
+| `'data'`（默认）   | —                          | —                        | 聚合值           | 回退       |
+| `'edit'`           | 如果存在则使用             | 如果没有编辑器则使用     | 聚合值           | 回退       |
+| `'batch'`          | —                          | 如果存在则使用           | 聚合值           | 回退       |
+| `'value'`          | —                          | —                        | 标量（解包）     | 回退       |
+| `'data-raw'`       | —                          | —                        | —                | 始终使用   |
+
+**聚合值**
+
+-   **`'value'`** — 与 `'data'` 相同，但将 `avg` 和 `count` 返回的聚合结果解包为其标量值。
+-   **`'data-raw'`** — 与 `'data'` 相同，但跳过聚合结果（`rowNode.aggData`）。对于组行，返回 valueGetter 或字段值，这通常是 `undefined`，因为组行不保存叶子数据。
+
+### 示例 getDataValue()
+
+```js
+                                             // 42（原始值）
+api.startBatchEdit();                        // 开始批量
+
+rowNode.setDataValue('price', 99, 'batch');  // 将值编辑为 99
+
+rowNode.getDataValue('price')                // 42（原始数据，默认 'data'）
+rowNode.getDataValue('price', 'batch');      // 99（待定值）
+rowNode.getDataValue('price', 'edit');       // 99（没有打开的编辑器，与 'batch' 相同）
+
+api.commitBatchEdit();                       // 提交批量
+
+rowNode.getDataValue('price');               // 99（现已提交）
+```
+
+```js
+// 列 'revenue' 使用 aggFunc: 'avg' — 3 行的平均值为 420
+groupRowNode.getDataValue('revenue');             // 聚合结果对象
+groupRowNode.getDataValue('revenue', 'value');    // 420（标量）
+groupRowNode.getDataValue('revenue', 'data-raw'); // undefined（跳过 aggData；组行没有原始字段）
+```
+
+### api.getCellValue()
+
+{% apiDocumentation source="grid-api/api.json" section="miscellaneous" names=["getCellValue"] /%}
+
+| `from`             | 活动编辑器       | 待定批量         | 聚合     | 已提交数据 |
+| ------------------ | ---------------- | ---------------- | -------- | ---------- |
+| `'edit'`（默认）   | 如果存在则使用   | 如果没有编辑器则使用 | 聚合值 | 回退       |
+| `'batch'`          | —                | 如果存在则使用   | 聚合值   | 回退       |
+| `'data'`           | —                | —                | 聚合值   | 回退       |
+
+### 示例 getCellValue()
+
+```js
+                                                              // 42（原始值）
+api.startBatchEdit();                                         // 开始批量
+api.startEditingCell({ rowIndex: 0, colKey: 'price' });       // 打开编辑器
+
+// getCellValue 读取实时编辑器值
+api.getCellValue({ rowNode, colKey: 'price', from: 'edit' }); // 实时编辑器值
+api.getCellValue({ rowNode, colKey: 'price', from: 'data' }); // 42（原始数据）
+```
+
+## 写入值
+
+### rowNode.setDataValue()
+
+`rowNode.setDataValue(colKey, newValue, eventSource?)` 以编程方式写入值。`eventSource` 参数控制写入方式。
+
+| `eventSource` | 活动编辑器 | 待定批量            | 已提交数据                     |
+| ------------- | ---------- | ------------------- | ------------------------------ |
+| （默认）      | 关闭       | 写入                | 如果没有批量则写入             |
+| `'edit'`      | 写入       | 如果没有编辑器则写入 | 如果没有编辑器、没有批量则写入 |
+| `'batch'`     | 保持打开   | 写入                | 如果没有批量则写入             |
+| `'data'`      | 保持打开   | —                   | 始终写入                       |
+
+使用 `'edit'`，活动编辑器通过 `refresh()` 接收新值（如果已实现）；否则重新创建编辑器并保留焦点。
+
+```js
+api.startBatchEdit();                                         // 开始批量
+api.startEditingCell({ rowIndex: 0, colKey: 'price' });       // 打开编辑器
+
+rowNode.setDataValue('price', 99, 'edit');                    // 更新打开的编辑器而不关闭
+api.getCellValue({ rowNode, colKey: 'price', from: 'edit' }); // 99（实时编辑值）
+rowNode.data.price;                                           // 42（未更改）
+
+api.stopEditing();                                            // 关闭编辑器
+api.commitBatchEdit();                                        // 提交批量
+rowNode.getDataValue('price');                                // 99（已提交）
+```
+
+```js
+api.startBatchEdit();                       // 开始批量
+rowNode.setDataValue('price', 99, 'batch'); // 更新价格
+rowNode.setDataValue('qty', 5, 'batch');    // 更新数量
+
+rowNode.getDataValue('price');              // 42（已提交数据）
+rowNode.getDataValue('price', 'batch');     // 99（待定）
+
+api.commitBatchEdit();                      // 提交批量
+rowNode.getDataValue('price');              // 99（已提交数据）
+```
+
+```js
+api.startBatchEdit();                       // 开始批量
+rowNode.setDataValue('price', 99, 'data');  // 'data' — 绕过批量，立即写入
+rowNode.data.price;                         // 99（已提交）
+api.cancelBatchEdit();                      // 'data' 写入是永久的
+```
+
+## 撤销/重做
+
+启用[撤销/重做](./undo-redo-edits/)时，提交的批量被视为**单个撤销操作**。在 `commitBatchEdit()` 之后调用撤销会一次性恢复该批量的所有更改 —— 不需要额外的 API 调用。
+
+如果改为调用 `cancelBatchEdit()`，则丢弃待定编辑而不触及撤销历史记录。撤销堆栈保持不变，就像批量从未发生过一样。
+
+## 全行批量编辑
+
+在[全行](./cell-editing-full-row/)批量编辑中，在任一单元格中开始编辑会为当前行打开所有编辑器。当行编辑完成时，只有更改的单元格包含在待定批量编辑中。
+
+{% gridExampleRunner title="批量编辑全行" name="batch-editing-fullrow" exampleHeight=560 /%}
+
+## 自定义
+
+### 自定义渲染器和编辑器
+
+{% if isFramework("react") %}
+自定义单元格渲染器在批量期间待定值更改时接收更新的 props，触发重新渲染。
+{% /if %}
+
+{% if isFramework("javascript","angular","vue") %}
+在自定义单元格渲染器和编辑器中实现 `refresh()` 以在批量期间接收更新的值。传递给 `refresh()` 的 `params` 包含最新的待定值。
+{% /if %}
+
+{% gridExampleRunner title="批量编辑自定义" name="batch-editing-custom" exampleHeight=560 /%}
+
+### 样式
+
+可以使用 CSS 通过 `.ag-cell-batch-edit` 和 `.ag-row-batch-edit` 类覆盖待定编辑样式。
+
+```scss
+.ag-cell-batch-edit {
+    background-color: var(--ag-cell-batch-edit-background-color);
+    color: var(--ag-cell-batch-edit-text-color);
+}
+
+.ag-row-batch-edit {
+    background-color: var(--ag-row-batch-edit-background-color);
+    color: var(--ag-row-batch-edit-text-color);
+}
+```
+
+以下示例显示了自定义批量样式：
+
+-   通过 `api.startBatchEdit()` 自动启动批量
+-   通过 `rowNode.setDataValue()` 更新两行数据
+-   注意提交或恢复批量时样式如何被移除
+
+{% gridExampleRunner title="批量编辑样式" name="batch-editing-styles" exampleHeight=560 /%}
+
+## API
+
+{% apiDocumentation source="grid-api/api.json" section="batch-editing" names=["isBatchEditing", "startBatchEdit", "commitBatchEdit", "cancelBatchEdit"] /%}
+
+{% apiDocumentation source="grid-api/api.json" section="editing" names=["getEditingCells", "getEditRowValues"] /%}

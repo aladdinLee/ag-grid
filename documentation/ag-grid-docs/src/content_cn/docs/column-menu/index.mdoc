@@ -1,0 +1,199 @@
+---
+title: "列菜单"
+enterprise: true
+---
+
+列菜单从网格标题启动，显示菜单项列表，以及选择列和显示筛选器的能力。
+
+{% note %}
+AG Grid Community 没有菜单，但如果启用，可以启动[列筛选器](./filtering)（有关配置详细信息，请参阅[启动筛选器](./filter-api/#launching-filters)）。
+{% /note %}
+
+以下示例显示了列菜单：
+
+-   **Athlete** 列未启用筛选，仅显示主菜单。
+-   **Age** 列已启用筛选，并显示额外的筛选图标。打开并应用筛选器以查看行为。
+-   **Country** 列已启用筛选并带有浮动筛选器。打开并应用筛选器以查看行为。
+-   右键单击列标题也将显示列菜单。
+-   右键单击列标题右侧的空白区域将显示列菜单，其中包含选择/重置列的选项。
+
+{% gridExampleRunner title="Column Menu" name="column-menu" /%}
+
+## 自定义列菜单
+
+如何从标题启动列菜单可以通过以下列定义属性进行配置。
+
+{% apiDocumentation source="column-properties/properties.json" section="header" names=["suppressHeaderMenuButton", "suppressHeaderFilterButton", "suppressHeaderContextMenu"] /%}
+
+以下示例演示了自定义列菜单的不同方式：
+
+-   **Athlete** 列有筛选器且菜单按钮被抑制，但仍可通过右键单击使用。
+-   **Age** 列有浮动筛选器且菜单被抑制，但仍可通过右键单击使用。
+-   **Country** 列有筛选器且标题筛选按钮被抑制。
+-   **Year** 列有浮动筛选器且标题筛选按钮被抑制。
+-   **Sport** 列没有筛选器且右键单击菜单被抑制。
+-   **Gold** 列没有筛选器且菜单按钮被抑制，但仍可通过右键单击使用。
+-   **Silver** 列有筛选器（标题筛选按钮被抑制），且菜单按钮被抑制但仍可通过右键单击使用。
+-   **Bronze** 列有浮动筛选器且菜单按钮被抑制，但仍可通过右键单击使用。
+-   **Total** 列的菜单按钮、标题筛选按钮和右键菜单都被抑制。
+
+{% gridExampleRunner title="Customising the Column Menu" name="customising-column-menu" /%}
+
+## 自定义菜单项
+
+主菜单列表默认显示一组项目。您可以调整显示哪些项目，或者从头开始提供自己的项目。有两种方法可以自定义菜单项：
+
+1. 设置 `colDef.mainMenuItems`。这可以是菜单项列表，或者是传递默认菜单项列表的回调函数。
+1. 设置网格选项 `getMainMenuItems()`。此回调将传递默认菜单项列表以及列。
+
+请注意，`colDef.mainMenuItems` 将优先于 `getMainMenuItems()`。
+
+菜单项列表应该是一个列表，其中每个项目要么是 a) 字符串，要么是 b) `MenuItemDef` 描述。使用 'string' 从内置菜单项中选择（如下所列），使用 `MenuItemDef` 描述来创建自己的菜单项。
+
+{% apiDocumentation source="column-properties/properties.json" section="header" names=["mainMenuItems"] /%}
+
+{% apiDocumentation source="grid-options/properties.json" section="accessories" names=["getMainMenuItems"] /%}
+
+### 内置菜单项
+
+以下是所有默认内置菜单项的列表，以及它们显示的规则。
+
+-   `sortAscending`：按升序对列进行排序。当 `columnMenu = 'legacy'` 或列已按升序排序时不显示。
+-   `sortDescending`：按降序对列进行排序。当 `columnMenu = 'legacy'` 或列已按降序排序时不显示。
+-   `sortUnSort`：清除列上的排序。当 `columnMenu = 'legacy'` 或列未排序时不显示。
+-   `columnFilter`：显示列筛选器。当 `columnMenu = 'legacy'`、未启用筛选器，或显示标题筛选按钮或浮动筛选按钮时不显示。
+-   `columnChooser`：显示列选择器。当 `columnMenu = 'legacy'` 时不显示。
+-   `pinSubMenu`：用于固定的子菜单。始终显示。
+-   `valueAggSubMenu`：用于值聚合的子菜单。始终显示。
+-   `autoSizeThis`：自动调整当前列的大小。始终显示。
+-   `autoSizeAll`：自动调整所有列的大小。始终显示。
+-   `rowGroup`：按此列分组。仅在列未分组时显示。请注意，一旦有行分组，此项就会出现。
+-   `rowUnGroup`：取消按此列分组。仅在列已分组时显示。请注意，一旦有行分组，此项就会出现。
+-   `resetColumns`：重置列详细信息。始终显示。
+-   `expandAll`：展开所有组。仅当至少按一列分组时显示。
+-   `contractAll`：折叠所有组。仅当至少按一列分组时显示。
+
+`defaultItems` 列表将在不同的调用中更改，具体取决于例如当前用于分组的列。
+
+如果您不覆盖菜单项列表，则显示的项目将基于上述规则。
+
+### 菜单项分隔符
+
+菜单项可以通过在组之间添加分隔符来分组。分隔符由字符串值 `'separator'` 定义。例如，您可以按如下方式添加菜单项分隔符：
+
+```js
+menuItems.push('separator')
+```
+
+### 自定义菜单项组件
+
+除了提供的菜单项外，还可以创建自定义菜单项组件。
+
+有关更多详细信息，请参阅：[自定义菜单项组件](./component-menu-item/)。
+
+### 示例：自定义菜单项
+
+以下示例演示了 `colDef.mainMenuItems` 属性：
+
+-   **Athlete** 列显示内置项目列表。
+-   **Age** 列将自定义项目附加到内置项目列表。
+-   **Country** 列提供自定义项目并添加一个内置默认项目。单击自定义项目将记录到开发者控制台。
+-   **Year** 列通过删除值来精简默认项目。
+
+{% gridExampleRunner title="Customising the Menu Items" name="customising-menu-items" /%}
+
+## 自定义列选择器
+
+列菜单选项卡的行为和外观可以通过向列定义提供 `ColumnChooserParams` 来自定义：`colDef.columnChooserParams`。请注意，所有属性最初都设置为 `false`。
+
+{% interfaceDocumentation interfaceName="ColumnChooserParams" /%}
+
+以下示例演示了上述所有列选择器属性，**除了 columnLayout**，它将在稍后介绍。请注意以下几点：
+
+-   从任何列菜单中选择 `Choose Columns` 以启动列选择器。
+-   从任何列启动的列选择器已配置为忽略网格中的列移动，方法是在默认列定义上设置 `suppressSyncLayoutWithGrid=true`。
+-   **Name** 列选择器不显示顶部筛选部分，因为 `suppressColumnFilter`、`suppressColumnSelectAll` 和 `suppressColumnExpandAll` 都设置为 `true`。
+-   **Age** 列选择器以折叠状态显示组列，因为 `contractColumnSelection` 设置为 `true`。
+
+{% gridExampleRunner title="Customising Column Chooser" name="customising-column-chooser" /%}
+
+### 自定义列布局
+
+默认情况下，列选择器中列的顺序派生自网格选项中提供的 `columnDefs`，并在移动列时与网格保持同步。
+
+但是，可以使用 `colDef.columnChooserParams` 中的 **columnLayout** 属性提供自定义列布局。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    // 提供给网格的原始列定义
+    columnDefs: [
+        {
+            columnChooserParams: {
+                columnLayout: [{
+                    headerName: 'Group 1', // 组不出现在网格中
+                    children: [
+                        { field: 'c' }, // 自定义列顺序，省略了列 "b"
+                        { field: 'a' }
+                    ]
+                }]
+            }
+        },
+        { field: 'b' },
+        { field: 'c' }
+    ]
+}
+```
+
+{% note %}
+当通过设置 **columnLayout** 属性提供自定义列布局时，`suppressSyncLayoutWithGrid` 属性将自动设置为 true。这意味着在网格中重新排序列不会重新排列列菜单选项卡中显示的列表中的列。
+{% /note %}
+
+以下示例演示了通过 **columnLayout** 属性在列选择器中提供自定义列布局。请注意以下几点：
+
+-   打开 **Name** 列的列选择器，注意它显示其 `columnLayout` 中指定的自定义列顺序。
+-   打开 **Age** 列的列选择器，注意它显示网格中显示的实际列顺序。
+-   在网格中重新排序列 - 拖动 **Age** 列并将其放在 **Name** 列的左侧。
+-   打开 **Age** 列的列选择器，注意列布局现在显示 **Age** 列在 **Name** 列之前。
+-   打开 **Name** 列的列选择器，注意列布局仍然显示 **Name** 列后跟 **Age** 列（自定义列布局未与网格列顺序同步）。
+
+{% gridExampleRunner title="Customising Columns Layout" name="customising-columns-layout" /%}
+
+## 列菜单 API / 事件
+
+`gridApi` 具有以下方法，可用于与列菜单交互：
+
+{% apiDocumentation source="grid-api/api.json" section="accessories" names=["showColumnChooser", "showColumnMenu", "hideColumnChooser", "hidePopupMenu"] /%}
+
+列筛选器不被视为菜单的一部分，因此有自己的 API 方法来显示/隐藏。
+
+但是，在使用[旧版选项卡式列菜单](#legacy-tabbed-column-menu)时，筛选器弹出窗口是列菜单的一部分，可以通过列菜单 API 方法打开/关闭。
+
+{% apiDocumentation source="grid-api/api.json" section="accessories" names=["showColumnFilter", "hideColumnFilter"] /%}
+
+{% br /%}
+
+网格发出以下列菜单事件。请注意，这也包括列筛选器弹出窗口。
+
+{% apiDocumentation source="grid-events/events.json" section="accessories" names=["columnMenuVisibleChanged"] /%}
+
+{% br /%}
+
+以下示例演示了列菜单 API 和事件（通过单击网格外部的按钮）。
+
+请注意，列菜单和列筛选器弹出窗口在单击网格外部时会自动关闭，因此示例中没有关闭它们的按钮。
+
+{% gridExampleRunner title="Column Menu API" name="column-menu-api" /%}
+
+## 菜单弹出窗口
+
+列菜单显示在弹出窗口内，可以进一步配置。
+
+### 重新定位弹出窗口
+
+如果对弹出窗口的位置不满意，可以使用 `postProcessPopup(params)` 回调覆盖其位置。这为您提供了弹出窗口 HTML 元素，以便您可以根据需要更改其位置。
+
+{% apiDocumentation source="grid-options/properties.json" section="accessories" names=["postProcessPopup"] /%}
+
+以下示例演示了使用 `postProcessPopup()` 将 **Age** 列菜单向下移动 25 像素。
+
+{% gridExampleRunner title="Column Menu Popup" name="column-menu-popup" /%}

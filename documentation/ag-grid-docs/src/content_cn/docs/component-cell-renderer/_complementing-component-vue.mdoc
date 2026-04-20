@@ -1,0 +1,50 @@
+{% if isFramework("vue") %}
+
+```js
+<template>
+    <ag-grid-vue :columnDefs="columnDefs" ...其他属性>
+    </ag-grid-vue>
+</template>
+
+<script>
+//...其他导入
+import {AgGridVue} from "ag-grid-vue3";
+
+// 定义要重用的单元格组件
+const ColourComponent = {
+  template: '<span :style="{color: params.color}">{{params.value}}</span>'
+};
+
+export default {
+    components: {
+        AgGridVue,
+        ColourComponent
+    },
+    data() {
+        return {
+            columnDefs: [
+                {
+                    headerName: "Colour 1",
+                    field: "value",
+                    cellRenderer: 'ColourComponent',
+                    cellRendererParams: {
+                        color: 'guinnessBlack'
+                    }
+                },
+                {
+                    headerName: "Colour 2",
+                    field: "value",
+                    cellRenderer: 'ColourComponent',
+                    cellRendererParams: {
+                        color: 'irishGreen'
+                    }
+                }
+            ]
+        }
+    }
+    //...其他属性和方法
+}
+</script>
+```
+
+{% /if %}

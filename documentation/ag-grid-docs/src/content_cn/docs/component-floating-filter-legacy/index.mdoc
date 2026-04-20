@@ -1,0 +1,98 @@
+---
+title: "浮动筛选器组件 - 旧版"
+---
+
+{% warning %}
+本页面描述了在未设置网格选项 `enableFilterHandlers` 时声明自定义浮动筛选器组件的旧方法。强烈建议改用[浮动筛选器组件](./component-floating-filter/)页面上描述的新行为。
+{% /warning %}
+
+浮动筛选器组件允许您向 AG Grid 添加自己的浮动筛选器类型。您可以创建自定义浮动筛选器组件，以与网格提供的筛选器之一或自定义筛选器一起工作。
+
+## 示例：自定义浮动筛选器
+
+在下面的示例中，您可以看到 Gold、Silver、Bronze 和 Total 列具有自定义浮动筛选器 `NumberFloatingFilter`。此筛选器将标准浮动筛选器替换为输入框，用户可以更改该输入框以根据大于筛选器调整每列要筛选的奖牌数量。
+
+{% gridExampleRunner title="Custom Floating Filter" name="custom-floating-filter" /%}
+
+## 实现浮动筛选器组件
+
+{% partial file="./_component-interface-javascript.mdoc" /%}
+{% partial file="./_component-interface-angular.mdoc" /%}
+{% partial file="./_component-interface-react.mdoc" /%}
+{% partial file="./_component-interface-vue.mdoc" /%}
+
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="FloatingFilterDisplayParams" /%}
+{% /if %}
+
+## 浮动筛选器生命周期
+
+浮动筛选器本身不包含筛选逻辑，它们只是底层筛选器组件的附加 UI 组件。因此，浮动筛选器的生命周期与列的可见性绑定；如果您隐藏列（设置为不可见，或水平滚动将列滚动出视图），则浮动筛选器 UI 组件将被销毁。如果列重新进入视图，则会再次创建它。这与列筛选器不同，只要列存在，列筛选器就会存在，无论列的可见性如何。
+
+要查看实现浮动筛选器的不同方法的示例，请参阅下面的示例。
+
+{% if isFramework("javascript", "angular", "vue") %}
+
+## 提供的筛选器上的浮动筛选器方法
+
+当用户与浮动筛选器交互时，浮动筛选器必须设置主父筛选器的状态，以便筛选更改生效。这是通过浮动筛选器获取对父筛选器实例的引用并调用其上的方法来完成的。
+
+如果您创建自己的筛选器和浮动筛选器，则由您决定在筛选器上公开哪个方法供浮动筛选器调用。此约定在筛选器和浮动筛选器之间，不通过网格。
+
+简单筛选器（文本、数字、日期）提供了相应的提供的浮动筛选器可以调用的方法。此信息在以下情况下很有用：a) 您想创建自己的浮动筛选器与提供的父筛选器配对，或 b) 您只是想了解交互如何工作以帮助构建自己的筛选器和浮动筛选器。
+
+-   **日期、文本和数字筛选器：**所有这些筛选器都提供一个方法 `onFloatingFilterChanged(type: string, value: string)`，其中 `type` 是类型（`'lessThan'`、`'equals'` 等），value 是要使用的文本值（数字和日期筛选器会将文本转换为相应的类型）。
+
+-   **集合筛选器：**浮动集合筛选器不可编辑，因此父筛选器上没有公开供浮动筛选器调用的方法。
+
+您也可以在筛选器上调用 `setModel()` 作为替代方案。例如，您可以为集合筛选器构建自己的浮动筛选器，允许选择所有欧洲或亚洲国家，或者您可以提供自己的数字浮动筛选器，允许选择范围（提供的数字浮动筛选器不允许编辑范围）。
+{% /if %}
+
+## 示例：自定义筛选器和自定义浮动筛选器
+
+此示例通过在 Gold、Silver、Bronze 和 Total 列中提供自己的自定义筛选器 `NumberFilter` 来扩展示例。
+
+{% if isFramework("javascript", "angular", "vue") %}
+在此示例中，重要的是要注意：
+
+1. `NumberFilter.getModel()` 返回一个 `number`，表示当前的大于筛选器。
+1. `NumberFilter.setModel(model)` 接受一个可以是任何类型的对象。如果传递的值是数字，则筛选器将以大于的条件应用。
+1. `NumberFloatingFilter.onParentModelChanged(parentModel)` 每当 `NumberFilter` 模型更改时接收 `NumberFilter.getModel()` 的结果。
+1. `NumberFloatingFilter` 每当用户更改浮动筛选器值时调用 `parentFilter.myMethodForTakingValueFromFloatingFilter(change)`。
+1. `NumberFilter.myMethodForTakingValueFromFloatingFilter(change)` 执行筛选。
+
+{% /if %}
+
+{% gridExampleRunner title="Custom Filter and Floating Filter" name="custom-filter-and-floating-filter" /%}
+
+## 示例：自定义筛选器和只读浮动筛选器
+
+如果您想提供自定义筛选器但不想提供等效的自定义浮动筛选器，您可以实现 `getModelAsString()`，您将免费获得一个只读浮动筛选器。
+
+此示例使用以前的自定义筛选器但实现 `getModelAsString()`。请注意，没有自定义浮动筛选器，但使用 `NumberFilter` 的每列（Gold、Silver、Bronze 和 Total）都有一个只读浮动筛选器，当您从主筛选器更改值时会更新。
+
+{% gridExampleRunner title="Custom Filter Only" name="custom-filter" /%}
+
+{% if isFramework("react", "angular", "vue") %}
+
+## 滑动浮动筛选器
+
+下面的示例显示了如何创建重用开箱即用数字筛选器的自定义浮动筛选器。
+
+{% gridExampleRunner title="Sliding Floating Filter Component" name="floating-filter-component" /%}
+{% /if %}
+
+{% if isFramework("javascript") %}
+
+## 使用 jQuery 的复杂示例
+
+以下示例说明了一个复杂的场景。所有列都有浮动筛选器。前 6 列（Athlete 到 Sport）具有标准提供的浮动筛选器。最后 4 列（Gold 到 Total）具有使用 jQuery 滑块的自定义筛选器和自定义浮动筛选器。
+
+请注意：
+
+-   Athlete 有 2 秒的去抖动（`debounceMs: 2000`）
+-   Age 没有去抖动（`debounceMs: 0`）
+-   所有其他列都有标准的 500ms 去抖动
+
+{% gridExampleRunner title="Custom Complex Filter and Floating Filter" name="custom-complex-filter-and-floating-filter" typescriptOnly=true /%}
+{% /if %}

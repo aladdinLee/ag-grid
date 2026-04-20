@@ -1,0 +1,57 @@
+---
+title: "Excel 导出"
+enterprise: true
+---
+
+网格提供内置的 Excel (xlsx) 导出功能，无需任何第三方库。可以通过[上下文菜单](./context-menu/)或通过 [Grid API](./grid-api/) 以编程方式导出到 Excel，导出的电子表格可以完全自定义和样式化以满足用户要求。
+
+{% imageCaption imagePath="resources/excel-export-context-menu.png" alt="Excel 导出" maxWidth="48rem" centered=true constrained=true /%}
+
+## 启用 Excel 导出
+
+网格的企业版本默认通过网格[上下文菜单](./context-menu/)提供"Excel Export"选项。
+
+也可以通过 [Grid API](./grid-api/) 使用以下方法进行 Excel 导出：
+
+```{% frameworkTransform=true %}
+ api.exportDataAsExcel();
+```
+
+这两种方法都不需要特殊配置或第三方库。
+
+## 默认 Excel 导出
+
+默认的 Excel 导出行为将导出当前渲染的网格。这意味着导出的电子表格将匹配导出时网格中显示的内容，包括任何排序、过滤、行分组、可见列、分组列等...
+
+请注意，将使用原始值，而不是单元格渲染器的结果，这意味着以下结果：
+
+-   将使用值获取器的结果。
+-   将**不**使用单元格渲染器。
+-   默认情况下将通过[导出使用值格式化器](./value-formatters/#formatting-for-export)功能使用值格式化器。
+-   默认情况下**不**导出单元格样式。
+
+在下面的示例中，重新排列一些列并应用一些过滤和排序操作 - 然后从上下文菜单中的"Excel Export"选项或提供的"Export to Excel"按钮导出。请注意以下内容：
+
+-   导出列的当前顺序，任何隐藏列都不会导出。
+-   过滤掉的行不包含在导出中，并保持排序顺序。
+
+{% gridExampleRunner title="默认 Excel 导出" name="excel-default-export"  exampleHeight=600 /%}
+
+{% note %}
+
+1. Excel 中的列宽将与导出时应用程序中列的实际宽度相同，或 75px，以较宽者为准。"实际宽度"可能与列定义中的宽度不同，如果列已调整大小或使用 flex 大小。这可以通过 `columnWidth` 导出参数覆盖。
+
+1. 列的数据类型作为导出的一部分传递给 Excel，以便您可以在 Excel 中以正确的格式处理数据。
+
+1. 列组表头的单元格以与 AG Grid 中的组表头相同的方式合并。
+
+{% /note %}
+
+## 自定义 Excel 导出
+
+[默认 Excel 导出](./excel-export/#default-excel-export)行为将满足大多数应用程序的要求。但是，您可以对导出的值、布局、值格式化和导出电子表格的样式应用广泛的自定义。
+
+以下部分介绍了自定义导出的 Excel 电子表格的各种方法：
+
+-   **[样式](./excel-export-styles/)**：向导出的电子表格应用自定义样式。
+-   **[公式](./excel-export-formulas/)**：将网格的值获取器导出为 Excel 公式。

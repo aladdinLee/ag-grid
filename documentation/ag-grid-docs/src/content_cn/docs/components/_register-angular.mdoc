@@ -1,0 +1,88 @@
+{% if isFramework("angular") %}
+
+有两种方式注册自定义组件：
+
+-   直接引用。
+-   按名称。
+
+### 1. 按直接引用
+
+当通过引用注册 Angular 组件时，您只需将组件传递到您想要使用它的地方（即单元格渲染器、过滤器等）。
+
+在此示例中，我们指定要在 `Cube` 列中使用 Angular `CubeComponent` 作为单元格渲染器：
+
+{% /if %}
+
+{% if isFramework("angular") %}
+
+```ts
+//...其他导入
+import { Component } from '@angular/core';
+import { CubeComponent } from './cube.component';
+
+@Component({
+selector: 'app-root',
+template: `
+  <ag-grid-angular [columnDefs]="columnDefs"
+                   ...其他属性 />
+`
+})
+export class AppComponent {
+  columnDefs: [
+      {
+          field: "cube",
+          cellRenderer: CubeComponent,
+      }
+  ]
+
+  //...其他属性和方法
+}
+```
+
+{% /if %}
+
+{% if isFramework("angular") %}
+直接引用组件的优势是代码更简洁，没有按名称引用时添加的额外间接层。
+
+### 2. 按名称
+
+当按名称注册 Angular 组件时，您需要先在网格的 `components` 属性中注册组件，然后在您想要使用它的地方（即作为单元格渲染器、过滤器等）按名称引用该组件。
+
+在此示例中，我们注册了 Angular `CubeComponent` 并为其指定了名称 `cubeComponent`（这可以是您选择的任何名称）。然后我们指定要在 `Cube` 列中使用先前注册的 `cubeComponent` 作为单元格渲染器：
+
+{% /if %}
+
+{% if isFramework("angular") %}
+
+```ts
+//...其他导入
+import { Component } from '@angular/core';
+import { CubeComponent } from './cube.component';
+
+@Component({
+selector: 'app-root',
+template: `
+  <ag-grid-angular [columnDefs]="columnDefs" [components]="components"
+                   ...其他属性 />
+`
+})
+export class AppComponent {
+  components = {
+      'cubeComponent': CubeComponent
+  };
+  columnDefs = [
+      {
+          field: "cube",
+          cellRenderer: 'cubeComponent',
+      }
+  ]
+
+  //...其他属性和方法
+}
+```
+
+{% /if %}
+
+{% if isFramework("angular") %}
+按名称引用组件的优势是定义（例如列定义）可以由简单类型（即 JSON）组成，如果您希望持久化列定义，这很有用。
+{% /if %}

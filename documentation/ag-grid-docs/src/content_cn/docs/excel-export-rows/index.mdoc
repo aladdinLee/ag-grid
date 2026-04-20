@@ -1,0 +1,56 @@
+---
+title: "Excel 导出 - 行"
+enterprise: true
+---
+
+Excel 导出允许您选择将哪些行导出到 Excel。
+
+默认情况下，网格中的所有行都包含在 Excel 导出中。但是，您可以设置导出哪些行，并配置它们在 Excel 文件中的呈现方式。
+
+## 导出选定的行
+
+默认情况下，导出所有可见行，但通过使用 `onlySelected` 参数，只会导出选定的行。
+
+{% gridExampleRunner title="Excel 导出 - 选定的行" name="excel-export-selected-rows" /%}
+
+## 导出多行单元格
+
+默认情况下，Excel 使用单行呈现每个导出的单元格值。如果需要在多行上显示单元格值，请设置 [Excel 对齐](./excel-export-api/#excelalignment) `wrapText` 选项，如下面的示例所示。
+
+{% gridExampleRunner title="Excel 导出 - 多行" name="excel-export-multi-line" /%}
+
+## 导出所有未处理的行
+
+默认情况下，网格在应用过滤和排序后导出网格行。这意味着如果您已过滤网格，则只会按导出时的视觉顺序导出过滤后的行。
+
+您可以通过将 `exportedRows` 参数设置为 'all' 来覆盖此设置，导出所有行而不是仅导出过滤后的行。
+
+{% note %}
+导出所有行时，将忽略应用于网格的任何列过滤器或排序，所有行都按原始顺序导出。
+{% /note %}
+
+您可以在下面的示例中验证这一点：
+
+-   过滤 Country 列以仅显示 Australia 的行
+-   按 Athlete 列降序排序
+-   取消选中 All Rows 复选框并单击 Export to Excel 按钮
+
+观察 Excel 文件中如何仅按 Athlete 列降序导出过滤后的行
+
+-   选中 All Rows 复选框并单击 Export to Excel 按钮
+
+观察 Excel 文件中如何按原始未排序的行顺序导出所有行
+
+{% gridExampleRunner title="Excel 导出 - 所有行" name="excel-export-all-rows" /%}
+
+## 固定行
+
+如果您想从 Excel 导出中排除 AG Grid 中的固定顶部/底部行，请将 `skipPinnedTop` 和 `skipPinnedBottom` 属性设置为 true。
+
+请注意以下内容：
+
+-   默认情况下，导出所有固定行。
+-   如果选中 `Skip Pinned Top Rows`，将跳过固定在顶部的行。
+-   如果选中 `Skip Pinned Bottom Rows`，将跳过固定在底部的行。
+
+{% gridExampleRunner title="Excel 导出 - 固定行" name="excel-export-pinned-rows"  exampleHeight=815 /%}

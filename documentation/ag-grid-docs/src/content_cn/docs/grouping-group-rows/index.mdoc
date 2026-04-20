@@ -1,0 +1,102 @@
+---
+title: "行分组 - 组行"
+enterprise: true
+---
+
+可以使用全宽组行来表示网格中的组结构。
+
+{% gridExampleRunner title="启用组行" name="enabling-group-rows" /%}
+
+## 启用组行
+
+上面的示例演示了 `country` 和 `year` 都已分组。没有生成组列，而是使用全宽行来显示组值单元格。
+
+可以通过将 `groupDisplayType` 网格选项设置为 `"groupRows"` 来启用组行，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupDisplayType: 'groupRows',
+}
+```
+
+## 单元格组件
+
+组行使用 `agGroupCellRenderer` 组件显示组信息，以及用于展开和折叠行的箭头控件。
+
+可以使用 `groupRowRendererParams` 网格选项配置多个[组渲染器属性](./grouping-group-rows/#configurable-options)。下面的示例删除了行计数。使用 `checkboxLocation` 属性为行选择启用复选框。
+
+{% gridExampleRunner title="组单元格渲染器配置" name="renderer-config-group-cell" /%}
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'total', rowGroup: true, cellRenderer: CustomMedalCellRenderer },
+        // ... 其他列定义
+    ],
+    groupRowRendererParams: {
+        suppressCount: true,
+    },
+    rowSelection: {
+        mode: 'singleRow',
+        checkboxLocation: 'autoGroupColumn',
+    }
+}
+```
+
+### 可配置选项
+
+{% interfaceDocumentation interfaceName="IGroupCellRendererParams" overrideSrc="group-cell-renderer/group-cell-renderer.json" config={ "description": "" } /%}
+
+### 复选框选择
+
+可以配置 `agGroupCellRenderer` 显示行选择的复选框。将[行选择](./row-selection/) `checkboxLocation` 属性设置为 `'autoGroupColumn'` 不会隐藏[复选框列](./row-selection-single-row/#customising-the-checkbox-column)，但会阻止任何配置了 `agGroupCellRenderer` 的列显示复选框。
+
+{% gridExampleRunner title="组单元格渲染器复选框选择" name="renderer-config-checkbox" /%}
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowSelection: {
+        mode: 'multiRow',
+        selectAll: 'all',
+        checkboxLocation: 'autoGroupColumn',
+    },
+}
+```
+
+### 自定义内部渲染器
+
+使用组单元格渲染器时，`agGroupCellRenderer` 组件将继承分组列的渲染器，并在组单元格内显示此内容，与任何配置的复选框、单元格计数和展开/折叠箭头控件相邻。
+
+可以通过在 `groupRowRendererParams` 网格选项上设置 `innerRenderer` 和 `innerRendererParams` 属性，使用[自定义单元格组件](./component-cell-renderer/)覆盖此内部渲染器。
+
+{% gridExampleRunner title="组单元格渲染器配置" name="renderer-config-inner" /%}
+
+上面的示例使用以下配置为组列提供自定义内部渲染器：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    autoGroupColumnDef: {
+        cellRendererParams: {
+            innerRenderer: CustomMedalCellRenderer,
+        },
+    },
+}
+```
+
+### 自定义单元格渲染器
+
+可以通过设置 `groupRowRenderer` 网格选项，用[自定义单元格组件](./component-cell-renderer/)完全替换组单元格渲染器。
+
+{% gridExampleRunner title="自定义组单元格渲染器" name="renderer-config-custom" /%}
+
+上面的示例使用以下配置设置自定义单元格渲染器：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupRowRenderer: CustomGroupCellRenderer,
+}
+```

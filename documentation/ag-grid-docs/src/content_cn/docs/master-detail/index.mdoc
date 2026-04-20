@@ -1,0 +1,81 @@
+---
+title: "主/从"
+enterprise: true
+---
+
+{% videoSection id="8OeJn75or2w" title="Master / Detail Video Tutorial" showHeader=true %}
+主/从是指顶级网格（称为主网格）具有可展开的行。当行展开时，会显示另一个网格，其中包含与展开行相关的更多详细信息。出现的网格称为详细信息网格。
+{% /videoSection %}
+
+## 启用主/从
+
+可以使用 `masterDetail` 网格选项启用主/从，并使用 `detailCellRendererParams` 配置详细信息行，如下所示：
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    // 启用主/从
+    masterDetail: true,
+
+    // 第一列配置为使用 agGroupCellRenderer
+    columnDefs: [
+        { field: 'name', cellRenderer: 'agGroupCellRenderer' },
+        { field: 'account' }
+    ],
+
+    // 提供详细信息单元格渲染器参数
+    detailCellRendererParams: {
+        // 提供要在详细信息网格上使用的网格选项
+        detailGridOptions: {
+            columnDefs: [
+                { field: 'callId' },
+                { field: 'direction' },
+                { field: 'number'}
+            ]
+        },
+        // 获取每个详细信息网格的行
+        getDetailRowData: params => {
+            params.successCallback(params.data.callRecords);
+        }
+    }
+}
+```
+
+下面的示例显示了配置了上述所有内容的简单主/从。
+
+1. 设置网格属性 `masterDetail=true`。这告诉网格允许展开行以显示详细信息网格。
+
+1. 主网格中第一列的单元格渲染器设置为 `agGroupCellRenderer`。这告诉网格使用组单元格渲染器，该渲染器又包含该列的展开/折叠功能。
+
+1. 设置详细信息单元格渲染器参数 `detailGridOptions`。这包含详细信息网格的配置，例如要显示哪些列以及在详细信息网格内启用哪些网格功能。
+
+1. 通过详细信息单元格渲染器参数 `getDetailRowData` 提供回调。此回调为每个详细信息网格调用，并设置要在每个详细信息网格中显示的行。
+
+{% note %}
+要了解有关 `detailCellRendererParams` 配置的更多信息，请参阅[详细信息网格](./master-detail-grids/)部分。
+{% /note %}
+
+{% gridExampleRunner title="主/从示例" name="simple"  exampleHeight=535 /%}
+
+## 行模型
+
+使用主/从时，主网格必须使用[客户端](./row-models/#client-side)或[服务器端](./server-side-model-master-detail/)行模型。不支持[视口](./viewport/)或[无限](./infinite-scrolling/)行模型。
+
+另一方面，详细信息网格可以使用任何行模型。
+
+## API 参考
+
+### 主/从属性
+
+网格选项上可用的顶级主/从属性：
+
+{% apiDocumentation source="grid-options/properties.json" section="masterDetail" /%}
+
+### 详细信息单元格渲染器参数
+
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="IDetailCellRendererParams" names=["detailGridOptions", "getDetailRowData", "template", "refreshStrategy"] /%}
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="IDetailCellRendererParams" names=["detailGridOptions", "getDetailRowData", "refreshStrategy"] /%}
+{% /if %}

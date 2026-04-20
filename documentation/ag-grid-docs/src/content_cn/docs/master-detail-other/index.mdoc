@@ -1,0 +1,71 @@
+---
+title: "主/从 - 其他"
+enterprise: true
+---
+
+在这里，我们讨论不太适合文档其他部分的主/从领域。
+
+## 将从网格滚动与主网格同步
+
+默认情况下，从网格占据主网格的宽度，并且在主网格的列水平滚动时不移动。这是因为从网格不与主网格的其他单元格一起放置，而是在一个单独的容器中，该容器覆盖主网格的单元格并占据网格的全宽，忽略所有主网格的列。
+
+允许从网格跨越主网格宽度的网格底层功能称为[全宽行](./full-width-rows/)。
+
+可以让从网格与主网格的单元格位于同一容器中，从而随主网格的水平滚动移动。这是通过[嵌入全宽行](./full-width-rows/#embedded-full-width-rows)实现的，并通过主网格的网格属性 `embedFullWidthRows=true` 设置。这告诉网格将详情面板与其他行一起布局（嵌入）。
+
+在下面的示例中，请注意使用嵌入全宽行功能，主网格和从网格的水平滚动是组合的。
+
+{% gridExampleRunner title="从网格随主网格滚动" name="detail-scrolls-with-master"  exampleHeight=525 /%}
+
+如果您混合使用嵌入全宽行和[自定义详情](./master-detail-custom-detail/)，请注意详情面板将被渲染三次，如下所示：
+
+- 固定左侧列
+- 固定右侧列
+- 固定中间列
+
+这是因为列以及详情面板出现在三个单独的可滚动部分中。下面的示例演示了这一点。请注意自定义详情面板出现在所有三个部分中。
+
+{% gridExampleRunner title="嵌入自定义详情" name="embed-custom-detail" /%}
+
+如果您希望自定义详情面板仅在一个部分中显示内容，请使用检查组件 `params.pinned` 属性的逻辑，并呈现与该部分相关的内容。
+
+## 过滤和排序
+
+主/从的过滤和排序没有特定配置，但由于有多个网格，每个网格将独立过滤和排序。
+
+下面显示了一个简单的主/从设置，在主网格和从网格中都启用了过滤和排序。
+
+{% gridExampleRunner title="带排序的过滤" name="filtering-with-sort"  exampleHeight=550 /%}
+
+## 分组
+
+主/从支持[行分组](./grouping/)。
+只有叶节点可以是主行。
+
+{% gridExampleRunner title="带主/从的分组" name="grouping-master-detail"  exampleHeight=550 /%}
+
+## 树形数据
+
+主/从支持[树形数据](./tree-data/)。
+叶节点和组都可以是主行。如果组也是主行，则从网格将显示在其子级之前。
+
+{% note %}
+主/从默认将为每一行显示从网格，包括组。
+要仅为叶节点显示从网格，请提供 `isRowMaster` 回调并仅对叶节点返回 `true`。
+
+使用[树形数据路径](.//tree-data-paths)时，填充组不能是主行，也不会调用 `isRowMaster`。
+{% /note %}
+
+{% gridExampleRunner title="带主/从的树形数据" name="tree-data-master-detail"  exampleHeight=550 /%}
+
+## 布局
+
+不可能为主从混合[DOM 布局](./grid-size/#dom-layout)。这是因为布局是一个 CSS 设置，将被主网格中包含的所有网格继承。因此，如果您的主网格是'for-print'，那么所有子网格都将采用'for-print'布局。
+
+使用主/从和[for-print](./printing/)时，所有从网格都需要使用 for-print。
+
+使用主/从和[auto-height](./grid-size/#auto-height-layout)时，所有从网格都需要使用 auto-height。
+
+## 单元格选择
+
+在主网格上启用[单元格选择](./cell-selection/)时，从网格不会参与主网格的单元格选择。

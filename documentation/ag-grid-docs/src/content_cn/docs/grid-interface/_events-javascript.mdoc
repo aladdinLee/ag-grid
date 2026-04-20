@@ -1,0 +1,28 @@
+{% if isFramework("javascript") %}
+通过 `GridOptions` 接口注册事件的回调。回调名称通过在事件名称前添加 `on` 前缀来构造。例如，`cellClicked` 事件的回调是 `gridOptions.onCellClicked`。
+
+```js
+const gridOptions = {
+    // 添加事件处理程序
+    onCellClicked: (event: CellClickedEvent) => console.log('单元格被点击'),
+}
+```
+
+## 监听事件
+
+除了通过 `gridOptions` 对象直接添加事件监听器外，还可以注册事件，类似于在本机 DOM 元素上注册事件。这意味着有两种方法可以监听事件：要么使用 gridOptions 上的 `onXXX()` 方法（其中 XXX 替换为事件名称），要么为事件注册监听器。后一种选项允许您为同一事件添加多个处理程序。以下示例演示了这两个选项：
+
+```js
+// 创建处理程序函数
+function myRowClickedHandler(event) {
+    console.log('行被点击');
+}
+
+// 选项 1：使用 gridOptions
+gridOptions.onRowClicked = myRowClickedHandler;
+
+// 选项 2：注册处理程序
+api.addEventListener('rowClicked', myRowClickedHandler);
+```
+
+{% /if %}

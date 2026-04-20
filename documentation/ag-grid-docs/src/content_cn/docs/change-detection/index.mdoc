@@ -1,0 +1,238 @@
+---
+title: "更改检测"
+---
+
+表格内置更改检测。当表格中的值通过 UI 或表格 API 更改时，表格将检查所有单元格以查看哪些需要更新，并仅更新这些单元格，因此对 DOM 进行最小更改。
+
+更改检测可以分为以下两个类别：
+
+1. **值更改检测：** 当任何单元格的值更改时（例如编辑后），表格会遍历表格中的每个单元格，并将当前值与先前值进行比较。如果值不同，则刷新单元格。这允许所有使用 `valueGetters` 的单元格保持最新，其中一个单元格（被编辑的）的更改可能影响另一个单元格（引用第一个单元格的）的值。
+
+1. **聚合更改检测：** 当任何单元格的值更改时，表格将重新计算所有受更改值影响的[聚合](./aggregation/)。这意味着表格将随着其下面的数据更改自动保持聚合结果（分组行中的值）最新。
+
+{% note %}
+如果您使用自定义单元格渲染器，请参阅[单元格组件](./component-cell-renderer)以获取有关如何在更改检测后更新组件的更多详细信息。
+{% /note %}
+
+## 示例：更改检测和值 Getter
+
+下面的示例显示更改检测对值 getter 的影响。表格
+自己完成所有刷新，无需客户端应用程序显式请求
+刷新。请注意以下几点：
+
+-   '总计'列使用值 getter 计算该行中所有值的总和。
+
+-   通过双击单元格并输入新值来编辑列 A 到 F 中的任何值。
+
+-   '总计'列自动刷新并闪烁。
+
+{% gridExampleRunner title="更改检测和值 Getter" name="change-detection-value-getters"  exampleHeight=550 /%}
+
+## 1. 值更改检测
+
+表格保留每个单元格中渲染的所有值的本地副本。当请求刷新单元格时，只有当值已更改时才会刷新单元格。
+
+{% note %}
+您可能会问，检查每个单元格的值是否是性能问题？答案是否定的。
+AG Grid 所做的类似于框架中的更改检测算法。
+在 JavaScript 中进行这么多检查不是问题。缓慢来自于 DOM 被更新
+多次。AG Grid 通过仅更新检测到更改的 DOM 来最小化 DOM 更新。
+{% /note %}
+
+### 比较值
+
+本节说明表格如何比较值。如果您想以不同方式比较值，这很有意义。
+
+默认情况下，表格将使用三等号比较值，例如 `"oldValue === newValue"`。这对您大多数情况下都有效，特别是如果您的值是简单类型（字符串、数字、布尔值）或不可变对象。这对可变对象将是一个问题，因为对象引用将用于比较，这不会检测对象内部的更改。如果使用可变对象（数据已更改但它是相同的对象引用），则需要覆盖值的比较方式。
+
+如果您的行数据属性是简单类型（字符串、布尔值、数字）或不可变对象，则不需要实现自己的比较方法。
+
+如果您确实需要提供对象的自定义比较，请使用 `colDef.equals(val1,val2)` 方法。例如，以下代码片段为存储在复杂对象中的 '姓名' 列提供自定义比较。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'person',
+            // 如果名和姓相等，方法返回 true
+            equals: (person1, person2) => {
+                const firstNameEqual = person1.firstName === person2.firstName;
+                const lastNameEqual = person2.lastName === person2.lastName;
+                return firstNameEqual && lastNameEqual;
+            }
+        }
+    ]
+}
+```
+
+{% apiDocumentation source="column-properties/properties.json" section="columns" names=["equals"] /%}
+
+### 触发值更改检测
+
+以下操作将**自动**触发所有可见单元格的更改检测：
+
+1. 通过表格 UI 编辑任何值（例如双击单元格并输入新值）。
+1. 使用 `rowNode.setDataValue(col,value)` 行节点方法。
+1. 使用 `api.applyTransaction(transaction)` API 方法。
+1. 如果 `refreshAfterGroupEdit` 表格选项设置为 `true`，则编辑组值（请参阅[分组编辑](./grouping-edit/)）。
+
+如果您不希望自动进行更改检测，则设置表格属性
+`suppressChangeDetection=true`。这将阻止上述事件发生时触发更改检测过程。
+理想情况下，您不应该关闭更改检测，但是如果您选择关闭它，该选项就在那里。
+可能诱使您关闭它的一件事是，如果您有一些自定义值 Getter 或单元格类规则正在
+进行一些耗时的计算，您可能希望限制它们被调用的次数，并有更多
+控制何时进行刷新。
+
+要**手动**运行值更改检测以刷新所有可见单元格，请调用 [api.refreshCells()](./view-refresh/)。
+
+{% apiDocumentation source="grid-api/api.json" section="refresh" names=["refreshCells"] /%}
+
+## 2. 聚合更改检测
+
+聚合更改检测意味着当值更改时重新运行[聚合](./aggregation/)。例如，如果您按列分组并按值求和，并且其中一个值更改，则求和值也应该更改。
+
+{% note %}
+如果您希望编辑的行自动跳转到其新组，请通过设置表格属性 `refreshAfterGroupEdit=true` 启用[分组编辑](./grouping-edit/)。
+此属性在编辑后触发必要的重新分组、排序和过滤器刷新，是我们内联编辑分组列时的首选方法。
+{% /note %}
+
+### 过滤器更新期间的闪烁单元格
+
+默认情况下，应用过滤时表格不会闪烁单元格，即使聚合单元格中的值已更改。
+要更改此行为，请设置表格属性 `allowShowChangeAfterFilter=true`。
+
+本页面上的所有示例将 `allowShowChangeAfterFilter` 设置为 `true`，以便在使用过滤器进行实验时清楚地看到值更改。
+
+### 示例：组的重新聚合
+
+下面的示例显示更改检测影响组的结果。表格自己完成所有刷新，无需客户端应用程序显式请求刷新。请注意以下几点：
+
+-   列 '组' 被标记为[行组](./grouping/)，列 A 到 D 被标记为[聚合](./aggregation/)列，以便它们的值被求和到组级别。
+
+-   列 '总计' 有一个值 getter，它给出列 A 到 D 的所有总和。
+
+-   列 A 到 D 可编辑。如果您编辑单元格值，则组级别的聚合值也会更新以反映更改。这是因为表格由于更改而重新计算聚合。
+
+-   所有单元格都配置为使用表格的[动画单元格渲染器](./change-cell-renderers/)而不是闪烁单元格。
+
+{% gridExampleRunner title="带组的更改检测" name="change-detection-groups"  exampleHeight=590 /%}
+
+请注意上面组列也是可编辑的（例如您可以将其中一行从组 'A' 更改为组 'G'），但是此更改后行**不会**移动到正确的组。这在下面的[更改检测和排序、过滤、分组](#change-detection-and-sorting-filtering-grouping)部分中讨论。
+
+### 内联编辑后刷新组
+
+默认情况下，表格将编辑的行保持在原位，直到您手动刷新客户端侧行模型。这可以防止用户输入时出现令人不安的行移动，但如果组编辑不频繁并且您希望行立即重新定位，则可能看起来不正确。
+
+`refreshAfterGroupEdit` 翻转该行为。当设置为 `true` 时，表格在提交编辑后自动重新运行分组、排序和过滤，因此行将根据其新值移动。
+
+```ts
+const gridOptions = {
+    refreshAfterGroupEdit: true,
+    // 其他表格选项
+};
+```
+
+有关更多详细信息，请参阅[分组编辑](./grouping-edit/)。
+
+### 触发聚合更改检测
+
+以下操作将**自动**触发聚合更改检测：
+
+1. 通过表格 UI 编辑任何值（例如双击单元格并输入新值）。
+1. 使用 `rowNode.setDataValue(col,value)` 行节点方法。
+1. 使用 `api.applyTransaction(transaction)` API 方法。
+
+要**手动**运行聚合更改检测以重新计算聚合值，请调用 [api.refreshClientSideRowModel('aggregate')](./grid-api/#reference-data-refreshClientSideRowModel)。
+
+{% apiDocumentation source="grid-api/api.json" section="data" names=["refreshClientSideRowModel"] /%}
+
+## 更改检测和排序、过滤、分组
+
+当值更改时，表格的自动更改检测将更新：
+
+-   聚合值。
+-   单元格中显示的值。
+
+表格**不会**：
+
+-   排序
+-   过滤
+-   分组
+
+不自动进行排序、过滤和分组的原因是，在大多数用例中，在编辑时更改显示的行将被视为糟糕的用户体验。例如，如果用户编辑单元格，则行不应跳转位置（由于排序和分组），或者更糟糕的是，完全消失（如果过滤器由于新值未通过过滤器而删除该行）。
+
+因此，如果您想在更新后更新排序、过滤或分组，您应该监听事件 `cellValueChanged` 并使用更新的行调用 [api.applyTransaction(transaction)](./data-update-transactions/#transaction-update-api)。
+
+### 示例：更改检测和过滤器/排序/分组
+
+以下示例与上面的示例[更改检测和组](#example-change-detection-groups)相同，只是它让表格进行事务更新，以便重新计算分组、排序和过滤。从示例中，可以注意到以下几点：
+
+-   和以前一样，更新任何值将更新总计列和聚合组列。
+
+-   更新组单元格将把行移动到新组。如果组不存在，它将被创建。
+
+-   如果您按列排序（例如按 'A' 排序）然后更改数据以使顺序不正确，表格将自我修复以保持顺序。换句话说，更新的行将移动到新的排序位置。
+
+-   如果您设置过滤器（例如过滤 'A' 为 '小于 50'）然后更改数据以使行不再通过过滤器，表格将自我修复以保持过滤。换句话说，如果更新的行不再通过过滤器，它将被删除。
+
+{% gridExampleRunner title="带过滤器/排序/分组的更改检测" name="change-detection-filter-sort-group" /%}
+
+## 聚合路径选择
+
+当表格中的数据更新且聚合处于活动状态时，表格不会从头开始重新计算所有聚合。相反，它将选择性地确定需要重新计算哪些聚合。
+
+## 树路径选择
+
+当值更改时，表格将重新计算行所在的直接组，然后是任何父组，一直到根。这被称为"树路径选择" - 只有需要重新计算的树部分才会被重新计算。
+
+如果您使用[更新事务](./data-update-transactions/)同时更新多行，表格将首先完成所有更新，然后仅针对组合影响的路径重新计算所有聚合。
+
+## 列路径选择
+
+默认情况下，表格将为更新的树路径重新计算所有列的聚合，即使只有其中一个列值被更改。这是因为表格假设任何列都有可能影响任何其他列，如果该列在 valueGetter 中被引用。
+
+如果您确定值更改仅影响那一列，则可以设置表格属性 `aggregateOnlyChangedColumns=true`。这将在单个单元格更新后仅重新聚合更改的列，而不是所有列。
+
+## 示例：树路径和列路径选择
+
+考虑下面的示例。当您编辑组 "Bottom" -> "Group B2" 和列 "Column C" 下的单元格值时。表格将仅为 "Group B2" 和 "Bottom" 重新计算列 C 聚合。它不会为任何其他组或任何其他列重新计算任何聚合。
+
+树路径选择（即不更新组 "Top" 中的任何内容）在表格中始终处于活动状态，列选择（仅更新列 "Column C"）由于表格属性 `aggregateOnlyChangedColumns=true` 而处于活动状态。
+
+路径选择确保只进行最小量的重新计算。
+
+为了演示这一点，示例安装了自己的求和聚合函数。这与表格提供的正常求和相同，同时还在被调用时打印到控制台。这允许示例显示何时进行聚合以及在什么上进行。
+
+因此，对于下面的示例，打开控制台并注意以下几点：
+
+-   当表格初始化时，聚合完成 48 次（4 列 * 12 组）。那是组树中的所有路径和所有列。
+
+-   当一个值更改时（通过 UI 或通过第一个按钮 '更新一个值'），表格仅针对受影响的路径和仅针对更改的列重新计算值。
+
+-   当通过任何其他按钮使用事务更改某些值时，则重新计算所有列但仅在更改的路径上。
+
+{% gridExampleRunner title="带增量聚合的更改检测" name="change-detection-delta-aggregation"  exampleHeight=590 /%}
+
+## 更改检测和透视
+
+上面的一切都适用于您进行[透视](./pivoting/)时。没有新概念需要介绍，所以让我们直接进入示例。
+
+当您点击下面的任何按钮时，请记住您不是在更改显示的单元格值，因为当您透视时，每个单元格都是基础数据的聚合，基础数据不再显示在表格中（进行透视会删除叶节点）。
+
+从示例中，您可以观察到：
+
+-   取消选中 '**Group & Pivot**' 以查看数据在扁平时的样子。您可以看到它是显示学生分数和年龄的学生记录列表。要查看值更改对透视的影响，请在选择其他按钮时保持此项选中。
+
+-   按钮 '**设置一个值**' 使用 `rowNode.setDataValue(col,value)` 更新一个值。表格聚合新值以显示。
+
+-   按钮 '**更新分数**' 使用 `api.applyTransaction(transaction)` 更新一条记录。表格聚合新值以显示。
+
+-   按钮 '**添加 Year 5**' 使用 `api.applyTransaction(transaction)` 为 'Year 5' 添加一条记录。表格进行增量更改并为此组添加一行，而不触及剩余行的 DOM。
+
+-   按钮 '**添加物理行**' 使用 `api.applyTransaction(transaction)` 添加一条科目为 '物理' 的记录。这会影响表格中的列，因为我们在 '课程' 上透视，所以为 '物理' 添加了一个新列。同样，这一切都在不触及表格中剩余列或行的情况下完成。
+
+-   按钮 '**删除所有物理**' 使用 `api.applyTransaction(transaction)` 删除所有 '物理' 记录。如前所述，这会影响列，所有 '物理' 列都被删除。
+
+-   按钮 '**移动课程**' 使用 `api.applyTransaction(transaction)` 更新行的课程。这导致两个位置的聚合更改，一次是课程被删除的地方，另一次是课程被添加的地方。
+
+{% gridExampleRunner title="更改检测透视" name="change-detection-pivot"  exampleHeight=590 /%}

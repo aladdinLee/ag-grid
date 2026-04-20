@@ -1,0 +1,196 @@
+---
+title: "更新列定义"
+---
+
+[列定义](./column-definitions/)部分解释了如何配置列。可以在初始设置后更改列的配置。本节介绍如何更新列定义。
+
+## 添加和删除列 {% #adding-removing-columns %}
+
+可以通过更新提供给网格的列定义列表来添加和删除列。
+
+设置新列时，网格将与当前列进行比较，并确定哪些列是旧的（要删除）、新的（创建新列）或保留的。
+
+下面的示例演示了从网格中添加和删除列。请注意以下几点：
+
+-   选择按钮以在包含或排除奖牌列之间切换。
+
+{% gridExampleRunner title="Add & Remove Columns" name="add-remove-columns" /%}
+
+在上面的示例中，请注意，如果列在新定义应用后仍然存在，则应用于任何列的任何状态（例如排序、筛选、宽度）都将保留。例如，尝试以下操作：
+
+-   调整 Country 列的大小。请注意，更改列不会影响其宽度。
+-   对 Country 列排序。请注意，更改列不会影响其排序。
+
+## 更新列定义 {% #changing-column-definition %}
+
+列定义的所有属性，除了标记为[初始](./column-interface/#initial-column-options)的属性外，都可以更新。例如，如果要更改列的标题名称，请在列定义上更新 `headerName`，然后将列定义列表再次设置到网格中。
+
+无法单独更新一个列的列定义。只能应用一组新的列定义。
+
+下面的示例演示了更新列定义以更改列的配置方式。请注意以下几点：
+
+-   所有列都只在列定义上设置了 `field` 属性。
+-   'Set Header Names' 和 'Remove Header Names' 设置然后随后删除所有列上的 `headerName` 属性。
+-   'Set Value Formatter' 和 'Remove Value Formatter' 设置然后随后删除所有列上的 `valueFormatter` 属性。
+-   请注意，列的任何调整大小、排序等在列定义更新之间保持不变。
+
+{% gridExampleRunner title="Updating Column Definition" name="update-column-definition" /%}
+
+## 更改列状态
+
+列定义的部分内容表示列状态。列状态是有状态信息，表示网格的变化值。
+
+列定义的所有有状态属性如下：
+
+| 有状态属性 | 初始属性             | 描述                                         |
+| ---------- | -------------------- | -------------------------------------------- |
+| width      | initialWidth         | 列的宽度。                                   |
+| flex       | initialFlex          | 用于设置此列宽度的弹性值。                   |
+| hide       | initialHide          | 此列是否应该隐藏。                           |
+| pinned     | initialPinned        | 此列是否应该固定。                           |
+| sort       | initialSort          | 要应用于此列的排序。                         |
+| sortIndex  | initialSortIndex     | 如果是多列排序，应用排序的顺序。             |
+| rowGroup   | initialRowGroup      | 此列是否应该是行组。                         |
+| rowGroupIndex | initialRowGroupIndex | 此列是否应该是行组以及按什么顺序。        |
+| pivot      | initialPivot         | 此列是否应该是透视。                         |
+| pivotIndex | initialPivotIndex    | 此列是否应该是透视以及按什么顺序。           |
+| aggFunc    | initialAggFunc       | 如果行分组或透视，用于聚合此列的函数。       |
+
+{% note %}
+如果您只对更改列状态感兴趣，而不对列定义的其他部分感兴趣，那么请考虑使用[列状态](./column-state/) API。
+
+列状态作为列定义的一部分提供，以使这些属性具有响应性。一些开发人员希望更新列定义并期望网格响应。其他开发人员可能会发现这不直观，并且更喜欢直接与[列状态](./column-state/)交互。
+{% /note %}
+
+**初始属性**仅在**创建列**时使用。**有状态属性**将在**创建或更新列**时使用。
+
+```{% frameworkTransform=true suppressFrameworkContext=true %}
+const gridOptions = {
+    columnDefs: [
+        // 使用初始值，仅在创建列时应用
+        { field: 'country', initialWidth: 200, initialPinned: 'left' },
+        // 使用有状态值，在创建或更新列时应用
+        { field: 'country', width: 200, pinned: 'left' }
+    ]
+}
+```
+
+下面的示例显示了使用**初始属性**的列定义。请注意以下几点：
+
+-   `initialWidth`、`initialSort` 和 `initialPinned` 仅在创建列时应用。
+-   如果您通过与网格的 UI 交互更新列的宽度、排序或固定，然后点击 'Set Columns with Initials'，列状态将不会更改。
+-   首先删除列然后再次设置它们将再次使用初始值。
+
+{% gridExampleRunner title="Updating Column Initial Attributes" name="changing-default" /%}
+
+以下示例显示了使用**有状态属性**的列定义。请注意以下几点：
+
+-   `width`、`sort` 和 `pinned` 有状态属性在设置列定义时应用。
+-   如果您通过与网格的 UI 交互更新列的宽度、排序或固定，然后点击 'Set Columns with State'，列状态将更改，通过 UI 所做的更改将丢失。
+-   请注意，`defaultColDef` 用于删除状态。例如，设置 `sort=null`，以便清除用户可能在另一列上进行的任何排序。否则，网格会将 `sort` 属性视为 `undefined`，这意味着不应更改状态。
+
+{% gridExampleRunner title="Updating Column State" name="changing-state" /%}
+
+## null vs undefined
+
+当有状态属性设置为 `undefined` 时，网格将忽略该属性。
+
+当有状态属性设置为 `null` 时，网格将清除该属性。
+
+例如，设置 `pinned=null` 将清除列上的固定，而 `pinned=undefined` 意味着网格将保留该列的固定状态。
+
+如果您不想干扰任何列状态（例如，如果您不想撤销用户通过网格的 UI 对列所做的任何更改，例如通过单击标题应用排序或拖动列的宽度），则不要设置状态属性，因为默认情况下它们将是 `undefined`。
+
+## 匹配列
+
+当新的列定义传递给网格时，网格需要确定它是列的更新还是新列。
+
+大多数情况下，`field` 属性将匹配列。但是，`field` 既是一个可选属性，也是一个非唯一属性，例如，可以使用 `valueGetter` 代替字段，或者两列可以共享相同的字段。
+
+鉴于 `field` 不是唯一标识符，网格使用以下规则来匹配列：
+
+1. 如果提供了 `colId`，则使用 `colId` 匹配
+1. 否则如果提供了 `field`，则使用 `field` 匹配
+1. 否则使用列定义实例上的对象相等性匹配
+
+换句话说，要让网格正确匹配列，请确保每个列都有 `field` 或 `colId`。
+
+下面的示例演示了不同的匹配策略。请注意以下几点：
+
+-   除 Country 外的所有列都正确匹配。这意味着任何列宽度、排序等将在列更改之间保留。Country 将重置其状态，因为每次都会将其视为新列。
+-   Athlete 列通过对象相等性匹配，因为每次都向网格提供相同的列定义实例。
+-   Age 列通过 `colId` 匹配。需要 `colId`，因为该列没有 `field` 属性。
+-   除 Country 外的所有其他列都使用 `field` 属性匹配。
+-   Country 列不匹配，因为它是不同的对象实例，并且没有 `colId` 或 `field` 属性。
+
+{% gridExampleRunner title="Matching Columns" name="matching-columns" /%}
+
+## 维护列顺序
+
+当向网格提供新的[列定义](./column-definitions/)时，它们提供的顺序就是列显示的顺序。这可能意味着当用一组新列覆盖列时，用户移动的任何列都将重置其位置。
+
+如果您希望优先考虑列在网格中出现的顺序，请将网格属性 `maintainColumnOrder` 设置为 `true`。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    maintainColumnOrder: true,
+}
+```
+
+在下面的示例中，请注意以下几点：
+
+-   网格配置了 `maintainColumnOrder=true`。
+-   可以通过拖动重新排序列。
+-   存在两个按钮，**Column Set A** 和 **Column Set B**。单击这些按钮将在两个列定义之间切换，每个列定义具有不同的列顺序。
+-   在列集之间切换不会重置或更改列顺序，而是保留网格状态。
+-   还存在一个 **Clear** 按钮，单击此按钮时，列将被删除，随后应用列集将应用其顺序。
+
+{% gridExampleRunner title="Column Definition Order" name="col-def-order" /%}
+
+如果添加了新列，则这些新列将始终添加在末尾。
+
+为了维护列顺序，网格需要匹配列。这可以通过确保每个列都定义了唯一的 `field` 或 `colId` 来完成。任何无法匹配的列将被视为新列并放置在末尾。
+
+## 列事件
+
+当设置更新当前列的新列定义时，将引发列事件。例如，如果应用状态导致列被固定或取消固定，则将引发 `columnPinned` 事件。
+
+下面的示例演示了基于列定义更改引发的事件。该示例将事件信息记录到控制台。
+
+{% gridExampleRunner title="Column Events" name="column-events" /%}
+
+## 列定义检索
+
+有时您需要检索当前列定义，以便可能持久化它们，或者可能检索、更改然后重新应用修改后的列。
+
+可以使用 `getColumnDefs` 检索当前列定义：
+
+{% apiDocumentation source="grid-api/api.json" section="columns" names=["getColumnDefs"] /%}
+
+## 列组
+
+列组可以以与列相同的方式更新，您只需更新列组定义。对于可展开的组，要保持打开/关闭状态，您需要在列组定义中分配 `groupId`。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            headerName: 'Group A',
+            groupId: 'groupA',
+            children: [
+                { field: 'name' },
+                { field: 'age', columnGroupShow: 'open' }
+            ]
+        }
+    ]
+}
+```
+
+在下面的示例中，请注意以下几点：
+
+1. 单击顶部按钮在两组定义之间交替列。
+1. 列组 A - 提供了 `groupId`，因此保留展开/折叠。标题名称也会更改。
+1. 列组 B - 未提供 `groupId`，因此展开/折叠丢失，组在更新发生时总是关闭。
+1. 列组 C - 提供了 `groupId`，因此保留展开/折叠。子列已更改。
+
+{% gridExampleRunner title="Column Groups" name="column-groups" /%}

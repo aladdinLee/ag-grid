@@ -1,0 +1,89 @@
+---
+title: "Excel 导出 - Excel 表格"
+enterprise: true
+---
+
+Excel 导出提供了一种将网格数据导出为 Excel 表格的方法，这将使用户能够立即在 Excel 中筛选、排序和分析数据。您可以指示 AG Grid 在导出到 Excel 时自动创建包含网格数据的 Excel 表格。
+
+## 导出 Excel 表格
+
+为了为导出的数据创建 Excel 表格，您应该在 [ExcelExportParams](./excel-export-api/#excelexportparams) 配置对象中设置 `exportAsExcelTable` 属性。Excel 配置参数可以在 [defaultExcelExportParams](./grid-options/#reference-export-defaultExcelExportParams) 网格选项中设置，或作为参数传递给 [Excel 导出 API 方法](./excel-export-api/)之一。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+     defaultExcelExportParams: {
+        exportAsExcelTable: true,
+     },
+};
+```
+
+导出的 Excel 文件将包含一个表格，该表格包含导出的数据。当您选择表格内的单元格时，Excel 标签工具栏中的 `表格` 标签将出现，提供筛选、排序和分析数据的选项。
+
+这是在 Excel 中打开的带有表格的导出 Excel 文件的外观：
+
+{% imageCaption imagePath="resources/excel-table-export.png" alt="Excel 中的表格" centered=true /%}
+
+## 将工作表导出为 Excel 表格
+
+以下示例演示如何将网格数据导出为 Excel 表格。
+
+-   我们在 `defaultExcelExportParams` 网格选项中将 `exportAsExcelTable` 属性设置为 `true`。
+
+请按照以下步骤查看 Excel 表格：
+
+-   您可以通过单击 `导出到 Excel` 按钮或通过上下文菜单触发导出。
+-   文件导出后，在 Excel 中打开它并选择表格内的单元格以查看 `表格` 标签。
+-   此示例包含分组列，因此 Excel 表格中仅包含叶列。
+-   在此示例中，只有运动员和国家/地区列可以筛选。这也反映在 Excel 表格中。
+
+{% gridExampleRunner title="Excel 导出 - 将单个工作表导出为 Excel 表格" name="excel-export-table-single-sheet" /%}
+
+## 自定义
+
+您可以通过为 `exportAsExcelTable` 提供配置对象而不是布尔值来自定义 Excel 表格。此配置对象可以包含以下属性：
+
+{% interfaceDocumentation interfaceName="ExcelTableConfig" /%}
+
+{% warning %}
+Excel 表格需要非空且唯一的表格列名称。
+将网格导出为 Excel 表格时，应确保列标题都是唯一且非空的。
+
+这同样适用于使用
+[processHeaderCallback](./excel-export-api/#reference-ExcelExportParams-processHeaderCallback)
+自定义列标题时。
+
+如果您有重复的列标题，Excel 将在打开导出的文件时显示警告消息。Excel 有时会建议自动修复问题（通过重命名无效的表格标题）。但是，情况并非总是如此，用户最终可能会得到一个无法按预期工作的表格。
+{% /warning %}
+
+{% note %}
+请注意，导出为 Excel 表格不支持透视表和主/明细网格。
+网格将在没有 Excel 表格格式的情况下导出。
+{% /note %}
+
+### 行/列条纹和筛选按钮
+
+在以下示例中，我们按如下方式自定义 Excel 表格：
+
+-   `showRowStripes` - 设置为 `true` 以在 Excel 表格中显示行条纹。
+-   `showColumnStripes` - 设置为 `true` 以在 Excel 表格中显示列条纹。
+-   `showFilterButton` - 设置为 `true` 以在 Excel 表格中为所有列显示筛选按钮。
+-   `name` - 设置为 `Olympic Medals` 以命名 Excel 表格。
+
+请按照以下步骤查看 Excel 表格：
+
+-   单击 `导出到 Excel` 按钮将网格数据导出为 Excel 表格。
+-   在 Excel 中打开导出的文件并选择表格内的单元格以查看 `表格` 标签。
+-   请注意，条纹仅应用于表格的列。
+-   请注意，表格名称设置为 `Olympic_Medals`。
+-   请注意，表格中所有列都可以使用筛选按钮。
+
+{% gridExampleRunner title="Excel 导出 - 自定义 Excel 表格条纹" name="excel-export-table-stripes" /%}
+
+### 突出显示第一列和最后一列
+
+在以下示例中，我们按如下方式自定义 Excel 表格：
+
+-   `highlightFirstColumn` - 设置为 `true` 以突出显示 Excel 表格中的第一列。
+-   `highlightLastColumn` - 设置为 `true` 以突出显示 Excel 表格中的最后一列。
+
+请按照以下步骤查看 Excel 表格：

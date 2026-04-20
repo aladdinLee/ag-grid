@@ -1,0 +1,87 @@
+---
+title: "SSRM 数据源"
+enterprise: true
+---
+
+本节介绍服务端数据源并演示如何使用它从服务器加载数据。
+
+服务端行模型需要数据源来为网格获取行。当用户滚动或执行排序或分组等网格操作时，将通过数据源请求更多数据。
+
+{% note %}
+大多数服务端行模型示例包括一个生成 SQL 的假服务器，以模拟真实服务器如何使用从网格发送的请求。这些示例使用 [AlaSQL](http://alasql.org/)，这是一个在浏览器中工作的 JavaScript SQL 数据库。
+
+但是，请注意，服务端行模型对使用的服务端技术没有任何限制。
+{% /note %}
+
+## 启用服务端行模型
+
+[客户端行模型](./row-models/#client-side)是默认的行模型。要改用 SSRM，请按如下方式设置 `rowModelType`：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowModelType: 'serverSide',
+}
+```
+
+## 实现服务端数据源
+
+SSRM 使用数据源为网格获取行。
+
+{% interfaceDocumentation interfaceName="IServerSideDatasource" /%}
+
+以下代码片段显示了一个简单的数据源实现：
+
+```js
+const createDatasource = server => {
+    return {
+        // 当需要更多行时由网格调用
+        getRows: params => {
+
+            // 从服务器获取请求数据
+            const response = server.getData(params.request);
+
+            if (response.success) {
+                // 将请求块的行提供给网格
+                params.success({
+                    rowData: response.rows
+                });
+            } else {
+                // 通知网格请求失败
+                params.fail();
+            }
+        }
+    };
+}
+```
+
+请注意，数据源包含一个方法 `getRows(params)`，当需要更多行时由网格调用。请求在 `params` 对象中提供，其中包含服务器从服务器获取数据所需的所有信息。
+
+从服务器获取的行通过 `params.success(data)` 提供给网格。
+
+## 注册数据源
+
+数据源通过 a) 网格属性 `serverSideDatasource` 或 b) 网格 API 注册到网格。
+
+通过网格选项注册数据源如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    serverSideDatasource: myDatasource
+}
+```
+
+或者，可以通过网格 API 注册数据源：
+
+```{% frameworkTransform=true %}
+api.setGridOption('serverSideDatasource', myDatasource);
+```
+
+下面的示例演示使用简单的 SSRM 数据源加载行。请注意以下几点：
+
+-   使用网格选项属性选择服务端行模型：`rowModelType = 'serverSide'`。
+-   数据源使用以下方式注册到网格：`api.setGridOption('serverSideDatasource', datasource)`。
+-   `getRows(params)` 定义请求参数，`params` 包含确定要返回的行范围的 `startRow` 和 `endRow`。例如，如果使用 `startRow: 0` 和 `endRow: 100` 调用 `getRows` 函数，则网格将期望结果有 100 行（第 0 到 99 行）。
+-   向下滚动时，会有从服务器获取更多行的延迟。
+-   查看示例下方的控制台以查看网格为行发送的请求数据。
+
+{% gridExampleRunner title="简单服务端数据源" name="simple" /%}

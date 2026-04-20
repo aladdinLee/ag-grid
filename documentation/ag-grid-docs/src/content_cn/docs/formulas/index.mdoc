@@ -1,0 +1,60 @@
+---
+title: "公式"
+enterprise: true
+---
+
+公式允许用户在网格单元格中输入电子表格样式的表达式，以便在引用的数据更改时值自动更新。
+
+{% video videoSrc="resources/formula-editor-demo.mp4" centered=true /%}
+
+## 启用公式
+
+要启用公式，请在一个或多个列上设置列属性 `allowFormula: true`，并确保您的行具有[行 ID](./row-ids/#row-ids)。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'product' },
+        { field: 'price' },
+        { field: 'quantity' },
+        { field: 'subtotal', allowFormula: true },
+        { field: 'tax', allowFormula: true },
+        { field: 'total', allowFormula: true },
+    ],
+    cellSelection: {
+        handle: {
+            mode: 'fill',
+        },
+    },
+    getRowId: (params) => String(params.data.rid),
+};
+```
+
+{% gridExampleRunner title="公式" name="formulas" exampleHeight=390 /%}
+
+## 公式编辑器组件
+
+公式单元格编辑器是 `allowFormula: true` 列的默认编辑器，除非您提供自定义 `cellEditor`。它在键入时对引用进行标记化、突出显示范围并提供函数自动完成。
+
+要退出，请在列上设置 `cellEditor`。公式仍然求值，但公式编辑器功能被禁用。
+
+有关详细信息和示例，请参阅[公式编辑器组件](./formula-editor-component/)。
+
+## 公式语法
+
+公式是以等号（`=`）开头的文本字符串，可以包含引用、函数、运算符和常量。
+
+### 基础
+
+-   `=` 前缀表示公式。
+-   常量可以是数字（例如 `3.14`、`-7`）、字符串（例如 `"Hello"`）或布尔值（`TRUE`、`FALSE`）。
+-   应用标准运算符优先级（BODMAS/PEMDAS）。
+
+### 单元格引用
+
+单元格引用使用列字母加行号（例如 `A1`、`B2`）。行从 1 开始，列在 `Z` 之后继续为 `AA`、`AB`、`AC` 等。
+
+相对引用随着网格更改而移动。绝对引用使用 `$` 保持固定：
+
+-   `=$A$1` 锁定列和行。
+-   `=A$1` 仅锁定行。

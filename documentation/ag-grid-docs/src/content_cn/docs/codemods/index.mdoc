@@ -1,0 +1,297 @@
+---
+title: "代码模组"
+---
+
+## 如何升级 AG Grid 版本
+
+从 v31 开始的所有 AG Grid 版本都附带一个代码模组，以帮助自动化升级过程。
+代码模组是修复项目源文件的脚本，以在从旧版本升级时解决大多数破坏性更改和弃用。
+
+这是确保项目与最新 AG Grid 更改保持同步的最简单方法。
+
+## 框架覆盖
+
+代码模组完全支持使用以下 AG Grid 实现的项目：
+
+-   React
+-   JavaScript
+
+以下框架部分支持代码模组（即将推出完全支持）：
+
+-   Angular - _目前不在组件模板源内应用编辑_
+-   Vue - _目前不在组件模板源内应用编辑_
+
+## 注意事项
+
+使用代码模组时需要记住的一些要点：
+
+-   与任何自动化工作流一样，我们建议在提交更新的源文件之前检查和审查代码模组所做的任何更改。
+-   特别是，任何自动应用的更改应该始终在逻辑上是正确的，但是生成代码的格式可能与代码库的其余部分略有不同，可能需要微调。
+-   虽然我们尝试自动化尽可能多的升级路径，但不寻常的用例可能仍需要一些手动干预。
+
+有关特定 AG Grid 版本的代码模组的更多信息，请参阅相关的迁移文档页面。
+
+## 用法
+
+要运行迁移：
+
+```
+npx @ag-grid-devtools/cli@latest migrate --from=$FROM_VERSION --to=$TO_VERSION
+```
+
+### 参数
+
+-   `--from=<version>` _必需_
+
+    要从中迁移的 AG Grid [semver](https://semver.org/) 版本。
+
+    例如 `--from=30` 或 `--from=30.0.0`
+
+-   `--to=<version>`
+
+    要迁移到的 AG Grid [semver](https://semver.org/) 版本（默认为最新）
+
+-   `--num-threads=<number>`
+
+    要生成的工作线程数（默认为系统核心数）。
+
+-   `--dry-run`
+
+    显示将要进行的更改的比较，而不写入任何文件。
+
+    对于在应用更改之前查看更改很有用。
+
+-   `--verbose`
+
+    显示额外的日志输出。
+
+-   `--help`
+
+    显示详细的使用说明。
+
+为了防止意外更改，迁移命令只会在 git 仓库上操作，并且仅在工作树干净时操作。
+以下选项可用于覆盖此行为：
+
+-   `--allow-untracked`
+    允许在 git 仓库之外的文件上操作。
+
+    默认情况下，如果在非 git 目录中运行，应用程序将终止。
+
+-   `--allow-dirty`
+    允许在工作树中有未提交更改的仓库上操作。
+
+    建议在运行迁移之前始终提交，但此选项可用于覆盖默认行为。
+
+可以将自定义输入文件列表传递给 `migrate` 命令：
+
+-   [<file>...]
+    要操作的输入文件列表（默认为当前工作目录中的所有源文件）。
+
+    如果未指定，代码模组运行器将定位当前目录中的所有源文件，排除 [.gitignore](https://git-scm.com/docs/gitignore) 文件中指定的所有模式。
+
+    对于有更具体要求的项目，将输入文件列表传递给 `migrate` 命令。
+
+配置文件也可用于高级用例：
+
+-   `--config=<path>`
+
+    加载自定义配置文件。
+
+    有关更多信息，请参阅[配置文件](#configuration-file)部分。
+
+### 配置文件
+
+配置文件是导出配置对象的 [commonJS](https://en.wikipedia.org/wiki/CommonJS) JavaScript 或 TypeScript 模块。
+
+扩展名为 `.cjs` 的 JavaScript 文件 - `npx @ag-grid-devtools/cli migrate --from=30 --config=./my-migration-config.cjs`
+
+```js
+// my-migration-config.cjs
+
+const { defineUserConfig } = require('@ag-grid-devtools/cli/user-config');
+
+module.exports = defineUserConfig({
+    /// ... 配置在这里
+});
+```
+
+扩展名为 `.cts` 的 [TypeScript](https://www.typescriptlang.org/) 文件 - `npx @ag-grid-devtools/cli migrate --from=30 --config=./my-migration-config.cts`
+
+```ts
+// my-migration-config.cts
+
+import { defineUserConfig } from '@ag-grid-devtools/cli/user-config';
+
+export default defineUserConfig({
+    /// ... 配置在这里
+});
+```
+
+{% note %}
+`defineUserConfig` 函数仅用于为配置提供类型支持。
+配置可以是具有相同形状的普通对象，如 `module.exports = { ... }`。
+{% /note %}
+
+### 自定义导入路径和名称
+
+对于自定义表格包装器和自定义库，可以在配置文件中提供自定义拦截器来
+处理这些自定义表格包装器的迁移。
+
+{% if isFramework("javascript") %}
+
+假设组织 "my-org" 在包 `@my-org/my-grid` 中有两个自定义表格包装器
+
+```ts
+// @my-org/my-grid/index.ts
+
+import { createGrid, GridOptions } from 'ag-grid-community';
+export interface GridCustomOptions extends GridOptions { customOption: string; }
+export const createGridWithCustomOption = (myOptions: GridCustomOptions) => {
+    const { customOption, ...options } = myOptions;
+    console.log('Custom grid option', customOption);
+    return createGrid(options);
+}
+export { createGrid };
+```
+
+那么配置文件可以是：
+
+```ts
+// my-grid-migration-config.ts
+
+import { defineUserConfig } from '@ag-grid-devtools/cli/user-config';
+
+export default defineUserConfig({
+
+    matchGridImport({ importPath }): boolean {
+        // 如果导入路径是自定义表格包装器，这必须返回 true
+        // 例如 `import {...} from "@my-org/my-grid"`
+        return importPath === "@my-org/my-grid";
+    },
+
+    matchGridImportName({ importPath, importName, agGridExportName }): boolean {
+        // 只有当先前对同一导入路径的 `matchGridImport` 调用返回 true 时，才会调用此拦截器
+        if (importPath === "@my-org/my-grid" && agGridExportName === "createGrid") {
+            // 处理 `import { createGridWithCustomOption, createGrid } from "@my-org/my-grid"`
+            return importName === "createGridWithCustomOption" || importName === 'createGrid';
+        }
+        // 处理其他所有内容（默认情况）。
+        return importName === agGridExportName;
+    },
+});
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+假设组织 "my-org" 在包 `@my-org/my-grid-react` 中有一个 react 表格包装器
+
+```ts
+// @my-org/my-grid-react/index.tsx
+
+import { AgGridReact, AgGridReactProps } from 'ag-grid-react';
+export interface MyGridReactProps extends AgGridReactProps { wrapperClassName?: string; }
+export const MyGrid = ({wrapperClassName, ...gridProps}: AgGridReactProps) =>
+    <div className={wrapperClassName}><AgGridReact {...gridProps} /></div>;
+```
+
+那么配置文件可以是：
+
+```ts
+// my-grid-migration-config.ts
+
+import { defineUserConfig } from '@ag-grid-devtools/cli/user-config';
+
+export default defineUserConfig({
+    matchGridImport({ importPath }): boolean {
+        // 如果导入路径是自定义表格包装器，这必须返回 true
+        // 例如 `import {...} from "@my-org/my-grid-react"`
+        return importPath === "@my-org/my-grid-react";
+    },
+    matchGridImportName({ importPath, importName, agGridExportName }): boolean {
+        // 只有当先前对同一导入路径的 `matchGridImport` 调用返回 true 时，才会调用此拦截器
+        if (importPath === "@my-org/my-grid-react" && agGridExportName === "AgGridReact") {
+            // 处理 `import { MyGrid } from "@my-org/my-grid"`
+            return importName === "MyGrid";
+        }
+        // 处理其他所有内容（默认情况）。
+        return importName === agGridExportName;
+    },
+});
+```
+
+{% /if %}
+
+{% if isFramework("angular") %}
+
+假设组织 "my-org" 在包 `@my-org/my-grid-angular` 中有一个自定义 angular 表格包装器
+
+那么配置文件可以是：
+
+```ts
+// my-grid-migration-config.ts
+
+import { defineUserConfig } from '@ag-grid-devtools/cli/user-config';
+
+export default defineUserConfig({
+    matchGridImport({ importPath }): boolean {
+        // 如果导入路径是自定义表格包装器，这必须返回 true
+        // 例如 `import {...} from "@my-org/my-grid-angular"`
+        return importPath === "@my-org/my-grid-angular";
+    },
+    matchGridImportName({ importPath, importName, agGridExportName }): boolean {
+        // 只有当先前对同一导入路径的 `matchGridImport` 调用返回 true 时，才会调用此拦截器
+        if (importPath === "@my-org/my-grid-angular" && agGridExportName === "AgGridAngular") {
+            // 处理 `import { MyGrid } from "@my-org/my-grid"`
+            return importName === "MyGrid";
+        }
+        // 处理其他所有内容（默认情况）。
+        return importName === agGridExportName;
+    },
+});
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+假设组织 "my-org" 在包 `@my-org/my-grid-vue` 中有一个自定义 vue 表格包装器
+
+那么配置文件可以是：
+
+```ts
+// my-grid-migration-config.ts
+
+import { defineUserConfig } from '@ag-grid-devtools/cli/user-config';
+
+export default defineUserConfig({
+    matchGridImport({ importPath }): boolean {
+        // 如果导入路径是自定义表格包装器，这必须返回 true
+        // 例如 `import {...} from "@my-org/my-grid-vue"`
+        return importPath === "@my-org/my-grid-vue";
+    },
+    matchGridImportName({ importPath, importName, agGridExportName }): boolean {
+        // 只有当先前对同一导入路径的 `matchGridImport` 调用返回 true 时，才会调用此拦截器
+        if (importPath === "@my-org/my-grid-vue" && agGridExportName === "AgGridVue") {
+            // 处理 `import { MyGrid } from "@my-org/my-grid"`
+            return importName === "MyGrid";
+        }
+        // 处理其他所有内容（默认情况）。
+        return importName === agGridExportName;
+    },
+});
+```
+
+{% /if %}
+
+要使用自定义配置文件执行迁移：
+
+```
+npx @ag-grid-devtools/cli migrate --from=30 --config=./my-grid-migration-config.ts
+```
+
+### 配置 API
+
+要查看可用的完整选项列表，请参阅 [user-config.ts](https://github.com/ag-grid/devtools/blob/develop/packages/types/src/user-config.ts) 和
+[ag-grid-export-name.ts](https://github.com/ag-grid/devtools/blob/develop/packages/types/src/ag-grid-export-name.ts) 源代码。

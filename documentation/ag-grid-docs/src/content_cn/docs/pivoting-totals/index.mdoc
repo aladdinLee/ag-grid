@@ -1,0 +1,33 @@
+---
+title: "透视总计"
+enterprise: true
+---
+
+可以将透视总计插入网格以显示行的总计聚合。
+
+## 列组总计
+
+按多列透视时，网格会自动为每个活动聚合插入一列，表示该组的总计。
+默认情况下，这些列仅在列组关闭时显示。
+
+下面的示例演示，当折叠时，为每项运动显示组总计。展开时，这些被隐藏，而是显示每年的细分。
+
+{% gridExampleRunner title="可展开透视列组" name="expandable-pivot-column-groups" /%}
+
+## 行总计
+
+可以通过使用 `pivotRowTotals` 网格选项为每个聚合包含总计列。此选项可以设置为 `"before"` 或 `"after"`，确定这些总计列相对于透视列的位置。
+
+{% gridExampleRunner title="透视行总计" name="row-totals" /%}
+
+上面的示例演示了以下配置，用于在网格开头添加额外的透视行总计：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    pivotRowTotals: 'before',
+}
+```
+
+{% note %}
+尝试以响应方式更新行总计的位置时，请参见[更改数据、过滤器和配置](./pivoting-column-groups/#changing-data-filters-and-configurations)。
+{% /note %}

@@ -1,0 +1,196 @@
+---
+title: "图表自定义"
+enterprise: true
+---
+
+集成图表可以通过 [AG Charts 主题 API](https://www.ag-grid.com/charts/themes-api/) 进行自定义。
+
+## 提供的主题
+
+默认情况下，以下主题提供给集成图表。
+
+```js
+['ag-default', 'ag-material', 'ag-sheets', 'ag-polychroma', 'ag-vivid']
+```
+
+这些主题对应于 [AG Charts 基础主题](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-baseTheme)。
+
+{% note %}
+当网格使用深色配色方案时，应用程序必须提供图表主题的深色等效项。如果使用默认 AG Chart 主题，深色主题以 `-dark` 后缀命名，例如 `'ag-vivid-dark'`。
+{% /note %}
+
+用户可以通过[图表工具面板](./integrated-charts-chart-tool-panels/)或使用 `chartThemes` 网格选项更改提供主题的顺序来更改选定的主题，如下所示：
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    chartThemes: ['ag-vivid', 'ag-polychroma', 'ag-material', 'ag-sheets', 'ag-default']
+}
+```
+
+## 覆盖主题
+
+集成图表使用基于主题的配置，该配置"覆盖"主题默认值。
+
+要覆盖图表主题，请使用 `chartsThemeOverrides` 网格选项。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    chartThemeOverrides: {
+        common: {
+            title: {
+                fontSize: 22,
+                fontFamily: 'Arial, sans-serif'
+            }
+        }
+    }
+}
+```
+
+{% note %}
+请注意，`chartThemeOverrides` 网格选项映射到 [AG Charts 主题覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides)。
+{% /note %}
+
+### 通用覆盖
+
+这些覆盖可以用于任何系列类型。有关覆盖的完整列表，请参阅 AG Charts 文档中的[通用覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-common)。
+
+{% gridExampleRunner title="通用覆盖" name="common-overrides"  exampleHeight=660 /%}
+
+### 图表特定覆盖
+
+以下文档链接描述了特定于各个 AG Charts 系列类型的不同类型的覆盖。
+
+-   [折线覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-line)
+-   [条形覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-bar)
+-   [面积覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-area)
+-   [散点覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-scatter)
+-   [饼图覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-pie)
+-   [雷达折线覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-radar-line)
+-   [雷达面积覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-radar-area)
+-   [南丁格尔覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-nightingale)
+-   [径向柱状覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-radial-column)
+-   [径向条形覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-radial-bar)
+-   [范围条形覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-range-bar)
+-   [范围面积覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-range-area)
+-   [箱线图覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-box-plot)
+-   [瀑布图覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-waterfall)
+-   [热力图覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-heatmap)
+-   [树图覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-treemap)
+-   [旭日图覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides-sunburst)
+
+## 自定义图表主题
+
+也可以通过 `customChartThemes` 网格选项向网格提供自定义 [AG Charts 主题](https://www.ag-grid.com/charts/react/themes/)。
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    customChartThemes: {
+        myCustomTheme: {
+            palette: {
+                fills: ['#42a5f5', '#ffa726', '#81c784'],
+                strokes: ['#000000', '#424242'],
+            },
+            overrides: {
+                common: {
+                    background: {
+                        fill: '#f4f4f4',
+                    },
+                    legend: {
+                        item: {
+                            label: {
+                                color: '#333333',
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        chartThemes: ['myCustomTheme', 'ag-vivid'],
+    }
+}
+```
+
+下面的示例显示了与网格一起使用的自定义图表主题。请注意，其他提供的主题可以与自定义主题一起使用，并且不受自定义主题中设置的影响。
+
+{% gridExampleRunner title="自定义图表主题" name="custom-chart-theme"  exampleHeight=660 /%}
+
+## 格式化
+
+图表值可以通过几种不同的方式进行格式化。
+
+### 标签格式化
+
+{% note %}
+`valueFormatter` 不会自动应用于图表轴。如果您希望使用网格的值格式化器，必须手动应用它们。
+{% /note %}
+
+可以通过提供合适的格式化器将自定义标签格式化应用于图表轴。
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    chartThemeOverrides: {
+        common: {
+            axes: {
+                number: {
+                    label: {
+                        formatter: function(params) {
+                            // 前缀美元符号
+                            return '$' + params.value;
+                        },
+                    },
+                },
+            },
+        },
+    },
+}
+```
+
+下面的示例显示：
+
+-   与垂直轴一起使用的自定义标签格式化器，用于显示数据的 SI 单位。此外，此示例演示了传递给格式化器的 `domain` 属性的使用，以在整个值范围内提供一致的刻度。
+-   使用传递给格式化器的 `boundSeries` 属性的自定义标题格式化器，用于垂直轴以显示轴代表的系列。
+
+{% gridExampleRunner title="标签格式化" name="label-formatting"  exampleHeight=660 /%}
+
+有关轴标签的 `formatter` 属性的更多信息，请参阅 AG Charts 轴标签[标签文本格式化](https://www.ag-grid.com/charts/javascript/axes-labels/#label-text-formatting)。
+
+### 全局格式化器
+
+单个顶级 `formatter` 可用于控制每个带有标签元素的文本，例如轴、系列标签、图例项、标注等。格式化器将为每个元素运行，除非该元素定义了自己的 `formatter`。
+
+回调接收提供给元素级格式化器的类似 `params` 对象，提供对 `value`、`type` 和 `elementId` 等属性的访问。有关更多信息，请参阅 [AG Charts API 参考](https://charts.ag-grid.com/themes-api/#reference-AgChartTheme-overrides-common-formatter)。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    chartThemeOverrides: {
+        common: {
+            formatter: (params) => {
+                if (params.type === 'number') {
+                    return `£${params.value}`;
+                    // 前缀 `£` 符号
+                }
+                const gridApi = params.context.api;
+                // 使用网格 API 做一些事情
+            }
+        }
+    }
+}
+```
+
+下面的示例显示了一个全局格式化器，它在所有数值前加上 `£` 符号。
+
+{% gridExampleRunner title="全局标签格式化器" name="global-label-formatter"  exampleHeight=850 /%}
+
+格式化的顺序如下：
+
+1. 元素特定的 `label.formatter`（轴、系列、图例、标注等）
+2. 全局 `formatter`
+3. 默认 AG Charts 格式化规则
+
+### 在格式化器中访问网格上下文
+
+网格将网格 API 和上下文传递给格式化器参数的 `context` 属性。
+
+{% interfaceDocumentation interfaceName="GridChartContext" /%}
+
+对于直接链接到行数据的格式化器，行节点将在 `datum.node` 属性中传递（请注意 `datum` 可能未定义）。

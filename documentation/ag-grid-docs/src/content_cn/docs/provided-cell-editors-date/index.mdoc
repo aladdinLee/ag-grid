@@ -1,0 +1,61 @@
+---
+title: "日期单元格编辑器"
+---
+
+提供了两个日期单元格编辑器 - `agDateCellEditor` 用于作为 [Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date) 提供的单元格值，`agDateStringCellEditor` 用于作为 [String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String) 提供的日期值。
+
+## 启用日期单元格编辑器
+
+编辑下面网格中的任何单元格以查看日期单元格编辑器。
+
+{% gridExampleRunner title="日期编辑器" name="date-editor" /%}
+
+日期单元格编辑器是一个简单的日期编辑器，使用标准 HTML 日期输入，要求单元格值为 [Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date) 类型。
+
+使用 `agDateCellEditor` 启用，并使用 `IDateCellEditorParams` 配置。
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agDateCellEditor',
+        cellEditorParams: {
+            min: '2000-01-01',
+            max: '2019-12-31',
+        }
+        // ...其他属性
+    }
+]
+```
+
+### API 参考
+
+{% interfaceDocumentation interfaceName="IDateCellEditorParams" names=["min","max","step","includeTime"] /%}
+
+## 启用日期字符串单元格编辑器
+
+编辑下面网格中的任何单元格以查看日期字符串单元格编辑器。
+
+{% gridExampleRunner title="日期字符串编辑器" name="date-as-string-editor" /%}
+
+日期字符串单元格编辑器是一个简单的日期编辑器，使用标准 HTML 日期输入。它与日期单元格编辑器类似，但使用 [String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String) 类型的单元格值。
+
+日期格式通过[单元格数据类型](./cell-data-types/)和[日期字符串数据类型定义](./cell-data-types/#date-as-string)控制。默认为 `'YYYY-MM-DD'`（或 `dateTimeString` 的 `'YYYY-MM-DDTHH:mm:ss'`）。
+
+使用 `agDateStringCellEditor` 启用，并使用 `IDateStringCellEditorParams` 配置。
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agDateStringCellEditor',
+        cellEditorParams: {
+            min: '2000-01-01',
+            max: '2019-12-31',
+        }
+        // ...其他属性
+    }
+]
+```
+
+### API 参考
+
+{% interfaceDocumentation interfaceName="IDateStringCellEditorParams" names=["min","max","step","includeTime"] /%}

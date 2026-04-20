@@ -1,0 +1,175 @@
+---
+title: "图表工具面板"
+enterprise: true
+---
+
+图表工具面板允许用户更改选定的图表类型并自定义数据和图表格式。
+
+{% gridExampleRunner title="图表工具面板" name="chart-tool-panels" /%}
+
+通过从图表右上角的[图表菜单](./integrated-charts-menu)中选择 `Edit Chart` 来访问图表工具面板。请注意，它们也可以通过配置打开（请参阅本节中的示例），或通过 Grid API 以编程方式打开，请参阅[打开/关闭图表工具面板](#chart-tool-panel-api)。
+
+## 图表面板
+
+图表面板可用于更改图表类型和图表主题。
+
+{% imageCaption imagePath="resources/chart-panel.png" alt="Chart Settings Panel"  constrained=true centered=true maxWidth="30%" %}
+图表面板
+{% /imageCaption %}
+
+可以通过 `chartToolPanelsDef` 网格选项配置包含哪些图表组和图表类型以及以何种顺序：
+
+{% apiDocumentation source="grid-options/properties.json" section="charts" names=["chartToolPanelsDef"] /%}
+
+请注意，图表面板键是 `settingsPanel`。
+
+下面显示了具有相应图表类型的图表组的完整列表：
+
+{% interfaceDocumentation interfaceName="ChartGroupsDef" config={"description":"", "asCode":true, "lineBetweenProps": false} /%}
+
+{% note %}
+[上下文菜单](./context-menu/)中图表菜单项的内容和顺序将与 `ChartGroupsDef` 配置匹配。
+{% /note %}
+
+下面的示例显示了提供的图表组的子集，图表类型已重新排序。请注意以下几点：
+
+-   图表面板中仅显示 **Pie**、**Columns** 和 **Bar** 图表组。
+-   右键单击网格时，上下文菜单中仅显示 **Pie**、**Columns** 和 **Bar** 图表组。
+-   请注意，图表组及其图表类型的顺序与它们在 `chartGroupsDef` 中指定的顺序匹配。
+-   图表面板配置为通过 `defaultToolPanel: 'settings'` 默认打开。
+
+{% gridExampleRunner title="图表面板自定义" name="settings-panel-customisation" /%}
+
+## 设置工具面板
+
+设置面板可用于更改图表类别和系列。它不适用于透视图表。
+
+{% imageCaption imagePath="resources/data-panel.png" alt="Chart Set Up Panel" maxWidth="30%" constrained=true centered=true %}
+图表设置面板
+{% /imageCaption %}
+
+可以通过 `chartToolPanelsDef` 网格选项配置显示哪些组、它们出现的顺序以及是否默认打开：
+
+{% apiDocumentation source="grid-options/properties.json" section="charts" names=["chartToolPanelsDef"] /%}
+
+请注意，设置面板键是 `dataPanel`。
+
+设置面板组的默认列表和顺序如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    chartToolPanelsDef: {
+        dataPanel: {
+            groups: [
+                { type: 'categories', isOpen: true },
+                { type: 'series', isOpen: true },
+                { type: 'seriesChartType', isOpen: true }
+            ]
+        }
+    }
+}
+```
+
+{% note %}
+`seriesChartType` 组仅显示在[组合图表](./integrated-charts-api-range-chart/#combination-charts)中。
+{% /note %}
+
+以下示例显示了一些设置面板自定义。请注意以下几点：
+
+-   不包含 **Categories** 组。
+-   **Series** 组默认关闭。
+-   设置面板配置为通过 `defaultToolPanel: 'data'` 默认打开。
+
+{% gridExampleRunner title="设置工具面板自定义" name="data-panel-customisation" /%}
+
+## 自定义工具面板
+
+自定义面板允许用户格式化图表，其中可用的格式选项因图表类型而异。
+
+{% imageCaption imagePath="resources/format-panel.png" alt="Chart Customize Panel" maxWidth="30%" constrained=true centered=true %}
+图表自定义面板
+{% /imageCaption %}
+
+可以通过 `chartToolPanelsDef` 网格选项配置显示哪些组、它们出现的顺序以及是否默认打开：
+
+{% apiDocumentation source="grid-options/properties.json" section="charts" names=["chartToolPanelsDef"] /%}
+
+请注意，自定义面板键是 `formatPanel`。
+
+格式组的默认列表和顺序如下：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    chartToolPanelsDef: {
+        formatPanel: {
+            groups: [
+                { type: 'chart', isOpen: false },
+                { type: 'titles', isOpen: false },
+                { type: 'legend', isOpen: false },
+                { type: 'horizontalAxis', isOpen: false },
+                { type: 'verticalAxis', isOpen: false },
+                { type: 'series', isOpen: false },
+            ]
+        }
+    }
+}
+```
+
+{% note %}
+选定的图表确定显示哪些组。例如，饼图没有轴，因此即使它们列在 `chartToolPanelsDef.formatPanel.groups` 中，也不会显示 **Axis** 组。
+
+对于同时具有水平轴和垂直轴的图表类型，可以用更具体的 `horizontalAxis` 和 `verticalAxis` 组替换 `axis` 组，以独立控制这些选项。
+{% /note %}
+
+以下示例显示了一些自定义面板自定义。请注意以下几点：
+
+-   自定义面板组已重新排序。
+-   **Horizontal Axis** 组默认打开。
+-   已省略 **Title** 和 **Legend** 组。
+-   自定义面板配置为通过 `defaultToolPanel: 'format'` 默认打开。
+
+{% gridExampleRunner title="自定义工具面板自定义" name="format-panel-customisation" /%}
+
+## 省略和排序工具面板
+
+可以使用 `chartToolPanelsDef.panels` 网格选项省略和排序图表工具面板：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    chartToolPanelsDef: {
+        panels: ['data', 'format', 'settings'], // 默认顺序
+    },
+}
+```
+
+要隐藏图表工具面板，可以将 `chartToolPanelsDef.panels` 网格选项设置为空数组：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    chartToolPanelsDef: {
+        panels: [], // 不显示图表工具面板，并从图表菜单中移除编辑图表
+    },
+}
+```
+
+以下示例显示了如何省略和排序图表工具面板。请注意以下几点：
+
+-   已省略 **Customize** 工具面板。
+-   **Set Up** 工具面板出现在 **Chart** 工具面板之前。
+-   设置面板配置为通过 `defaultToolPanel: 'data'` 默认打开。
+
+{% gridExampleRunner title="省略和排序工具面板" name="omitting-ordering-tool-panels" /%}
+
+## 图表工具面板 API
+
+可以使用以下网格 API 以编程方式打开和关闭图表工具面板：
+
+{% apiDocumentation source="grid-api/api.json" section="charts" names=["openChartToolPanel", "closeChartToolPanel"] /%}
+
+下面的示例演示如何打开和关闭图表工具面板。
+
+-   单击 **Open Chart Tool Panel** 通过 `openChartToolPanel()` 打开默认 `Chart` 选项卡
+-   单击 **Open Chart Tool Panel Customize tab** 通过 `openChartToolPanel()` 打开 `Customize` 选项卡
+-   单击 **Close Chart Tool Panel** 通过 `closeChartToolPanel()` 关闭
+
+{% gridExampleRunner title="打开/关闭图表工具面板" name="chart-tool-panel-api"  exampleHeight=800 /%}

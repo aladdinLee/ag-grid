@@ -1,0 +1,17 @@
+{% if isFramework("angular") %}
+网格通过 `ag-grid-angular` 组件上的输入进行配置。属性包括简单类型、数组、复杂对象和回调函数。
+
+```js
+<ag-grid-angular
+    // 设置布尔属性
+    pagination
+    // 将属性/回调绑定到组件
+    [columnDefs]="columnDefs"
+    // 回调
+    [getRowHeight]="myGetRowHeight"
+    // 事件处理程序
+    (cellClicked)="onCellClicked($event)"
+    />
+```
+
+{% /if %}

@@ -1,0 +1,141 @@
+---
+title: "开始/停止单元格编辑"
+---
+
+本页讨论可以开始和停止单元格编辑的不同方式。
+
+## 开始编辑
+
+假设 `editable=true` 或 `editable` 有一个为列定义返回 `true` 的回调，编辑将在以下任一情况下开始：
+
+-   **编辑键按下**：按下以下键之一：{% kbd "↵ Enter" /%}、{% kbd "F2" /%}。
+-   **退格键**：如果在 Windows 上按下 {% kbd "Backspace" /%}，默认编辑器将启动并清除单元格的内容。要在 MacOS 上模仿此行为，请使用 `enableCellEditingOnBackspace=true` 表格选项。
+-   **可打印键按下**：按下以下任何字符：`abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!"£$%^&amp;*()_+-=[];\'#,./\|<>?:@~{}`{% br /%} 默认编辑器将此字符放入编辑字段，以便用户体验是他们在单元格中键入。
+-   **鼠标双击**：如果鼠标双击。有一个表格属性 `singleClickEdit` 将允许单击开始编辑而不是双击。另一个属性 `suppressClickEdit` 将防止单击和双击开始编辑；如果您只想有自己的开始编辑方式，例如在自定义单元格渲染器中单击按钮，请使用此属性。
+-   **api.startEditingCell(params)**：如果您在表格 API 上调用 `startEditingCell(params)`
+
+## 停止编辑
+
+在以下任一情况下，表格将停止编辑：
+
+-   **回调 stopEditing**：编辑器调用回调 `stopEditing`（来自上面的参数）。这是您的单元格编辑器通知表格停止编辑的方式。
+-   **其他单元格获得焦点**：如果表格中的焦点转到另一个单元格，编辑将停止。
+-   **Enter 键按下**：如果表格在单元格上收到 {% kbd "↵ Enter" /%} 键按下事件。如果您**不**希望在按下 {% kbd "↵ Enter" /%} 时停止编辑，请侦听事件并停止传播，以便表格不对事件进行操作。
+-   **Escape 键按下**：与 {% kbd "↵ Enter" /%} 类似，如果按下 {% kbd "⎋ Esc" /%} 键，编辑将停止。与 {% kbd "↵ Enter" /%} 不同，{% kbd "⎋ Esc" /%} 操作将丢弃更改而不是采用新值。
+-   **Tab 键按下**：编辑将停止，接受更改，并且编辑将移动到下一个单元格，或者如果同时按下 {% kbd "⇧ Shift" /%}，则移动到上一个单元格。
+-   **弹出编辑器关闭**：如果使用弹出编辑器，如果您在编辑器外部单击，弹出窗口配置为关闭。关闭弹出窗口触发表格停止编辑。
+-   **gridApi.stopEditing()**：如果您在表格 API 上调用 `stopEditing()`。
+
+### 开始/停止事件
+
+编辑开始和停止时会触发以下事件。
+
+{% apiDocumentation source="grid-events/events.json" section="editing" names=["cellEditingStarted", "cellEditingStopped"] /%}
+
+## Tab 导航
+
+编辑时，如果您按 {% kbd "⇥ Tab" /%}，当前单元格的编辑将停止并在下一个单元格上开始。如果您按住 {% kbd "⇧ Shift" /%}+{% kbd "⇥ Tab" /%}，同样的事情会发生，只是上一个单元格将开始编辑而不是下一个。这与在 Excel 中编辑数据一致。
+
+下一个和上一个单元格也可以使用 API 函数 `api.tabToNextCell()` 和 `api.tabToPreviousCell()` 导航。如果导航成功，这两个方法都将返回 `true`，否则返回 `false`。
+
+{% apiDocumentation source="grid-api/api.json" section="navigation" names=["tabToNextCell", "tabToPreviousCell"] /%}
+
+## 编辑 API
+
+表格有以下编辑 API 方法：
+
+{% apiDocumentation source="grid-api/api.json" section="editing" names=["startEditingCell", "stopEditing", "getEditingCells", "getEditRowValues", "isEditing"] /%}
+
+如果表格正在编辑，`getEditingCells()` 返回编辑单元格的详细信息。结果是一个对象数组。如果只有一个单元格正在编辑（默认），则数组将有一个条目。如果多个单元格正在编辑（例如[全行编辑](./cell-editing-full-row/)），则数组包含所有编辑单元格。
+
+下面是使用编辑 API 方法的代码示例。
+
+```{% frameworkTransform=true %}
+// 开始编辑第一行的国家单元格
+api.startEditingCell({
+    rowIndex: 0,
+    colKey: 'country'
+});
+
+// 停止编辑
+api.stopEditing();
+
+// 打印编辑单元格的详细信息
+const cellDefs = api.getEditingCells();
+cellDefs.forEach(cellDef => {
+    console.log(cellDef.rowIndex);
+    console.log(cellDef.column.getId());
+    console.log(cellDef.rowPinned);
+});
+```
+
+下面的示例演示了编辑 API 的不同部分。每个按钮开始编辑第一行的"姓氏"列，但有以下区别：
+
+-   `edit()`：正常编辑开始。
+-   `edit(Backspace)`：像按下删除键一样编辑（首先清除内容）。
+-   `edit('T')`：像按下 'T' 一样编辑（将 'T' 放入单元格）。
+-   `edit(top)`：编辑顶部固定行。
+-   `edit(bottom)`：编辑底部固定行。
+
+该示例还演示了以下编辑导航按钮：
+
+-   `stop()`：停止编辑。
+-   `next()`：编辑下一个单元格。
+-   `previous()`：编辑上一个单元格。
+
+最后，该示例还演示了查询哪个单元格正在编辑：
+
+-   `which()`：如果表格正在编辑，打印到控制台哪个单元格处于编辑模式。
+
+事件记录在开发者控制台中。
+
+{% gridExampleRunner title="单元格编辑" name="cell-editing"  exampleHeight=545 /%}
+
+## Enter 键导航
+
+默认情况下，按 {% kbd "↵ Enter" /%} 将在单元格上开始编辑，或在编辑单元格上停止编辑。它不会导航到下面的单元格。
+
+为了与 Excel 保持一致，表格具有以下属性：
+
+-   `enterNavigatesVertically`：设置为 `true` 以便 {% kbd "↵ Enter" /%} 键在未编辑时将焦点移动到下面的单元格。默认是 {% kbd "↵ Enter" /%} 键开始编辑当前聚焦的单元格。
+-   `enterNavigatesVerticallyAfterEdit`：设置为 `true` 以便在编辑时按下 {% kbd "↵ Enter" /%} 后 {% kbd "↵ Enter" /%} 键将焦点移动到下面的单元格。默认是编辑将停止，焦点将保留在编辑单元格上。
+
+下面的示例演示了按 {% kbd "↵ Enter" /%} 时焦点向下移动。
+
+{% gridExampleRunner title="Enter 键导航" name="enter-key-navigation"  exampleHeight=555 /%}
+
+## 单击编辑
+
+默认情况下，当您双击单元格时，表格进入编辑。要更改默认设置以便单击开始编辑，请设置属性 `gridOptions.singleClickEdit = true`。当您希望单元格在单击时立即进入编辑模式时，这很有用，类似于您在 Excel 内部的体验。
+
+也可以使用 `colDef.singleClickEdit = true` 在每列基础上定义单击编辑。
+
+下面的表格设置了 `singleClickEdit = true`，以便当您单击单元格时将开始编辑。
+
+{% gridExampleRunner title="单击编辑" name="single-click-editing"  exampleHeight=520 /%}
+
+## 无点击编辑
+
+可以将表格配置为单击或双击都不开始编辑。为此，请设置属性 `suppressClickEdit=true`。当您希望以另一种方式开始编辑时，例如在单元格渲染器中包含按钮时，这很有用。
+
+下面的表格设置了 `suppressClickEdit = true`，以便点击不会开始编辑。表格配置了一个带有按钮的单元格渲染器来开始编辑。
+
+{% gridExampleRunner title="无点击编辑" name="single-click-editing-renderer"  exampleHeight=520 /%}
+
+## 表格失去焦点时停止编辑
+
+默认情况下，当单元格失去焦点时，表格不会停止编辑当前编辑的单元格，除非单击另一个单元格。这意味着单击表格标题或应用程序的另一部分不会停止编辑。
+这可能很糟糕，例如，如果您有一个保存按钮，并且您需要表格在执行保存函数之前停止编辑（例如，您想确保编辑已保存到表格的状态中）。
+
+如果您希望表格在焦点离开单元格或表格时停止编辑，请设置表格属性 `stopEditingWhenCellsLoseFocus = true`。
+
+下面的示例显示设置了 `stopEditingWhenCellsLoseFocus = true` 的编辑。请注意以下几点：
+
+-   双击开始编辑"年龄"，然后点击表格外部（在"虚拟保存"按钮上，或虚拟文本字段上），表格将停止编辑。
+-   双击开始编辑"年份"，出现自定义弹出编辑器，您可以点击弹出编辑器的任何位置，但一旦您点击编辑器外部，弹出窗口就会关闭。
+
+{% gridExampleRunner title="表格失去焦点时停止编辑" name="stop-edit-when-grid-loses-focus"  exampleHeight=510 /%}
+
+{% note %}
+单元格编辑也可以通过单元格编辑器组件执行；有关更多信息，请参阅[单元格编辑器组件](./cell-editors/)。
+{% /note %}

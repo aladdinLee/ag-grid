@@ -1,0 +1,108 @@
+---
+title: "聚合 - 自定义函数"
+enterprise: true
+---
+
+本节介绍如何在表格中提供和使用自定义聚合函数。
+
+{% gridExampleRunner title="注册函数" name="registering-functions" /%}
+
+## 注册自定义函数
+
+可以通过 `aggFuncs` 表格选项按名称向表格注册自定义函数。然后可以通过在列定义中引用函数名称将函数应用于列。默认值 `"sum"`、`"min"`、`"max"`、`"first"`、`"last"`、`"count"` 和 `"avg"` 也可以用自定义实现覆盖。
+
+上面的示例演示了以下配置，用于注册自定义 `"range"` 函数并将其应用于 `total` 列：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'total', aggFunc: 'range' },
+    ],
+    aggFuncs: {
+        'range': params => {
+            const values = params.values;
+            return values.length > 0 ? Math.max(...values) - Math.min(...values) : null;
+        }
+    },
+}
+```
+
+## 直接应用的函数
+
+对于不是[通过 UI 配置](./aggregation-columns/#configuring-via-the-ui)的列，直接将自定义函数应用于列可能更简单。这可以通过将自定义函数直接传递给列 `aggFunc` 属性来完成。
+
+{% warning %}
+直接函数不会出现在[列工具面板](./tool-panel-columns/)中，在[保存和应用列状态](./column-state/#save-and-apply)时不起作用，或与[表格状态](./grid-state/)一起使用。要使用这些功能，请改为注册自定义函数。
+{% /warning %}
+
+{% gridExampleRunner title="直接应用的函数" name="applied-functions" /%}
+
+上面的示例演示了以下配置，用于将自定义 `"range"` 函数应用于 `total` 列：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'total',
+            aggFunc: params => {
+                const values = params.values;
+                return values.length > 0 ? Math.max(...values) - Math.min(...values) : null;
+            }
+        }
+    ]
+}
+```
+
+## 多个组级别
+
+当跨多个分组级别应用聚合时，聚合函数会被递归调用。
+这会导致某些组聚合其他聚合的结果，从而导致不正确的结果。
+
+要处理此问题，聚合函数应返回一个对象，其中包含下一级聚合的相关元数据，以及表示此级别结果的 `"value"` 字段。
+
+{% gridExampleRunner title="多个组级别" name="multi-group-levels" /%}
+
+{% note %}
+自定义聚合函数也可以与[编辑组行](./grouping-edit/)一起使用。
+当编辑组行时，内置分发自动处理 `sum`、`avg`、`min`、`max`、`first` 和 `last`。
+对于自定义聚合函数，定义每个聚合的分发策略或提供自定义 `groupRowValueSetter` 回调。
+{% /note %}
+
+上面的示例演示了以下配置，用于应用适用于多级行分组的自定义 `"range"` 函数：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+      { field: 'total', aggFunc: 'range' },
+      // ... 其他列定义
+    ],
+    aggFuncs: {
+      range: params => {
+        const values = params.values;
+        // 聚合叶子行
+        if (params.rowNode.leafGroup) {
+            const max = Math.max(...values);
+            const min = Math.min(...values);
+            return {
+                max: max,
+                min: min,
+                value: max - min,
+            }
+        }
+
+        // 聚合组行
+        let max = values[0].max;
+        let min = values[0].min;
+        values.forEach(groupResult => {
+            max = Math.max(max, groupResult.max);
+            min = Math.min(min, groupResult.min);
+        });
+        return {
+            max: max,
+            min: min,
+            value: max - min,
+        };
+      }
+    },
+}
+```

@@ -1,0 +1,28 @@
+{% if isFramework("angular") %}
+
+可以通过 `@ViewChild` 装饰器从组件内访问 `AgGridAngular` 组件的 API。这将在 `ngAfterViewInit` 运行后定义。
+
+```js
+// 向网格添加模板引用
+<ag-grid-angular #myGrid  />
+
+// 通过模板引用选择网格
+@ViewChild('myGrid') grid!: AgGridAngular;
+
+// 从网格访问 API
+onClick() { this.grid.api.deselectAll() }
+```
+
+所有网格事件和回调的参数中也提供了 `api`。第一个触发的事件是 `gridReady` 事件，可用于存储对 API 的引用。
+
+```js
+<ag-grid-angular (gridReady)="onGridReady($event)" />
+
+private api!: GridApi;
+onGridReady = (event: GridReadyEvent) => {
+    // 存储 API 以供以后使用
+    this.api = event.api;
+}
+```
+
+{% /if %}

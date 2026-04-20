@@ -1,0 +1,33 @@
+---
+title: "保存/恢复图表"
+enterprise: true
+---
+
+本节展示如何使用网格 API 保存和恢复图表。
+
+## 保存/恢复图表
+
+下面的示例演示如何保存然后恢复图表。您可以更改图表类型、主题、数据和格式选项，并注意恢复的图表与保存的图表外观相同。
+
+- 更改图表类型、主题、数据和/或格式，以便稍后查看恢复的更改。
+- 单击"保存图表"将可见图表的模型持久化到局部变量中。
+- 单击"清除图表"以销毁现有图表。
+- 单击"恢复图表"以恢复之前保存的图表。
+
+{% gridExampleRunner title="保存和恢复图表" name="saving-and-restoring-charts"  exampleHeight=800 /%}
+
+## API 参考
+
+可以使用 `getChartModels()` 获取表示渲染图表的所有状态信息的图表模型。这些模型以易于与其他 API 方法一起使用的格式返回，以便稍后恢复图表。
+
+{% apiDocumentation source="grid-api/api.json" section="charts" names=["getChartModels"] /%}
+
+{% br /%}
+
+{% interfaceDocumentation interfaceName="ChartModel" /%}
+
+然后可以将这些模型提供给以下网格 API 方法以恢复图表：
+
+{% apiDocumentation source="grid-api/api.json" section="charts" names=["restoreChart"] /%}
+
+请注意，恢复图表时可以指定可选的 `chartContainer`。

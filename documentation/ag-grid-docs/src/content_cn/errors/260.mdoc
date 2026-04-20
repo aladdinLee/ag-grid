@@ -1,0 +1,39 @@
+## AG Grid 模块
+
+AG Grid 功能被拆分为[模块](./modules/)，以帮助减少应用程序包大小，使开发者能够按需选择所需功能。当使用某个功能但未先注册该功能的模块时，会出现此错误。
+
+{% note %}
+有关 AG Grid 模块的全面指南，请参阅[模块](./modules/)。
+{% /note %}
+
+### 最小化包大小
+
+如果您关心包大小，只需导入所需功能的模块，即上述错误中缺少的模块。
+
+我们建议使用[模块选择工具](./modules/#selecting-modules)来识别应用程序功能所需的所有模块。该工具将生成可以复制到应用程序中的模块注册代码。
+
+### 所有功能包
+
+如果您不关心包大小，可以通过[包](./modules/#bundles) `AllCommunityModule` / `AllEnterpriseModule` 导入所有社区/企业功能。
+
+```ts
+// 所有社区功能
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+ModuleRegistry.registerModules([AllCommunityModule]);
+```
+
+```ts
+// 所有企业功能
+import { AllEnterpriseModule, ModuleRegistry } from 'ag-grid-enterprise';
+ModuleRegistry.registerModules([AllEnterpriseModule]);
+```
+
+{% if isFramework("javascript") %}
+
+### UMD / CDN
+
+如果您通过 UMD 文件或 CDN 脚本标签使用 AG Grid，则不需要自己注册模块。有关更多详细信息，请参阅 [AG Grid CDN 安装](./installation/#cdn-installation)。
+
+如果您通过 UMD 文件或 CDN 使用集成图表，请参阅[集成图表安装](./integrated-charts-installation/#cdn-installation)了解更多详细信息。
+
+{% /if %}

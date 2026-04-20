@@ -1,0 +1,42 @@
+---
+title: "公式编辑器组件"
+enterprise: true
+---
+
+公式单元格编辑器是具有 `allowFormula: true` 的列的默认编辑器。它在您输入时标记单元格引用、高亮显示范围并提供函数自动完成。
+
+## 默认公式编辑器
+
+如果列启用公式且未指定 `cellEditor`，网格会自动使用公式单元格编辑器。
+
+{% gridExampleRunner title="公式编辑器" name="formula-editor-component" exampleHeight=320 /%}
+
+{% note %}
+范围高亮显示和范围手柄编辑需要启用 `cellSelection`。没有它，编辑器仍然可以工作，但不显示范围高亮显示和手柄。
+{% /note %}
+
+## 禁用公式单元格编辑器
+
+提供 `cellEditor` 将使列退出公式单元格编辑器。公式仍然会计算，但由于使用了不同的编辑器，范围高亮显示、手柄和函数自动完成将被禁用。
+
+{% gridExampleRunner title="公式编辑器已禁用" name="formula-editor-component-disabled" exampleHeight=320 /%}
+
+## 验证
+
+无效公式已经通过公式引擎显示：单元格显示错误并根据网格的公式错误状态显示工具提示。因此，公式单元格编辑器默认情况下不会在每次更改时进行验证。
+
+要在编辑时选择验证，请在编辑器参数上设置 `validateFormulas: true`。如果您提供自定义 [getValidationErrors](./cell-editing-validation/#overriding-validation) 回调，验证也会运行。有关验证行为和表示的更多详细信息，请参阅[单元格编辑验证](./cell-editing-validation/)。
+
+```js
+const columnDefs = [
+    {
+        field: 'total',
+        allowFormula: true,
+        cellEditorParams: {
+            validateFormulas: true,
+        },
+    },
+];
+```
+
+{% gridExampleRunner title="公式编辑器验证" name="formula-editor-component-validation" exampleHeight=320 /%}

@@ -1,0 +1,155 @@
+---
+title: "填充手柄"
+enterprise: true
+---
+
+使用单元格选择时，填充手柄允许您在调整范围大小时对单元格运行操作。
+
+## 启用填充手柄
+
+要启用填充手柄，在 `gridOptions` 中将 `cellSelection.handle` 设置为 `{ mode: 'fill' }`，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    cellSelection: {
+        handle: {
+            mode: 'fill',
+        }
+    },
+}
+```
+
+下面的示例演示了使用上述最小配置的[默认行为](#default-fill-handle)：
+
+{% gridExampleRunner title="填充手柄" name="fill-handle" /%}
+
+## 默认填充手柄
+
+默认填充手柄行为将尽可能接近其他电子表格应用程序。请注意以下几点：
+
+### 单个单元格
+
+-   当选择单个单元格并增加范围时，该单元格的值将被复制到添加到范围的单元格。
+-   当选择包含**数字**值的单个单元格并在按住 {% kbd "⌥ Alt" /%} 键的同时增加范围时，该值将递增（如果向左或向上拖动则递减）一个值，直到所有新单元格都已填充。
+
+### 多个单元格
+
+-   当选择数字范围并扩展该范围时，表格将检测所选项目的线性级数，并用计算值填充额外的单元格。
+-   当选择字符串范围或字符串和数字混合并扩展该范围时，范围项目将按顺序复制，直到所有新单元格都已正确填充。
+-   当选择数字范围并在按住 {% kbd "⌥ Alt" /%} 键的同时增加范围时，行为将与选择字符串范围或混合值范围时相同。
+
+### 范围缩小
+
+-   当减小范围大小时，不再是范围一部分的单元格将被清除（设置为 `null`）。如果您的列使用 `valueParser`，它将接收空字符串（`''`）作为新值。
+
+{% gridExampleRunner title="填充手柄" name="fill-handle"  exampleHeight=560 /%}
+
+### 防止范围缩小
+
+默认情况下，使用填充手柄缩小范围选择将清除单元格内容，如上面的[单元格缩小](#range-reduction)示例所示。
+
+如果需要防止这种减少选择的行为，应将标志 `cellSelection.handle.suppressClearOnFillReduction` 设置为 `true`。
+
+{% gridExampleRunner title="填充手柄 - 范围缩小" name="fill-handle-reduction"  exampleHeight=560 /%}
+
+## 填充手柄轴
+
+默认情况下，填充手柄可以水平或垂直拖动。如果您希望将拖动的允许方向限制为水平或垂直，请将 `cellSelection.handle.direction` 设置为 `x` 表示水平或 `y` 表示垂直。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    cellSelection: {
+        handle: {
+            mode: 'fill',
+            direction: 'x', // 填充手柄只能水平拖动
+        }
+    },
+}
+```
+
+{% gridExampleRunner title="填充手柄 - 方向" name="fill-handle-direction"  exampleHeight=560 /%}
+
+## 双击填充
+
+当填充手柄方向为 `'y'` 或 `'xy'` 时，双击填充手柄将对所选单元格下方的所有单元格执行填充操作。
+类似地，当填充手柄方向为 `'x'` 时，双击填充手柄将对所选单元格右侧的所有单元格执行填充操作。
+
+启用填充手柄时默认启用此功能，不需要单独配置。
+
+## 填充手柄事件
+
+使用填充手柄时，表格将在开始填充单元格之前触发 `fillStart` 事件，并在所有单元格都已填充后触发 `fillEnd` 事件。有关使用这些事件的示例，请参阅下面的自定义用户函数示例。
+
+{% apiDocumentation source="grid-events/events.json" section="selection" names=["fillStart", "fillEnd"] /%}
+
+## 自定义用户函数
+
+通常需要使用自定义方法来填充值，而不是简单地复制值或使用线性级数增加数字值。
+在这些情况下，应使用 `cellSelection.handle.setFillValue` 回调。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country' },
+        { field: 'year' },
+        { field: 'sport' },
+        { field: 'total' }
+    ],
+    cellSelection: {
+        handle: {
+            mode: 'fill',
+            setFillValue: (params) => '自定义填充值',
+        }
+    },
+}
+```
+
+### FillOperationParams
+
+{% interfaceDocumentation interfaceName="FillOperationParams" /%}
+
+{% note %}
+如果提供了 `setFillValue` 回调，填充手柄将始终运行它。如果当前值与提供的 `setFillValue` 函数无关，应返回 `false` 以允许表格正常处理值。
+{% /note %}
+
+下面的示例将对**星期几**列使用自定义 `setFillValue`，但对任何其他列将使用默认操作。
+
+{% gridExampleRunner title="自定义填充操作" name="custom-fill-operation"  exampleHeight=560 /%}
+
+### 在填充操作中跳过列
+
+下面的示例将使用自定义 `setFillValue` 防止**国家**列中的值被填充手柄更改。
+
+{% note %}
+当 `setFillValue` 函数返回 `params.currentCellValue` 时，该值不会添加到 `params.values` 列表中。这允许用户在填充手柄操作中跳过任何单元格。
+{% /note %}
+
+{% gridExampleRunner title="跳过列" name="skipping-columns"  exampleHeight=560 /%}
+
+{% warning %}
+不可编辑的单元格**不会**被填充手柄更改，因此不需要添加自定义逻辑来跳过不可编辑的列。
+{% /warning %}
+
+## 只读编辑
+
+当表格处于[只读编辑](./value-setters/#read-only-edit)模式时，填充手柄不会更新表格内的数据。相反，表格触发 `cellEditRequest` 事件，允许应用程序处理更新请求。
+
+{% apiDocumentation source="grid-events/events.json" section="editing" names=["cellEditRequest"] /%}
+
+下面的示例将展示如何结合填充手柄和 `readOnlyEdit=true` 更新单元格值。
+
+{% gridExampleRunner title="填充手柄 - 只读编辑" name="read-only-edit"  exampleHeight=560 /%}
+
+## 禁用填充手柄
+
+可以通过将列定义属性 `suppressFillHandle` 设置为 `true` 来在每个列的基础上禁用填充手柄。
+
+在下面的示例中，请注意**国家**和**日期**列中禁用了填充手柄。
+
+{% gridExampleRunner title="禁用填充手柄" name="suppress-fill-handle"  exampleHeight=560 /%}
+
+## API 参考
+
+在这里，您可以找到当手柄选项处于 `'fill'` 模式时可用的所有配置选项的完整列表。
+
+{% interfaceDocumentation interfaceName="FillHandleOptions" config={"description":""} /%}

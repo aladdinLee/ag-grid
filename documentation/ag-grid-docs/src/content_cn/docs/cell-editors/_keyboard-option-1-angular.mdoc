@@ -1,0 +1,45 @@
+{% if isFramework("angular") %}
+
+```js
+const KEY_LEFT = 'ArrowLeft';
+const KEY_UP = 'ArrowUp';
+const KEY_RIGHT = 'ArrowRight';
+const KEY_DOWN = 'ArrowDown';
+const KEY_PAGE_UP = 'PageUp';
+const KEY_PAGE_DOWN = 'PageDown';
+const KEY_PAGE_HOME = 'Home';
+const KEY_PAGE_END = 'End';
+
+@Component({
+    selector: 'my-editor',
+    template: `<input (keydown)="onKeyDown($event)" ...其余输入属性/>`
+})
+export class MyCellEditor implements ICellEditorAngularComp {
+    /* 组件编辑器生命周期方法 */
+    agInit(params: ICellEditorParams) {
+        this.params = params;
+    }
+
+    onKeyDown(event) {
+        const key = event.key;
+
+        const isNavigationKey = key === KEY_LEFT ||
+            key === KEY_RIGHT ||
+            key === KEY_UP ||
+            key === KEY_DOWN ||
+            key === KEY_PAGE_DOWN ||
+            key === KEY_PAGE_UP ||
+            key === KEY_PAGE_HOME ||
+            key === KEY_PAGE_END;
+
+            if (isNavigationKey) {
+                // 这会阻止表格接收事件并执行键盘导航
+                event.stopPropagation();
+            }
+    }
+
+    // ..组件的其余部分
+}
+```
+
+{% /if %}

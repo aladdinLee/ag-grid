@@ -1,0 +1,133 @@
+---
+title: "视口行模型"
+enterprise: true
+---
+
+视口是一种行模型，允许在客户端显示数据的"窗口"。通常所有数据都驻留在服务器上，服务器知道客户端中显示的数据是什么。这对于服务器将更改推送到客户端同样有用，因为它知道当前显示的数据是什么。
+
+{% note %}
+除非您了解视口行模型提供的优势以及是否需要它们，否则不要使用视口行模型。
+
+我们发现许多用户在不必要的情况下使用视口行模型，结果导致应用程序不必要地复杂化。我们建议查看我们最强大的行模型，[服务端行模型](./server-side-model/)，作为替代方案。
+
+行模型之间的差异可以在我们的[行模型摘要页面](./row-models/)中找到
+{% /note %}
+
+要启用视口行模型，请设置网格属性 `rowModelType='viewport'`。
+
+术语"视口"是 GUI 中的常用术语，用于描述使用滚动条显示大于可见区域的内容时的可见区域。在 AG Grid 中，视口指的是垂直滚动位置，因此它定义了网格当前渲染的行。
+
+AG Grid 使用"DOM 行虚拟化"，这意味着它只渲染您当前看到的行，因此 AG Grid 已经使用视口的概念来渲染行。网格扩展了此概念并将视口信息映射到视口行模型。
+
+使用视口管理网格中的大型实时数据集，您只想将数据子集加载到网格中，并且数据在源端（通常是服务器）更新，源端在显示的数据更改时将更新发送到网格。
+
+下图显示了视口如何映射到数据集的连接。数据集连接知道视口正在显示什么并相应地发送数据。当用户滚动时，视口将从源"获取"数据。如果/当数据更改时，如果源知道视口正在显示该数据，它将把数据"推送"到视口。
+
+{% imageCaption imagePath="resources/viewport.png" alt="Viewport Connected to Dataset" centered=true constrained=true /%}
+
+{% br /%}
+
+{% note %}
+显示数据是网格的责任。获取数据是应用程序（即您的代码）的责任，因此如果您使用 WebSocket 或其他方式，所有这些编码都属于客户端代码。
+{% /note %}
+
+## 接口 IViewportDatasource
+
+要使用 viewportRowModel，您需要向属性 `viewportDatasource` 提供网格 `IViewportDatasource` 的实现：
+
+{% apiDocumentation source="grid-options/properties.json" section="viewportRowModel" names=["viewportDatasource"] /%}
+
+网格将调用 `init` 方法一次，传递一个包含以下方法的 params 对象。
+
+{% interfaceDocumentation interfaceName="IViewportDatasourceParams" /%}
+
+## 示例序列
+
+如果您第一次查看接口，阅读接口会看起来令人困惑，因为不同的部分单独看没有意义，正是它们如何协同工作创造了魔力。所以为了解释，以下是可能发生的序列。
+
+1. 您向网格提供新的 `viewportDatasource`。网格将调用 `datasource.init()` 并提供数据源所需的回调。数据源应该存储对这些回调的引用，然后对服务器进行异步调用以找出需要显示的数据集有多大。
+
+1. 数据源响应数据的大小（例如 1,000 行）并调用 `params.setRowCount(1000)`。网格通过调整垂直滚动条大小以适应 1,000 行来响应。
+
+1. 网格由于其屏幕上的物理大小，计算出它在任何给定时间可以显示 20 行。鉴于滚动位置在开始，它调用 `datasource.setViewportRange(0,19)` 通知数据源它需要什么数据。网格目前将显示空白行。
+
+1. 数据源将对服务器进行异步调用，请求第 0 到 19 行。一段时间后结果将返回，数据源将调用 `params.setRowData(map)`，其中映射将有 20 个条目，键将是字符串（JavaScript 对象只允许字符串作为对象键，而不是数字）0 到 19，值将是行数据。
+
+1. 网格将用新数据刷新第 0 到 19 行的所有行。此时当前序列完成。网格将保持静态，直到用户滚动或数据源通知数据更改。
+
+1. 例如，如果用户向下滚动 100 行，上面的序列部分重复；网格调用 `datasource.setViewportRange(100,119)`，数据源异步响应 `params.setRowData(map)`。
+
+{% note %}
+当调用 `setRowCount: (count: number, keepRenderedRows?: boolean) => void` 时，可以通过提供 `keepRenderedRows = true` 来防止不必要的行重绘。
+{% /note %}
+
+## 更新数据
+
+如果您的数据更改，您应该通过调用 `params.getRow(rowIndex)` 获取对节点的引用，然后调用以下之一：
+
+-   `rowNode.setData(newData)`：调用此方法将整个数据设置到节点中。新数据将存储在 `rowNode` 内，替换旧数据。这将导致网格从 DOM 中删除渲染的行并用新的渲染行替换。如果您有任何自定义 `cellRenderers`，它们将被销毁并创建新的，因此无法实现动画。
+
+-   `rowNode.setDataValue(colKey, newValue)`：调用此方法将一个值设置到节点中。新值将存储在旧数据中，其余数据保持不变。这将导致网格仅刷新更新的单元格。如果单元格具有带有刷新方法的组件，则将调用刷新方法，允许动画。如果未提供刷新方法，网格将删除单元格（并销毁单元格渲染器（如果存在））并从头开始创建单元格。
+
+## 替换数据
+
+您可能希望完全更改视口中的数据，例如，如果您显示"超过 10k 的最新 10 笔交易"，随着交易的变化而变化，那么您只需使用新数据再次调用 `setRowData(rowData)`。网格不关心您使用新数据调用 `setRowData(rowData)` 多少次。您也可以在各个行节点上调用 `rowNode.setData(data)`，它将具有相同的效果。
+
+如果要更改数据长度（例如，应用过滤器，或结果集以其他方式增长或缩小），则再次调用 `setRowCount()`。网格不关心您调用 `setRowCount()` 多少次。
+
+## 排序
+
+仅支持服务端排序，因此如果要排序，您必须在服务器上自己完成。这是通过监听 `sortChanged` 事件然后在数据到达时使用新数据调用 `setRowData(data)` 来完成的。
+
+## 过滤
+
+与排序一样，过滤也必须在服务器上完成。要实现，请监听 `filterChanged` 事件并将过滤器应用于您的服务端数据集。然后调用 `setRowCount()` 和 `setRowData(data)` 以显示新数据。
+
+## 选择
+
+选择与视口一起工作。建议您实现 `getRowId()` 为每行提供唯一键。这样，如果同一行再次出现但位于不同位置，它将保持其选择值。请参阅下面的示例以设置 `getRowId()`。
+
+{% note %}
+使用"shift-click"执行多行选择仅适用于视口中可用的行。
+{% /note %}
+
+{% note %}
+视口行模型没有内置的[全选](./row-selection-multi-row/#selecting-all-rows)功能支持。单击标题复选框或按 {% kbd "^ Ctrl" /%}+A 都不会有任何效果。
+{% /note %}
+
+## 分组
+
+您猜对了，如果您正在进行分组，您需要在服务器上自己实现。如果分组，您需要提供自己的 `groupCellRenderer`，为您自己的自定义分组提供功能。您还需要自己管理分组如何影响整体网格的集合大小（即，如果展开组，行数增加，同样收缩将减少）。
+
+## 视口设置
+
+为简单起见，我们之前说视口是网格当前显示的行。这_几乎_是正确的，除了有两个属性，`viewportRowModelPageSize` 和 `viewportRowModelBufferSize`，可以使与服务器的通信更好。
+
+### viewportRowModelPageSize
+
+如果用户缓慢滚动，让网格一次请求一行是不好的。为了解决这个问题，网格定义了一个页面大小，因此它将以"页面"为单位请求行。例如，如果页面大小为 5，则视口将始终以可被 5 整除的数字开始和结束，例如 0 到 20 或 75 到 100。因此，如果用户缓慢滚动，只有在网格达到"接下来的五行"之后才会请求视口获取新行。默认页面大小为 `5`。要更改此设置，请设置网格属性 `viewportRowModelPageSize`。
+
+### viewportRowModelBufferSize
+
+除了页面大小，网格还将按缓冲区大小在可视区域之外扩展视口。例如，如果视口显示第 30 到 50 行，并且缓冲区设置为 5，则网格将从视口请求第 25 到 55 行。这将减少用户滚动数据时的"加载闪烁"。默认缓冲区大小为 `5`。要更改此设置，请设置网格属性 `viewportRowModelBufferSize`。
+
+## 视口示例
+
+下面的示例显示了视口的实际应用。
+
+使用了两个内置单元格渲染器：`animateShowChange`（bid、mid 和 ask 列）和 `animateSlide`（volume 列）。您可能会发现这些有用，但是提供它们是为了演示如何实现更改动画。您可能希望提供自己的自定义动画单元格渲染器，因为动画如何发生将取决于您的应用程序、数据类型和更改频率。
+
+该示例使用 `mockServer`。这是因为本文档中的所有示例都不依赖任何服务器。在您的应用程序中，您应该连接到真实的服务器，而不是使用模拟服务器。但是，`mockServer` 示例中的代码可用于观察您的服务器代码应该做什么 - 它演示了保持一个知道视口位置的连接打开，并根据视口位置将数据推送到客户端。
+
+{% gridExampleRunner title="视口示例" name="viewport" /%}
+
+## 带分页的视口示例
+
+下面的示例几乎与上面的示例相同，但有以下区别：
+
+-   `pagination = true`：启用分页。
+-   `paginationAutoPageSize = true`：将分页大小设置为网格的高度，因此不使用垂直滚动。
+-   `viewportRowModelPageSize = 1`：因为我们显示的是精确页面，用户不会滚动，所以不需要设置最小页面大小。将页面大小设置为 `1` 意味着网格将始终从顶行到底行请求。
+-   `viewportRowModelBufferSize = 0`：同样因为没有滚动，带回额外的行作为缓冲区没有意义。
+
+{% gridExampleRunner title="分页视口示例" name="pagination-viewport"  exampleHeight=570 /%}

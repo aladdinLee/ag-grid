@@ -1,0 +1,195 @@
+---
+title: "行分组 - 多个组列"
+enterprise: true
+---
+
+使用一个组列显示行分组的每个级别来显示组结构。
+
+{% gridExampleRunner title="启用单一组列" name="enabling-multiple-group-column" /%}
+
+## 启用多个组列
+
+上面的示例演示了 `country` 和 `year` 都已分组。使用一个组列显示每个已分组列的组值单元格。
+
+可以通过将 `groupDisplayType` 网格选项设置为 `"multipleColumns"` 来启用多个组列，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupDisplayType: 'multipleColumns',
+}
+```
+
+## 配置
+
+当存在行分组时，列会添加到网格中，可以通过 `autoGroupColumnDef` 网格选项配置以定义[列选项](./column-properties/)。
+
+{% gridExampleRunner title="多个组列配置" name="multiple-group-column-configuration" /%}
+
+上面的示例使用下面演示的配置更改列的标题名称并应用最小宽度。
+它还使用 `cellRendererParams` 选项[配置组单元格组件](./grouping-multiple-group-columns/#cell-component)以从每个行组中删除计数。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    autoGroupColumnDef: {
+        headerValueGetter: params => `${params.colDef.headerName} Group Column`,
+        minWidth: 220,
+        cellRendererParams: {
+            suppressCount: true,
+        }
+    }
+}
+```
+
+### 显示父组值
+
+组层次结构由相对于父级的位置表示。在网格中滚动时，跟踪父组值变得更加困难。
+
+将网格属性 `showOpenedGroup` 设置为 `true` 将在组列内显示父组的值。
+
+{% gridExampleRunner title="显示打开的组多列" name="show-opened-groups-many-columns" /%}
+
+上面的示例演示了以下配置以在组列内显示父组值：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    showOpenedGroup: true,
+}
+```
+
+## 单元格组件
+
+组列使用 `agGroupCellRenderer` 组件显示组信息，以及用于展开和折叠行的箭头控件。渲染器还嵌入分组列的渲染器，并在组单元格内显示此内容。
+
+可以使用 `autoGroupColumnDef` 属性 `cellRendererParams` 配置多个[组渲染器属性](./grouping-multiple-group-columns/#configurable-options)。下面的示例删除了行计数并为行选择启用复选框。
+
+{% gridExampleRunner title="组单元格渲染器配置" name="renderer-config-group-cell" /%}
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'total', rowGroup: true, cellRenderer: CustomMedalCellRenderer },
+        // ... 其他列定义
+    ],
+    autoGroupColumnDef: {
+        cellRendererParams: {
+            suppressCount: true,
+        }
+    },
+    rowSelection: {
+        mode: 'singleRow',
+        checkboxLocation: 'autoGroupColumn',
+    }
+}
+```
+
+### 可配置选项
+
+{% interfaceDocumentation interfaceName="IGroupCellRendererParams" overrideSrc="group-cell-renderer/group-cell-renderer.json" config={ "description": "" } /%}
+
+### 复选框选择
+
+可以配置 `agGroupCellRenderer` 显示行选择的复选框。将[行选择](./row-selection/) `checkboxLocation` 属性设置为 `'autoGroupColumn'` 会隐藏[复选框列](./row-selection-single-row/#customising-the-checkbox-column)，而是使用组单元格渲染器显示复选框。
+
+{% gridExampleRunner title="组单元格渲染器复选框选择" name="renderer-config-checkbox" /%}
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowSelection: {
+        mode: 'multiRow',
+        selectAll: 'all',
+        checkboxLocation: 'autoGroupColumn',
+    },
+}
+```
+
+### 自定义内部渲染器
+
+使用组单元格渲染器时，`agGroupCellRenderer` 组件将继承分组列的渲染器，并在组单元格内显示此内容，与任何配置的复选框、单元格计数和展开/折叠箭头控件相邻。
+
+可以通过在 `cellRendererParams` 配置上设置 `innerRenderer` 和 `innerRendererParams` 属性，使用[自定义单元格组件](./component-cell-renderer/)覆盖此内部渲染器。
+
+{% gridExampleRunner title="组单元格渲染器配置" name="renderer-config-inner" /%}
+
+上面的示例使用以下配置为组列提供自定义内部渲染器：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    autoGroupColumnDef: {
+        cellRendererParams: {
+            innerRenderer: CustomMedalCellRenderer,
+        },
+    },
+}
+```
+
+### 自定义单元格渲染器
+
+可以通过在 `autoGroupColumnDef` 配置上设置 `cellRenderer` 属性，用[自定义单元格组件](./component-cell-renderer/)完全替换组单元格渲染器。
+
+{% gridExampleRunner title="自定义组单元格渲染器" name="renderer-config-custom" /%}
+
+{% note %}
+也可以[动态确定单元格渲染器](./component-cell-renderer/#providing-custom-components-dynamically)。
+{% /note %}
+
+## 过滤
+
+要在组列上启用过滤器，请将 `autoGroupColumnDef` 的 `filter` 属性设置为 `'agGroupColumnFilter'`。此配置将导致组列从其表示的列继承过滤器。
+
+{% gridExampleRunner title="组列过滤" name="filtering-grouped-columns" /%}
+
+{% note %}
+当启用行分组的列也可见时，相应的组列浮动过滤器将处于只读模式。
+{% /note %}
+
+上面的示例演示了以下配置以从分组列继承过滤器：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    autoGroupColumnDef: {
+        filter: 'agGroupColumnFilter',
+        floatingFilter: true,
+    },
+}
+```
+
+## 隐藏展开的父行
+
+可以配置展开的行在打开时消失，而是将组单元格渲染器移动到第一个子行。
+要启用此功能，请将 `groupHideOpenParents` 网格选项设置为 `true`。
+
+{% gridExampleRunner title="隐藏打开的父级" name="hide-open-parents" /%}
+
+{% note %}
+启用 `groupHideOpenParents` 时，网格不再将展开的组行粘贴到视口顶部。
+{% /note %}
+
+上面的示例演示了以下配置以隐藏打开的父级：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupHideOpenParents: true,
+}
+```
+
+## 在展开前隐藏组列
+
+默认情况下，所有组列始终可见。将 `groupHideColumnsUntilExpanded` 设置为 `true` 会隐藏尚未通过展开到达的级别的组列。只有顶级组列最初可见；当前一级别的至少一个组展开时，每个后续级别的列变得可见。
+
+尝试展开 Country 行以显示 Year 组列，然后展开 Year 行以显示 Sport 组列。
+折叠给定级别的所有行将再次隐藏相应的组列。
+
+{% gridExampleRunner title="在展开前隐藏组列" name="hide-columns-until-expanded" /%}
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupDisplayType: 'multipleColumns',
+    groupHideColumnsUntilExpanded: true,
+}
+```

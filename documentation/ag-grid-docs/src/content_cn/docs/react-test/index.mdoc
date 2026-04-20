@@ -1,0 +1,38 @@
+---
+title: "React 特定测试用例"
+frameworks: ["react"]
+---
+
+这是一个仅供测试目的的内部页面。不打算用于公共使用或文档。
+
+## 重新排序网格
+
+此示例演示重新排序多个 AG Grid 实例而不导致 UI 崩溃或错误的能力。这是一个有趣的测试用例，特别是在开发模式下，因为它练习了 React 19 新的一些特定严格模式双重渲染场景。
+
+{% gridExampleRunner title="重新排序网格" name="reorder-grids" exampleHeight=650  /%}
+
+## 在没有 RowId 的情况下更新行数据
+
+此示例测试在未指定 `rowId` 属性的情况下更新行数据时 AG Grid 的渲染行为。这在过去导致了单元格折叠，现在渲染模式之间存在差异。
+
+- `renderingMode: 'legacy'` - 行没有闪烁，但在限制 CPU 时，一段时间后网格会崩溃并出现错误。
+
+```
+Uncaught Error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.
+```
+
+- `renderingMode: 'default'` - 网格不会崩溃，但在数据更新时会有行闪烁。
+
+{% note %}
+当提供 `getRowId` 时，两者都按预期工作，没有闪烁，没有崩溃。
+{% /note %}
+
+{% gridExampleRunner title="在没有 RowId 的情况下更新行数据" name="updating-row-data-without-row-ids" /%}
+
+## 测试清理
+
+此示例模仿 Vitest 作为其测试拆卸过程的一部分清理窗口的方式。我们遇到了 `window.setInterval` 和 `window.setTimeout` 在网格销毁时未正确清除的问题，导致尝试调用不再存在的窗口方法。
+
+单击"Destroy"按钮时，控制台中应该没有错误。
+
+{% gridExampleRunner title="测试拆卸" name="test-tear-down" exampleHeight=350 /%}

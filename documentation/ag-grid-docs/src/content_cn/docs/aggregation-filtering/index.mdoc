@@ -1,0 +1,58 @@
+---
+title: "聚合 - 筛选"
+enterprise: true
+---
+
+可以将筛选配置为影响表格中的聚合值。
+
+## 聚合时忽略筛选器
+
+当同时使用[筛选器](./filtering-overview/)和[聚合](./aggregation/)时，聚合值仅反映通过筛选器的行。可以使用 `suppressAggFilteredOnly` 表格选项将其更改为忽略应用的筛选器。
+
+{% gridExampleRunner title="聚合和筛选器" name="filters" /%}
+
+上面的示例演示了 `suppressAggFilteredOnly` 表格选项的影响。可以按如下方式启用：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    suppressAggFilteredOnly: true,
+}
+```
+
+## 为聚合值筛选
+
+表格仅将筛选器应用于叶子级行，可以通过启用 `groupAggFiltering` 表格选项将其切换为也应用于组行，允许筛选器也应用于聚合值。
+
+{% gridExampleRunner title="组和叶子聚合筛选" name="agg-filtering-all" /%}
+
+{% note %}
+使用 `groupAggFiltering` 时请注意以下几点：
+
+-   当组行通过筛选器时，它也会将其所有后代行包含在筛选结果中。
+-   `suppressAggFilteredOnly` 表格选项将被隐式启用。
+-   [集合筛选器](./filter-set/)仅适用于叶子行。
+
+{% /note %}
+
+以下配置演示如何启用组聚合筛选：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupAggFiltering: true,
+}
+```
+
+### 通过回调配置
+
+为聚合值筛选时，筛选器默认应用于所有组行。可以通过向 `groupAggFiltering` 表格选项提供回调函数来更精细地配置此设置。
+
+下面的示例演示了一个表格配置为仅对聚合值应用筛选器，而不对叶子行应用：
+{% gridExampleRunner title="仅组聚合筛选" name="agg-filtering-group" /%}
+
+以下配置演示如何仅对组行应用测试筛选器，而不对叶子行应用：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupAggFiltering: (params) => !!params.node.group,
+}
+```

@@ -1,0 +1,144 @@
+---
+title: "网格概述"
+description: "浏览所有 $framework 表格网格接口。使用网格选项、网格事件、网格状态和网格 API 配置和交互网格。"
+---
+
+本节提供配置和交互网格的关键信息。
+
+## 网格选项
+
+{% partial file="./_index-javascript.mdoc" /%}
+{% partial file="./_index-angular.mdoc" /%}
+{% partial file="./_index-react.mdoc" /%}
+{% partial file="./_index-vue.mdoc" /%}
+
+### 更新网格选项
+
+在创建网格后更新网格选项是一个常见需求。例如，您可能希望通过应用程序切换更改 `rowHeight`。
+
+{% if isFramework("javascript") %}
+可以通过调用 `api.setGridOption` 或 `api.updateGridOptions` 来更新属性。在此示例中，所有行都将使用新高度重新绘制。
+{% /if %}
+
+{% if isFramework("angular", "vue") %}
+只需更新绑定属性，网格就会响应新值。在此示例中，所有行都将使用新高度重新绘制。
+{% /if %}
+
+{% if isFramework("angular") %}
+
+```js
+<ag-grid-angular
+    [rowHeight]="rowHeight"
+    />
+
+updateHeight() {
+    this.rowHeight = 50;
+}
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+```jsx
+<ag-grid-vue
+    :row-height="rowHeight"
+</ag-grid-vue>
+
+updateHeight() {
+    this.rowHeight = 50;
+}
+```
+
+{% /if %}
+
+{% if isFramework("angular", "vue") %}
+也可以通过调用 `api.setGridOption` 或 `api.updateGridOptions` 来更新属性。
+{% /if %}
+
+{% if isFramework("react") %}
+只需更新状态，网格就会响应新值。在此示例中，所有行都将使用新高度重新绘制。
+
+```jsx
+const [rowHeight, setRowHeight] = useState(25);
+
+// 更新 rowHeight 的回调
+const updateHeight = () => setRowHeight(50);
+
+<AgGridReact
+    rowHeight={rowHeight}
+/>
+```
+
+我们建议通过 `AgGridReact` 属性更新选项，但也可以通过 `api.setGridOption` 或 `api.updateGridOptions` 更新属性。
+{% /if %}
+
+{% if isFramework("javascript", "angular", "vue", "react") %}
+
+```js
+// 更新 rowHeight
+api.setGridOption('rowHeight', 50);
+```
+
+{% /if %}
+
+### 初始网格选项
+
+少数网格选项**不**支持更新其值。它们的值仅在网格初始设置期间读取。这些选项在[选项参考](./grid-options)中标记为 `Initial`。对于这些属性，必须销毁并重新创建网格才能使新值生效。
+
+{% note %}
+并非所有网格选项都支持更新。这些标记为 Initial。
+{% /note %}
+
+有关选项的完整列表，请参阅：[选项参考](./grid-options)。
+
+### 全局网格选项
+
+全局网格选项可用于在应用程序中的所有网格之间共享配置。通过将全局选项传递给 `provideGlobalGridOptions` 来提供全局网格选项。每个网格将继承全局选项，如果两者定义相同的属性，则本地选项优先。
+
+```js {% frameworkTransform=false %}
+import { provideGlobalGridOptions } from 'ag-grid-community';
+
+// 通过全局选项向所有网格提供 localeText
+provideGlobalGridOptions({
+    localeText: userLocaleText,
+});
+```
+
+`provideGlobalGridOptions` 函数接受可选的第二个参数（`deep` / `shallow`）来控制当全局和本地网格选项都存在对象配置时的行为。使用 `shallow` 时，本地网格选项上的对象属性将完全替换全局对象属性。使用 `deep` 时，全局对象属性将与本地对象属性合并。默认值为 `shallow`。
+
+## 网格事件
+
+当用户与网格交互时，将触发事件以使您的应用程序能够响应特定操作。
+
+{% partial file="./_events-javascript.mdoc" /%}
+{% partial file="./_events-angular.mdoc" /%}
+{% partial file="./_events-react.mdoc" /%}
+{% partial file="./_events-vue.mdoc" /%}
+
+{% note %}
+TypeScript 用户可以利用事件的接口。通过在事件名称后添加 `Event` 后缀来构造接口名称。例如，`cellClicked` 事件使用接口 `CellClickedEvent`。所有事件都支持 [TypeScript 泛型](./typescript-generics/)。
+{% /note %}
+
+有关事件的完整列表，请参阅：[网格事件](./grid-events)。
+
+## 网格 API
+
+{% partial file="./_api-javascript.mdoc" /%}
+{% partial file="./_api-angular.mdoc" /%}
+{% partial file="./_api-react.mdoc" /%}
+{% partial file="./_api-vue.mdoc" /%}
+
+有关 API 方法的完整列表，请参阅：[网格 API](./grid-api)。
+
+## 网格状态
+
+当用户与网格交互时，他们可能会更改状态，例如筛选、排序和列顺序。此状态独立于配置，为了提供保存和恢复功能，网格使应用程序能够保存/恢复此状态。
+
+有关状态属性的完整列表，请参阅：[网格状态](./grid-state/)。
+
+## 网格生命周期
+
+使用 AG Grid 时，在首次初始化网格、首次渲染数据以及即将销毁网格时执行操作是一个常见需求。
+
+有关在这些关键时刻如何与网格交互的完整详细信息，请参阅：[网格生命周期](./grid-lifecycle/)。

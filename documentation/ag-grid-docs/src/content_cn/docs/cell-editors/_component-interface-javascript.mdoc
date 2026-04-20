@@ -1,0 +1,57 @@
+{% if isFramework("javascript") %}
+单元格编辑器组件的接口如下：
+
+```ts
+interface ICellEditorComp {
+    // 编辑器创建后调用一次
+    init?(params: ICellEditorParams): void;
+
+    // GUI 附加到 DOM 后调用一次。
+    // 如果您想聚焦或突出显示组件，这很有用
+    //（当元素未附加时这是不可能的）
+    afterGuiAttached?(): void;
+
+    // 必需 - 返回编辑器的 DOM 元素，这是表格放入 DOM 的内容
+    getGui(): HTMLElement;
+
+    // 必需 - 返回最终值 - 编辑完成后由表格调用一次
+    getValue(): any;
+
+    // 编辑完成后由表格调用一次
+    // 如果您的编辑器需要做任何清理工作，请在这里做
+    destroy?(): void;
+
+    // 初始化后调用一次。如果您返回 true，编辑器将
+    // 出现在弹出窗口中，因此不受单元格边界的约束。
+    // 如果您想例如提供自己的自定义下拉列表
+    // 进行选择，这很好。默认为 false（即如果您不提供该方法）。
+    isPopup?(): boolean;
+
+    // 仅当 isPopup() 返回 true 时调用一次。返回 "over" 如果
+    // 弹出窗口应该覆盖单元格，或 "under" 如果它应该定位在下面
+    // 使单元格值可见。如果此方法不存在，
+    // 默认为 "over"
+    getPopupPosition?(): string;
+
+    // 初始化后调用一次。如果您返回 true，编辑器将不会被
+    // 使用，表格将继续编辑。使用此方法在 init() 函数内
+    // 做出编辑决定，例如，如果编辑器用于数字，您可能只想
+    // 在用户按下数字键时开始编辑，而不是字母键。
+    isCancelBeforeStart?(): boolean;
+
+    // 编辑完成后调用一次。如果您返回 true，则新
+    // 值将不会被使用。编辑将对记录没有影响。如果您
+    // 不想从您的 gui 获取新值，即您想取消编辑，请使用此方法。
+    isCancelAfterEnd?(): boolean;
+
+    // 如果进行全行编辑，则当应该将焦点放入编辑器时调用
+    focusIn?(): void;
+
+    // 如果进行全行编辑，则当焦点离开编辑器时调用
+    focusOut?(): void;
+}
+```
+
+提供给单元格编辑器 `init` 方法的 params 对象遵循 `ICellEditorParams` 接口，该接口在下面的 [API 参考](#api-reference)中列出。
+
+{% /if %}

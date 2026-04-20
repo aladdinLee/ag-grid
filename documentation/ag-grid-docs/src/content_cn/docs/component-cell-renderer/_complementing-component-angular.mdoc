@@ -1,0 +1,56 @@
+{% if isFramework("angular") %}
+
+```js
+// 定义要重用的单元格组件
+@Component({
+    selector: 'colour-cell',
+    template: `<span [style.color]="params.color">{{params.value}}</span>`
+})
+class ColourCellComp implements ICellRendererAngularComp {
+    params!: ICellRendererParams;
+
+    agInit(params: ICellRendererParams) {
+        this.params = params;
+    }
+
+    refresh(params: ICellRendererParams) {
+        this.params = params;
+        // 由于我们已更新参数，我们返回 true 以让 AG Grid 知道我们已处理刷新。
+        // 因此 AG Grid 不会从头开始重新创建单元格渲染器。
+        return true;
+    }
+}
+
+@Component({
+    selector: 'my-app',
+    template: `
+        <ag-grid-angular
+                [columnDefs]="columnDefs"
+                ...其他属性 />`
+})
+export class AppComponent {
+    columnDefs = [
+        {
+            headerName: "Colour 1",
+            field: "value",
+            cellRenderer: ColourCellComp,
+            cellRendererParams: {
+                color: 'guinnessBlack'
+            }
+        },
+        {
+            headerName: "Colour 2",
+            field: "value",
+            cellRenderer: ColourCellComp,
+            cellRendererParams: {
+                color: 'irishGreen'
+            }
+        }
+    ];
+
+    //...
+}
+
+```
+
+{% /if %}

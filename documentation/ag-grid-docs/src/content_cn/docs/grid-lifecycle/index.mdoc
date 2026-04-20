@@ -1,0 +1,65 @@
+---
+title: "网格生命周期"
+---
+
+本节介绍网格初始化、数据更新和销毁网格之前引发的一些常见生命周期事件。
+
+{% note %}
+本页上的事件按其引发的顺序列出。
+{% /note %}
+
+## 网格就绪
+
+`gridReady` 事件在网格初始化时触发，但网格可能未完全渲染。
+
+**常见用途**
+
+-   通过 API 调用自定义网格。
+-   事件监听器设置。
+-   网格依赖的设置代码。
+
+在此示例中，`gridReady` 在渲染数据之前应用用户固定首选项。
+
+{% gridExampleRunner title="使用网格就绪事件" name="grid-ready" /%}
+
+## 首次数据渲染
+
+`firstDataRendered` 事件在首次将数据渲染到网格时触发。与每次数据更改时触发的 `rowDataUpdated` 不同，它只会触发一次。
+
+## 行数据更新
+
+每次网格数据更改时都会触发 `rowDataUpdated` 事件，通过[更新行数据](./data-update-row-data/)或应用[事务更新](./data-update-transactions/)。在[服务器端行模型](./server-side-model)中，请改用[模型更新事件](./grid-events/#reference-gridLifecycle-modelUpdated)。
+
+在此示例中，记录了触发 `firstDataRendered` 和 `rowDataUpdated` 的时间在网格上方。请注意，`firstDataRendered` 仅在网格初始加载时设置，在重新加载数据时不会更新。
+
+{% gridExampleRunner title="使用行数据事件" name="row-data-updated" /%}
+
+## 网格预销毁
+
+`gridPreDestroyed` 事件在网格销毁并从 DOM 中移除之前触发。
+
+**常见用途**
+
+-   清理资源。
+-   保存网格状态。
+-   断开其他库。
+
+[网格状态示例](./grid-state/#saving-and-restoring-state)演示了如何使用 `gridPreDestroyed` 保存和恢复网格状态。
+
+{% if isFramework("angular") %}
+
+### Angular PreDestroy 设置
+
+使用 Angular 时，必须通过网格选项而不是作为 Output 事件处理程序注册 `gridPreDestroyed` 事件处理程序才能正常工作。
+
+例如：
+
+```js
+this.gridOptions = {
+    onGridPreDestroyed: () => {
+        // 处理程序代码
+    }
+};
+```
+
+{% /if %}

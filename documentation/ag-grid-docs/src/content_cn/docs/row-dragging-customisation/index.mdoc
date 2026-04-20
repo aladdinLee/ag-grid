@@ -1,0 +1,199 @@
+---
+title: "行拖动自定义"
+---
+
+有一些选项可用于自定义行拖动体验，使其更好地与您的应用程序集成。
+
+## 整行拖动
+
+使用行拖动时，也可以通过启用 `rowDragEntireRow` 网格选项，通过单击并拖动行上的任意位置来重新排序行，而无需拖动句柄。
+
+{% gridExampleRunner title="整行拖动" name="entire-row-dragging" /%}
+
+上面的示例演示了带有[多行拖动](./row-dragging-managed/#multi-row-dragging)的整行拖动。请注意以下几点：
+
+- 由于启用了 `rowDragEntireRow`，可以通过单击并拖动行上的任意位置来重新排序行。
+- 由于还启用了 `rowDragMultiRow` 和 `rowSelection.mode = 'multiRow'`，可以选择和拖动多行。
+- 正在使用行拖动托管，但这不是整行拖动的要求。
+
+要启用整行拖动，请在 `gridOptions` 中将 `rowDragEntireRow` 属性设置为 `true`，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country' },
+        { field: 'year' },
+        { field: 'sport' },
+        { field: 'total' }
+    ],
+    // 允许拖动行而无需拖动句柄
+    rowDragEntireRow: true
+}
+```
+
+{% warning %}
+启用 `rowDragEntireRow` 时不支持[单元格选择](./cell-selection/)。
+{% /warning %}
+
+## 自定义行拖动文本
+
+当行拖动开始时，会创建一个"浮动" DOM 元素以指示正在拖动哪一行。默认情况下，此 DOM 元素将包含与启动行拖动的单元格相同的值。可以使用 `gridOptions.rowDragText` 回调覆盖该文本。
+
+{% gridExampleRunner title="带有自定义文本的行拖动" name="custom-drag-text" /%}
+
+上面的示例显示带有自定义文本的拖动。可以注意到以下几点：
+
+- 当您拖动 2012 年的行时，`rowDragText` 回调将在浮动拖动元素中添加 **(London Olympics)**。
+
+要启用自定义行拖动文本，请在 `gridOptions` 中设置 `rowDragText` 回调，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'athlete',
+            rowDrag: true
+        }, {
+            field: 'country'
+        }
+    ],
+    rowDragText: (params, dragItemCount) => {
+        return (
+            dragItemCount > 1
+                ? (dragItemCount + ' items')
+                : params.defaultTextValue + ' is'
+        ) + ' being dragged...';
+    }
+}
+```
+
+{% apiDocumentation source="grid-options/properties.json" section="rowDragging" names=["rowDragText"] /%}
+
+## 带有多个拖动器的自定义行拖动文本
+
+如果网格有多个列设置了 `rowDrag=true`，则可以在 `colDef` 中设置 `rowDragText` 回调。
+
+{% gridExampleRunner title="带有自定义文本和多个拖动器的行拖动" name="custom-drag-multiple-draggers" /%}
+
+上面的示例显示带有自定义文本和多个列拖动器的拖动。可以注意到以下几点：
+
+- 当您通过国家行拖动器拖动 2012 年的行时，`rowDragText` 回调将在浮动拖动元素中添加 **(London Olympics)**。
+
+- 当您通过运动员行拖动器拖动行时，`gridOptions` 中的 `rowDragText` 回调将被 `colDef` 中的回调覆盖，并将显示**所选运动员**的数量。
+
+要启用每个列拖动器的自定义行拖动文本，请在 `colDef` 中设置 `rowDragText` 回调，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'athlete',
+            rowDrag: true,
+            rowDragText: (params, dragItemCount) => {
+                const suffix = dragItemCount == 1 ? 'athlete' : 'athletes';
+                return `Dragging ${dragItemCount} ${suffix}`;
+            }
+        }, {
+            field: 'country',
+            rowDrag: true,
+        }
+    ],
+    rowDragText: (params, dragItemCount) => {
+        return (
+            dragItemCount > 1
+                ? (dragItemCount + ' items')
+                : params.defaultTextValue + ' is'
+        ) + ' being dragged...';
+    }
+}
+```
+
+## 自定义单元格渲染器内的行拖动器
+
+由于某些应用程序的复杂性，在自定义单元格渲染器内渲染行拖动组件可能很方便。这可以通过使用 [ICellRendererParams](./component-cell-renderer/) 中的 `registerRowDragger` 方法来实现。
+
+{% gridExampleRunner title="带有自定义单元格渲染器的行拖动" name="dragger-inside-custom-cell-renderer" /%}
+
+上面的示例显示使用 `registerRowDragger` 回调在其内部渲染行拖动器的自定义单元格渲染器。
+
+- 当您悬停单元格时，会出现一个箭头，此箭头可用于**拖动**行。
+
+要在自定义单元格渲染器内注册自定义行拖动器，请使用 `ICellRendererParams` 中的 `registerRowDragger` 方法，如下所示：
+
+{% if isFramework("javascript") %}
+
+```js
+// 您的自定义单元格渲染器初始化代码
+const rowDragger = document.createElement('div')
+this.eGui.appendChild(rowDragger);
+
+// 将其注册为行拖动器
+params.registerRowDragger(rowDragger);
+```
+
+{% /if %}
+
+{% if isFramework("angular") %}
+
+```js
+// 您的自定义单元格渲染器代码
+@ViewChild('myref') myRef;
+
+agInit(params: ICellRendererParams): void {
+    this.cellRendererParams = params;
+}
+
+ngAfterViewInit() {
+    this.cellRendererParams.registerRowDragger(this.myRef.nativeElement);
+}
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+```js
+// 您的自定义单元格渲染器代码
+
+// 这将保存对您希望作为行拖动器的元素的引用。
+const myRef = useRef(null);
+
+useEffect(() => {
+    props.registerRowDragger(myRef.current!);
+});
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+```js
+// 您的自定义单元格渲染器代码
+mounted() {
+    this.params.registerRowDragger(this.$refs.myRef);
+}
+```
+
+{% /if %}
+
+{% warning %}
+使用 `registerRowDragger` 时，您**不应**在列定义中设置属性 `rowDrag=true`。
+这样做会导致单元格有两个行拖动器。
+{% /warning %}
+
+## 全宽行拖动
+
+可以通过注册[自定义行拖动器](#row-dragger-inside-custom-cell-renderers)来拖动[全宽行](./full-width-rows/)。
+
+{% gridExampleRunner title="带有全宽行的行拖动" name="dragger-inside-full-width-row" /%}
+
+在上面的示例中，只有全宽行是可拖动的。
+
+## 带有自定义开始拖动像素的行拖动器
+
+默认情况下，拖动事件仅在**行拖动元素**被拖动 `4px` 后才开始，但有时使用不同的拖动阈值开始拖动可能很有用。
+例如，在 `mousedown` 事件发生时立即开始拖动（拖动 `0px`）。因此，`registerRowDragger` 接受第二个参数来指定将开始拖动事件的像素数。
+
+{% gridExampleRunner title="带有自定义开始拖动像素的行拖动" name="dragger-inside-custom-start-drag-pixels" /%}
+
+在上面的示例中，拖动事件在 `mousedown` 触发后立即开始。

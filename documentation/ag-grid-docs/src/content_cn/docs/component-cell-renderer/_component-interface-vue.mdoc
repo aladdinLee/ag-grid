@@ -1,0 +1,53 @@
+{% if isFramework("vue") %}
+单元格渲染器可以是：
+
+-   返回 HTML 字符串或 DOM 对象的函数
+-   常规 Vue 组件
+
+如果您没有刷新要求，请使用单元格组件的函数变体。
+
+提供 Vue 组件时，您可以通过常用方法（生命周期钩子、方法等）中的 `this.params` 访问 `params` 对象，并在使用 `setup` 时通过 `props.params` 访问。可以在下面的 [API 参考](#api-reference)中找到 `params` 的完整定义。
+
+```ts
+  // ...
+  beforeMount() {
+    this.cellValue = this.params.value;
+  }
+  // ...
+```
+
+提供基于函数的组件时，它接收相同的 `params` 作为参数，就像上面通过 `this.params` 提供给 Vue 组件一样。
+在下面的示例中，我们输出一个取决于单元格值的字符串值：
+
+```js
+<template>
+    <ag-grid-vue :columnDefs="columnDefs" ...其他属性>
+    </ag-grid-vue>
+</template>
+
+<script>
+//...其他导入
+import {AgGridVue} from "ag-grid-vue3";
+
+export default {
+    components: {
+        AgGridVue
+    },
+    data() {
+        return {
+            columnDefs: [
+                {
+                    headerName: "Value",
+                    field: "value",
+                    cellRenderer: params => params.value > 1000 ? "LARGE VALUE" : "SMALL VALUE"
+                }
+            ]
+        }
+    }
+    //...
+}
+</script>
+```
+
+也可以编写基于 JavaScript 的单元格组件 - 请参阅[此处的文档](/javascript-data-grid/component-cell-renderer/#creating-custom-components)以获取更多信息
+{% /if %}

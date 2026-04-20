@@ -1,0 +1,69 @@
+{% if isFramework("vue") %}
+
+每种组件类型（单元格渲染器、单元格编辑器等）的页面都包含有关如何注册和使用每种组件类型的示例。
+但是，在此处回顾并关注所有组件类型通用的组件注册过程是很有用的。
+
+{% note %}
+Nuxt 的自动导入组件不支持网格内的自定义组件。请按照以下说明手动注册任何自定义组件。
+{% /note %}
+
+{% note %}
+异步组件（例如 `defineAsyncComponent`）不支持作为自定义网格组件。请改用常规同步组件。
+{% /note %}
+
+自定义组件可以通过两种方式注册：
+
+-   全局
+-   使用 `components` 选项本地注册
+-   使用 `defineExpose` 和 `script setup` 本地注册
+
+### 全局组件注册
+
+```js
+import MyCustomerCellEditor from './App.vue'
+
+app.component('MyCustomerCellEditor', MyCustomerCellEditor)
+```
+
+### 使用 `components` 选项本地注册
+
+```js
+import MyCustomerCellEditor from './App.vue'
+
+export default {
+  components: {
+    MyCustomerCellEditor
+  },
+  setup() {
+    // ...
+  }
+}
+```
+
+### 使用 `defineExpose` 和 `script setup` 本地注册
+
+```js
+<template>
+  <ag-grid-vue v-model="rowData"
+               :columnDefs="columnDefs"
+               ...其他属性
+  >
+  </ag-grid-vue>
+</template>
+
+<script setup>
+import MyCustomerCellEditor from './App.vue'
+
+const columnDefs = ref([
+    { field: "make", cellEditor: 'MyCustomerCellEditor' }
+]);
+
+...其他 setup
+
+defineExpose({
+    MyCustomerCellEditor    // 使 MyCustomerCellEditor 可用于网格
+})
+</script>
+```
+
+{% /if %}

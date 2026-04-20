@@ -1,0 +1,45 @@
+---
+title: "单元格选择 API 参考"
+enterprise: true
+---
+
+## 配置 API
+
+{% interfaceDocumentation interfaceName="CellSelectionOptions" config={"description":""} /%}
+
+## 选择事件
+
+{% apiDocumentation source="grid-events/events.json" section="selection" names=["fillStart", "fillEnd", "cellSelectionChanged"] /%}
+
+作为说明 `cellSelectionChanged` 事件的示例，如果在一行中选择 5 个单元格的范围，用户将单击第一个单元格并拖动到最后一个单元格。
+这将导致最多 7 个事件。范围中的第一个和最后一个单元格将各导致两个事件。
+这是因为第一个单元格在 mousedown 时触发一个 `started=true, finished=true` 的事件，在范围内时还有一个额外的事件 `started=true, finished=false`，最后一个单元格在进入范围时立即触发一个事件 `started=false, finished=false`，然后在单元格选择结束时再次触发 `started=false, finished=true`。
+所有中间事件都将有一个事件，`started` 和 `finished` 都为 `false`。这在表中说明：
+
+| 用户操作                       | `started` | `finished` |
+| --------------------------------- | --------- | ---------- |
+| 在第一个单元格中 `mousedown`         | `true`    | `true`     |
+| 在第一个单元格中 `mousemove`         | `true`    | `false`    |
+| 在中间单元格中 `mousemove` | `false`   | `false`    |
+| 在最后一个单元格中 `mousemove`         | `false`   | `false`    |
+| 在最后一个单元格中 `mouseup`           | `false`   | `true`     |
+
+下面的示例也通过在控制台中记录事件字段来说明这一点：
+
+{% gridExampleRunner title="cellSelectionChanged" name="range-selection-changed-event" /%}
+
+## 编辑事件
+
+{% apiDocumentation source="grid-events/events.json" section="editing" names=["cellSelectionDeleteStart","cellSelectionDeleteEnd", "cellEditRequest"] /%}
+
+## 单元格选择 API
+
+以下方法在 `GridApi` 上可用于管理单元格选择。
+
+{% apiDocumentation source="grid-api/api.json" section="selection" names=["getCellRanges", "clearCellSelection", "addCellRange"] /%}
+
+单元格范围通常由起始行和结束行界定。但是，也可以定义不受行限制的范围（即包含所有行）。通过 `gridApi.addCellRange` 添加无界范围时，不要提供起始或结束行位置。
+
+行位置由行索引和固定位置定义。行索引是从零开始的整数。固定位置可以是 `'top'`（行在顶部固定区域）、`'bottom'`（行在底部固定区域）或 `null`（行在主体中）。有关行固定的信息，请参阅[行固定](./row-pinning/)。
+
+范围由列列表定义。传入 a) 列列表或 b) 起始和结束列，让表格计算出中间的列。传递列列表而不是起始和结束列的优点是列不需要是连续的。

@@ -1,0 +1,31 @@
+{% if isFramework("vue") %}
+
+可以通过 `this.$refs.myGrid.api` 访问网格 API，其中 `ref="myGrid"` 应用于 `ag-grid-vue` 组件。这仅在网格初始化后定义。
+
+```jsx
+<ag-grid-vue ref="myGrid" />
+
+// 方法
+onClick() {
+    this.$refs.myGrid.api.deselectAll();
+},
+```
+
+### 事件和回调中的 API
+
+所有网格事件和回调的参数中也提供了 `api`。第一个触发的事件是 `gridReady` 事件，可用于在组件内存储对 API 的引用，作为使用 `$refs` 的替代方法。
+
+```jsx
+<ag-grid-vue @grid-ready="onGridReady" />
+
+// 存储 API 以供以后使用
+onGridReady = (params) => {
+    this.api = params.api;
+}
+```
+
+{% warning %}
+如果 API 存储在引用中，它必须是 `shallowRef` 而不是 `ref` 才能正常工作。
+{% /warning %}
+
+{% /if %}

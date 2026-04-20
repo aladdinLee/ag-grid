@@ -1,0 +1,424 @@
+---
+title: "集合筛选器 - 筛选列表"
+enterprise: true
+---
+
+本节介绍如何通过自定义排序和格式化来管理筛选列表值。还将讨论直接向集合筛选器提供筛选值。
+
+## 排序筛选列表
+
+集合筛选器中的值默认情况下将进行排序，其中值转换为字符串值并根据其 UTF-16 代码按升序排序。
+
+当需要不同的排序顺序时，可以向集合筛选器提供比较器，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'age',
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                comparator: (a, b) => {
+                    const valA = parseInt(a);
+                    const valB = parseInt(b);
+                    if (valA === valB) return 0;
+                    return valA > valB ? 1 : -1;
+                }
+            }
+        }
+    ]
+}
+```
+
+集合筛选器使用的比较器仅在前两个参数中提供值，而列定义（`colDef`）的比较器还提供行数据作为附加参数。这是因为在对行进行排序时，存在行数据。例如，将 100 行拆分为颜色值 `[white, black]`。列将对 100 行进行排序，但筛选器将仅对两个值进行排序。
+
+如果您提供的比较器依赖于行数据并且您正在使用集合筛选器，请确保为集合筛选器提供不依赖于行数据的替代比较器。
+
+以下示例演示了使用比较器对集合筛选器值进行排序。请注意以下几点：
+
+-   **Age (no Comparator)** 筛选器值使用默认字符串顺序排序：`1, 10, 100...`
+-   **Age (with Comparator)** 筛选器在 `filterParams` 中提供了自定义比较器，该比较器按数值对年龄进行排序：`1, 2, 3...`
+
+{% gridExampleRunner title="排序筛选列表" name="sorting-set-filter-values"  exampleHeight=720 /%}
+
+## 格式化值
+
+本节介绍在集合筛选器中格式化显示的筛选列表值的不同方法。
+
+{% note %}
+格式化筛选列表值不会更改基础值或筛选模型。
+{% /note %}
+
+### 值格式化器
+
+当需要修改筛选列表中显示的字符串值时，[值格式化器](./value-formatters/)是一个不错的选择，例如在国家/地区名称后的括号中添加国家/地区代码，如下所示：
+
+```{% frameworkTransform=true %}
+const countryValueFormatter = params => {
+    const country = params.value;
+    return country + ' (' + COUNTRY_CODES[country].toUpperCase() + ')';
+}
+```
+
+以下代码段显示了如何向集合筛选器提供 `countryValueFormatter`：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        // 使用相同的值格式化器格式化单元格和筛选器值的列定义
+        {
+            field: 'country',
+            valueFormatter: countryValueFormatter,
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                valueFormatter: countryValueFormatter,
+            },
+        }
+    ]
+}
+```
+
+在上面的代码中，向列和筛选器参数提供了相同的值格式化器，但是可以使用单独的值格式化器。
+
+筛选列表项目和行之间没有一对一的映射（因为来自多行的值可能映射到同一个筛选列表项目），因此筛选列表的值格式化器不会传递 `node` 或 `data` 参数，应该仅基于 `value` 进行格式化。
+
+如果数据包含[缺失值](#missing-values)，值格式化器将需要处理如何显示空值（例如返回 `'(Blanks)'`）。如果数据包含复杂对象，请参阅[复杂对象](#complex-objects)以了解如何将值格式化器与键创建器一起使用。
+
+以下示例显示了如何使用值格式化器格式化集合筛选器值。请注意以下几点：
+
+-   **No Value Formatter** 没有向集合筛选器提供值格式化器。该列通过 `colDef.valueFormatter = countryValueFormatter` 提供了值格式化器。
+-   **With Value Formatter** 向列和集合筛选器提供了相同的值格式化器。集合筛选器通过 `filterParams.valueFormatter = countryValueFormatter` 提供了值格式化器。
+-   在应用筛选器的情况下单击 **Print Filter Model**，注意记录的筛选模型（开发者控制台）未被修改。
+
+{% gridExampleRunner title="筛选列表值格式化器" name="filter-list-value-formatter"  exampleHeight=745 /%}
+
+### 单元格渲染器
+
+当显示的值需要标记时，[单元格组件](./component-cell-renderer/)是一个不错的选择。例如，如果要显示国家/地区标志图像以及国家/地区名称。
+
+可以使用相同的单元格组件格式化网格单元格和筛选器值，或者可以向每个组件提供不同的组件。请注意，当用于格式化网格内的单元格时，单元格组件将被提供附加信息（因为网格单元格具有筛选列表中的值不存在的行详细信息）。
+
+假设您有一个自定义国家/地区单元格组件，以下代码段显示了如何向集合筛选器提供 `countryCellRenderer`：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        // 使用相同的单元格渲染器格式化单元格和筛选器值的列定义
+        {
+            field: 'country',
+            cellRenderer: countryCellRenderer,
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                cellRenderer: countryCellRenderer
+            }
+        }
+    ]
+}
+```
+
+{% note %}
+也可以向 `filterParams.cellRenderer` 提供自定义[单元格渲染器组件](./component-cell-renderer/)。
+{% /note %}
+
+以下示例显示了如何使用单元格渲染器渲染集合筛选器值。请注意以下几点：
+
+-   **No Cell Renderer** 没有向集合筛选器提供单元格渲染器。该列使用 `colDef.cellRenderer = countryCellRenderer` 向列提供了单元格渲染器。
+-   **With Cell Renderer** 使用相同的单元格渲染器格式化单元格和筛选器值。集合筛选器使用 `filterParams.cellRenderer = countryCellRenderer` 提供了单元格渲染器。
+-   在应用筛选器的情况下单击 **Print Filter Model**，注意记录的筛选模型（开发者控制台）未被修改。
+
+{% gridExampleRunner title="筛选列表单元格渲染器" name="filter-list-cell-renderer"  exampleHeight=745 /%}
+
+## 提供筛选值
+
+默认情况下，集合筛选器将从行数据中获取筛选值。这些值根据 `field` 属性从数据中检索。可以通过在列定义中提供 `filterValueGetter` 来覆盖此设置。这类似于使用[值获取器](./value-getters)，但特定于筛选器。
+
+{% apiDocumentation source="column-properties/properties.json" section="filtering" names=["filterValueGetter"] /%}
+
+也可以为筛选列表提供值。在使用[服务器端行模型](./server-side-model/)时，这是必需的。这可以同步或异步完成，如下所述。
+
+### 同步值
+
+最简单的方法是向 `filterParams.values` 提供值列表，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'days',
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                // 提供所有天数，即使数据中缺少天数！
+                values: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            }
+        }
+    ],
+}
+```
+
+请注意，如果行数据中缺少值，筛选列表将显示所有提供的值。这可能会给用户留下筛选已损坏的印象。
+
+{% note %}
+当提供已经排序的筛选值时，通常使用 `filterParams.suppressSorting=true` 禁用默认筛选列表排序。
+{% /note %}
+
+以下示例演示了使用 `filterParams.values` 提供筛选值。请注意以下几点：
+
+-   **Days (Values Not Provided)** 集合筛选器从行数据中获取值以填充筛选列表，由于数据中不存在 `'Saturday'` 和 `'Sunday'`，它们不会出现在筛选列表中。
+-   由于 **Days (Values Not Provided)** 筛选器值来自行数据，因此使用[自定义排序比较器](./filter-set-filter-list/#sorting-filter-lists)对其进行排序，以确保天数按照工作日排序。
+-   **Days (Values Provided)** 集合筛选器使用 `filterParams.values` 获得值。由于提供了所有天数，筛选列表也包含 `'Saturday'` 和 `'Sunday'`。
+-   由于 **Days (Values Provided)** 筛选器值按正确顺序提供，因此使用 `filterParams.suppressSorting=true` 关闭默认筛选列表排序。
+
+{% gridExampleRunner title="提供筛选值" name="providing-filter-values"  exampleHeight=720 /%}
+
+### 异步值
+
+也可以异步向集合筛选器提供值。这通过提供回调函数而不是值列表来完成，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                values: params => {
+                    // 使用 setTimeout() 模拟异步更新
+                    setTimeout(() => {
+                        // 从服务器获取值
+                        const values = getValuesFromServer();
+                        // 向集合筛选器提供值
+                        params.success(values);
+                    }, 3000);
+                }
+            }
+        }
+    ],
+}
+```
+
+请注意，在上面的代码段中，值回调接收一个参数对象，其中包含 `params.success()`，该参数允许将异步获取的值提供给集合筛选器。
+
+此参数对象的接口是 `SetFilterValuesFuncParams`：
+
+{% interfaceDocumentation interfaceName="SetFilterValuesFuncParams" config={"description":""} /%}
+
+{% note %}
+如果您异步向集合筛选器提供值，当使用 `setModel` 设置模型时，您需要等待返回的网格 promise 应用更改后再执行任何进一步操作，例如：
+
+`filter.setModel({ values: ['a', 'b'] }).then(() => gridApi.onFilterChanged(); );`
+{% /note %}
+
+以下示例演示了异步加载集合筛选器值。请注意以下几点：
+
+-   `filterParams.values` 被分配了一个回调函数，该函数使用参数中提供的回调在 3 秒延迟后加载筛选值：`params.success(['value1', 'value2'])`。
+-   打开集合筛选器会在设置值之前显示加载消息。有关如何更改此消息的详细信息，请参阅[本地化](./localisation/)部分。
+-   回调仅在首次打开筛选器时调用。下次打开筛选器时，不会再次加载值。
+
+{% gridExampleRunner title="回调/异步" name="callback-async"  exampleHeight=510 /%}
+
+### 刷新值
+
+当值最初传递给集合筛选器时，它们仅在最初创建集合筛选器时加载一次。当通过 `filterParams.values` 更新这些值时，集合筛选器将自动更新以反映新值。
+
+可能需要在稍后刷新值，例如反映网格中发生的其他筛选。为此，您可以在要刷新的相关筛选器上调用 `refreshFilterValues`。这将导致筛选器中使用的值从原始源刷新，无论是通过再次查看提供的 `values` 数组，还是通过重新执行 `values` 回调。例如，您可能会使用类似以下内容：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    onFilterChanged: params => {
+        params.api.getColumnFilterHandler('columnName').refreshFilterValues();
+    }
+}
+```
+
+如果您使用网格作为值源（即您不自己提供值），调用此方法也将使用从网格中获取的值刷新筛选器值，但这不应该是必需的，因为每当网格中的任何数据更改时，值都会自动刷新。
+
+相反，如果您希望每次打开集合筛选器时都刷新值，可以使用 `refreshValuesOnOpen` 进行配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                values: params => params.success(getValuesFromServer()),
+                refreshValuesOnOpen: true,
+            }
+        }
+    ],
+}
+```
+
+刷新值时，筛选器中选中的任何值在新值中仍然存在，将保持选中状态，但任何其他选中的值将被丢弃。
+
+此外，如果选中了所有新值（并且筛选器之前处于活动状态），筛选器模型将被清除（重置为 `null`）。可以通过设置筛选器参数 `suppressClearModelOnRefreshValues = true` 来防止此行为。如果使用[服务器端行模型筛选](./server-side-model-filtering/#set-filtering)并基于其他列筛选器更新筛选器值，这可能很有用
+
+以下示例演示了刷新值。请注意以下几点：
+
+-   Values Array 列的值作为数组提供。单击按钮更改值将更新提供给筛选器的数组中的值，并调用 `refreshFilterValues()` 立即刷新该列的筛选器。
+-   Values Callback 列的值作为回调提供，并配置了 `'refreshValuesOnOpen = true'`。单击按钮更改值将更新下次调用回调时返回的值。请注意，直到下次打开筛选器时才会更新值。
+-   如果选择 `'Elephant'` 并更改值，它将保持选中状态，因为它存在于两个列表中。
+-   如果选择任何其他选项，当您更改为不同的值时，该选择将丢失。
+-   刷新值后重新应用筛选器。
+
+{% gridExampleRunner title="刷新值" name="refreshing-values"  exampleHeight=755 /%}
+
+## 启用值区分大小写
+
+默认情况下，集合筛选器将值视为不区分大小写。实际上，这意味着单元格值 `Black`、`black` 和 `BLACK` 在匹配目的上都被视为相同，并且第一个遇到的值用作筛选列表中显示的值。
+
+可以使用 `caseSensitive` 筛选器参数启用区分大小写：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'colour',
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                caseSensitive: true
+            }
+        }
+    ]
+}
+```
+
+{% note %}
+`caseSensitive` 选项还会影响[迷你筛选器](./filter-set-mini-filter/#enabling-case-sensitive-searches)搜索和 [API](./filter-set-api/#enabling-case-sensitivity) 行为。
+{% /note %}
+
+以下示例演示了 `caseSensitive: false`（默认值）和 `caseSensitive: true` 之间的行为差异：
+
+-   不区分大小写列的筛选列表有七个具有唯一颜色的不同值。
+    -   在迷你筛选器中输入 `black` 将匹配 `Black`。
+-   区分大小写列的筛选列表有 21 个不同的值，尽管忽略大小写只有七个不同的颜色。
+    -   在迷你筛选器中输入 `black` 将仅匹配 `black`，但不匹配 `Black` 或 `BLACK`。
+
+{% gridExampleRunner title="启用集合筛选器区分大小写" name="case-sensitive-set-filter-list"  exampleHeight=720 /%}
+
+如果需要规范化大小写差异以从数据源中删除冗余值以进行筛选，应使用[值格式化器](#value-formatter)。
+
+## 缺失值
+
+如果网格的行数据中有缺失/空值，或者[提供的值](#supplying-filter-values)列表中有缺失值，筛选列表将包含一个名为 `(Blanks)` 的条目，可用于选择/取消选择所有这些值。如果这不是所需的行为，请提供[格式化器](#value-formatter)以不同方式显示空值。
+
+`undefined`、`null` 和 `''`，以及如果使用[每个单元格多个值](#multiple-values-per-cell)时的空数组，都被视为缺失值。这些将在[集合筛选器模型](./filter-set-api/#set-filter-model)中显示为 `null` 的单个条目。这也适用于提供的筛选列表值（例如，如果您提供 `''`，它将在筛选模型中显示为 `null`），以及通过 API 设置筛选模型时。
+
+## 筛选值类型
+
+集合筛选器在内部维护单元格值的原始类型，但始终使用字符串作为键。例如，如果单元格包含数字，筛选模型将包含转换为字符串的这些数字，但如果您指定了值格式化器，它将使用类型为数字的值。
+
+## 复杂对象
+
+如果您提供复杂对象作为值，则在使用集合筛选器时需要提供键创建器函数和值格式化器函数。
+
+键创建器从复杂对象生成唯一的字符串键（请注意，如果键是 `null`、`undefined` 或 `''`，它将转换为 `null`，与[缺失值](#missing-values)相同）。此键在筛选模型中使用，并用于比较对象。您可以在筛选器参数中提供键创建器，这将特定于集合筛选器，或者您可以在列定义中提供一个与其他功能（如分组）共享的键创建器。
+
+值格式化器用于生成在筛选列表中向用户显示的标签。您可以在筛选器参数中提供值格式化器。
+
+{% note %}
+有关在 AG Grid 中使用复杂对象的更多信息，请参阅[单元格数据类型 - 对象](/javascript-data-grid/cell-data-types/#object)。
+{% /note %}
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'country',
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                keyCreator: params => params.value.code,
+                valueFormatter: params => params.value.name,
+            },
+        }
+    ],
+}
+```
+
+上面的代码段显示了一个键创建器函数，该函数从复杂对象返回国家/地区代码，以及一个返回名称的值格式化器。如果根本没有提供键创建器或值格式化器，集合筛选器将无法工作。
+
+如果筛选列表使用[提供的值](#supplying-filter-values)，这些必须是完整的复杂对象。
+
+以下示例显示了键创建器为集合筛选器处理复杂对象。请注意以下几点：
+
+-   **Country** 列通过 `colDef.field` 提供了复杂对象。
+    -   使用 `colDef.filterParams.keyCreator = countryCodeKeyCreator` 向筛选器提供了键创建器，该键创建器为集合筛选器提取 `code` 属性。
+    -   使用 `colDef.filterParams.valueFormatter = countryValueFormatter` 向筛选器提供了值格式化器，该格式化器为筛选列表提取 `name` 属性。
+    -   使用 `colDef.valueFormatter = countryValueFormatter` 向列提供了值格式化器，该格式化器为单元格值提取 `name` 属性。
+-   在 **Country** 上激活筛选器的情况下单击 **Print Filter Model**，注意记录的筛选模型（开发者控制台）使用复杂对象中的 `code` 属性。
+
+{% gridExampleRunner title="复杂对象" name="complex-objects"  exampleHeight=720 /%}
+
+## 每个单元格多个值
+
+有时您可能希望支持单个单元格中的多个值，例如使用标签时。在这种情况下，集合筛选器可以从单元格中提取每个单独的值，为每个单独的值在筛选列表中创建一个条目。选择一个值将显示单元格中的任何值与所选值匹配的行。
+
+下面的示例演示了这一点。请注意以下几点：
+
+-   **Animals (array)** 列在数据中使用包含多个值的数组。
+-   **Animals (string)** 列在数据中使用单个字符串表示多个值，并使用[值获取器](./value-getters/)从数据中提取值数组。
+-   **Animals (objects)** 列使用[键创建器](#complex-objects)从对象数组中检索值。键创建器应用于数组内的元素（值格式化器也是如此）。
+-   对于所有情况，集合筛选器显示数据中存在的所有单独唯一值的列表。
+-   在集合筛选器中选择值将显示该行的数据包含所选值中的**任何**一个的行。
+-   第一行包含 **Animals (array)** 和 **Animals (objects)** 列的空数组，以及 **Animals (string)** 列的空字符串，该字符串转换为空数组。这些都作为 `(Blanks)` 出现在筛选列表中。
+
+{% gridExampleRunner title="多个值" name="multiple-values" /%}
+
+如果单元格值包含数组，[单元格数据类型](./cell-data-types/)将自动推断类型为 `'object'` 并提供使用列/数据类型值格式化器的 `comparator`。由于单元格值类型（数组）和筛选值类型（数组的内容）不同，需要在 `filterParams` 中为集合筛选器提供额外的 `comparator`，如上面的[排序筛选列表](#sorting-filter-lists)中所述。
+
+## 默认状态
+
+默认情况下，创建集合筛选器时，所有值都被选中。如果您希望反转此行为并默认取消选择所有内容，可以使用以下内容：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'country',
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                defaultToNothingSelected: true,
+            }
+        }
+    ],
+}
+```
+
+在这种情况下，在至少选择一个值之前不会进行筛选。
+
+请注意，如果启用了 [Excel 模式](./filter-set-excel-mode/)，则无法更改默认状态。
+
+以下示例演示了不同的默认状态。请注意以下几点：
+
+-   首次打开集合筛选器时，Athlete 列的所有内容都被选中，这是默认值
+-   Country 列默认情况下没有选中任何内容，因为 `defaultToNothingSelected = true`。
+-   打开 Country 列的集合筛选器时，在至少选择一个值之前，网格不会被筛选。
+
+{% gridExampleRunner title="默认状态" name="default-state" /%}
+
+## 筛选值工具提示
+
+默认情况下，太长而无法显示的集合筛选器值会被省略号截断。为了让用户看到完整的筛选值，可以启用工具提示，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'country',
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                showTooltips: true,
+            }
+        }
+    ],
+}
+```
+
+除非提供了[自定义工具提示组件](./tooltips/)，否则将使用默认工具提示组件。
+
+以下示例演示了集合筛选器中的工具提示。请注意以下几点：
+
+-   当值太长时，筛选值会自动用省略号截断。
+-   **Col A** 未启用集合筛选器工具提示。
+-   **Col B** 通过 `filterParams.showTooltips=true` 启用了集合筛选器工具提示。
+-   **Col C** 启用了集合筛选器工具提示并提供了自定义工具提示组件。
+
+{% gridExampleRunner title="筛选值工具提示" name="filter-value-tooltips"  exampleHeight=500 /%}

@@ -1,0 +1,24 @@
+{% if isFramework("vue") %}
+网格通过 `ag-grid-vue` 组件进行配置。属性包括简单类型、数组、复杂对象和回调函数。
+以下示例显示了一些绑定（演示了破折号和驼峰命名风格都是可接受的）：
+
+```jsx
+<ag-grid-vue
+    // 属性，未绑定，给出显式值
+    rowGroupPanelShow="always"
+
+    // 布尔值
+    :pivot-mode="true"
+
+    // 绑定属性
+    :columnDefs="columnDefs"
+
+    // 回调
+    :getRowHeight="myGetRowHeightFunction"
+
+    // 事件处理程序
+    @cell-clicked="onCellClicked"
+</ag-grid-vue>
+```
+
+{% /if %}

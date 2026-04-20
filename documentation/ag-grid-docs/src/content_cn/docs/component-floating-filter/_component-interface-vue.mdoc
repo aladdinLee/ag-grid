@@ -1,0 +1,32 @@
+{% if isFramework("vue") %}
+当实例化 Vue 组件时，网格将通过 `this.params` 使网格 API、许多实用方法以及单元格和行值可供您使用。
+
+自定义浮动筛选器组件的接口如下：
+
+```ts
+interface FloatingFilterDisplay {
+    // 必需方法
+
+    // 当列定义更新时执行任何必要操作的钩子。
+    refresh(params: FloatingFilterDisplayParams): void;
+
+    // 可选方法
+
+    // 每次显示弹出窗口时都会调用，在 getGui 返回的 GUI 附加到 DOM 之后。
+    // 这对于任何需要在执行之前附加的逻辑很有用，例如将焦点放在特定的 DOM 元素上。
+    afterGuiAttached?(params?: IAfterGuiAttachedParams): void;
+
+    // 当列被销毁时调用。如果您的自定义筛选器需要进行任何资源清理，请在此处进行。
+    // 当筛选器变为"不可见"时，筛选器不会被销毁，因为 GUI 会被保留，
+    // 以便在用户再次选择该筛选器时再次显示。当与筛选器关联的列被销毁时，
+    // 筛选器会被销毁，无论是将新列设置到网格中，还是网格本身被销毁。
+    destroy?(): void;
+}
+```
+
+### 自定义浮动筛选器参数
+
+当实例化 Vue 组件时，网格将通过 `this.params` 使网格 API、许多实用方法以及单元格和行值可供您使用 - 下面记录了提供的内容的接口。
+
+如果通过 `colDef.floatingFilterComponentParams` 属性提供了自定义参数，这些参数将额外添加到参数对象中，如果存在名称冲突，将覆盖同名项目。
+{% /if %}

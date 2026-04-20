@@ -1,0 +1,24 @@
+{% if isFramework("javascript") %}
+标题组组件接口如下：
+{% /if %}
+
+{% if isFramework("javascript") %}
+
+```ts
+interface IHeaderGroupComp {
+    // 可选方法，使用参数调用一次
+    init?(params: IHeaderGroupParams): void;
+
+    // 可以多次调用，您应该返回 HTML 元素
+    getGui(): HTMLElement;
+
+    // 可选方法，组件销毁时调用一次
+    destroy?(): void;
+}
+```
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+传递给 `init(params)` 的参数如下：
+{% /if %}

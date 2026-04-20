@@ -1,0 +1,309 @@
+---
+title: "编辑组件"
+description: "单元格编辑器处理 $framework 数据表格中的编辑操作。使用七个提供的单元格编辑器之一或创建自定义单元格编辑器组件。"
+---
+
+单元格编辑器组件是通常出现在单元格内部的 UI，负责处理编辑操作。您可以从[提供的单元格编辑器](./provided-cell-editors/)中选择或创建自己的自定义单元格编辑器组件。
+
+下面的示例展示了一些提供的编辑器组件和一些自定义编辑器组件。
+
+{% gridExampleRunner title="简单编辑器组件" name="component-editor-2"  exampleHeight=370 /%}
+
+## 自定义组件
+
+{% partial file="./_component-interface-javascript.mdoc" /%}
+{% partial file="./_component-interface-angular.mdoc" /%}
+{% partial file="./_component-interface-react.mdoc" /%}
+{% partial file="./_component-interface-vue.mdoc" /%}
+
+## 选择组件
+
+单元格编辑器组件使用[列定义](./column-definitions/)的 `cellEditor` 属性进行配置。
+
+{% apiDocumentation source="column-properties/properties.json" section="editing" names=["cellEditor"] /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'name',
+            editable: true,
+            // 使用提供的编辑器，通过名称引用
+            cellEditor: 'agTextCellEditor'
+        },
+        {
+            field: 'name',
+            editable: true,
+            // 使用自定义编辑器，直接引用
+            cellEditor: 'CustomEditorComp'
+        },
+    ]
+}
+```
+
+有关如何注册自定义表格组件的详细信息，请参阅[注册自定义组件](./components/#registering-custom-components)。
+
+## 动态选择
+
+`colDef.cellEditorSelector` 函数允许为列中的不同行设置不同的编辑器组件。
+
+{% apiDocumentation source="column-properties/properties.json" section="editing" names=["cellEditorSelector"] /%}
+
+传递给 `cellEditorSelector` 的 `params` 与传递给编辑器组件的参数相同。通常，选择器将使用此参数检查行的内容并相应地选择编辑器。
+
+结果是一个包含 `component` 和 `params` 的对象，用于代替 `cellEditor` 和 `cellEditorParams`。
+
+以下显示选择器始终返回提供的富选择编辑器：
+
+```js
+cellEditorSelector: params => {
+    return {
+        component: 'agRichSelectCellEditor',
+        params: { values: ['男', '女'] }
+    };
+}
+```
+
+但是，选择器只有在做出选择时才有意义。以下演示在单元格编辑器之间进行选择：
+
+```js
+cellEditorSelector: params => {
+
+  if (params.data.type === 'age') {
+    return {
+      component: NumericCellEditor,
+    }
+  }
+
+  if (params.data.type === 'gender') {
+    return {
+      component: 'agRichSelectCellEditor',
+      params: {
+        values: ['男', '女']
+      }
+    }
+  }
+
+  if (params.data.type === 'mood') {
+    return {
+      component: MoodEditor,
+      popup: true,
+      popupPosition: 'under'
+    }
+  }
+
+  return undefined
+}
+```
+
+这是一个完整的示例：
+
+-   列 '值' 保存不同类型的数据，如列 '类型' 所示（数字/性别/心情）。
+-   `colDef.cellEditorSelector` 是一个函数，根据该行的数据类型返回用于编辑的组件名称
+-   通过双击编辑单元格以观察使用的不同编辑器。
+
+{% gridExampleRunner title="动态编辑器组件" name="dynamic-editor-component"  exampleHeight=450 /%}
+
+## 自定义属性
+
+属性 `colDef.cellEditorParams` 允许将自定义属性传递给编辑器。
+
+{% apiDocumentation source="column-properties/properties.json" section="editing" names=["cellEditorParams"] /%}
+
+{% partial file="./_complementing-component-javascript.mdoc" /%}
+{% partial file="./_complementing-component-angular.mdoc" /%}
+{% partial file="./_complementing-component-react.mdoc" /%}
+{% partial file="./_complementing-component-vue.mdoc" /%}
+
+## 动态属性
+
+`colDef.cellEditorParams` 函数允许独立于编辑器选择动态设置属性。例如，您可能有一个 '城市' 列，其值基于 '国家' 列。
+
+```js
+cellEditorParams: params => {
+    const selectedCountry = params.data.country;
+
+    if (selectedCountry === '爱尔兰') {
+        return {
+            values: ['都柏林', '科克', '戈尔韦']
+        };
+    } else {
+        return {
+            values: ['纽约', '洛杉矶', '芝加哥', '休斯顿']
+        };
+    }
+}
+```
+
+下面显示了一个带有动态属性的示例。可以注意到以下几点：
+
+-   列 **性别** 使用单元格组件作为表格和编辑器。
+-   列 **国家** 允许选择国家，使用 `cellHeight` 使每个条目高度为 50px。如果当前选择的城市与新选择的国家不匹配，则清除城市单元格。
+-   列 **城市** 使用动态参数显示所选国家的值，并使用 `formatValue` 将所选城市的国家添加为后缀。
+-   列 **地址** 使用大文本区域编辑器。
+
+{% gridExampleRunner title="动态参数" name="dynamic-parameters"  exampleHeight=520 /%}
+
+## 弹出编辑器
+
+编辑器可以是内联或弹出的。
+
+内联编辑器组件将放置在表格的单元格内，激活时替换单元格内容。
+
+弹出编辑器组件出现在单元格上方的弹出窗口中。弹出编辑器不受单元格尺寸的限制。
+
+{% if isFramework("react") %}
+通过在[列定义](./column-definitions/)上设置 `cellEditorPopup=true` 来配置编辑器在弹出窗口中。
+{% /if %}
+
+{% if isFramework("javascript", "angular", "vue") %}
+通过以下方式之一配置自定义单元格编辑器在弹出窗口中：
+
+1. 在[列定义](./column-definitions/)上指定 `cellEditorPopup=true`。
+1. 在自定义单元格编辑器上实现 `isPopup()` 方法并返回 `true`。
+
+{% /if %}
+
+```{% frameworkTransform=true %}
+colDefs = [
+  {
+    cellEditor: MyPopupEditor,
+    cellEditorPopup: true
+    // ...
+  }
+]
+```
+
+{% if isFramework("react") %}
+弹出编辑器出现在编辑单元格上方。通过在[列定义](./column-definitions/)上设置 `cellEditorPopupPosition='under'` 来配置弹出编辑器出现在单元格下方。
+{% /if %}
+
+{% if isFramework("javascript", "angular", "vue") %}
+弹出编辑器出现在编辑单元格上方。通过以下方式之一配置弹出编辑器出现在单元格下方：
+
+1. 在自定义单元格编辑器上实现 `getPopupPosition()` 方法并返回 `under`。
+1. 在[列定义](./column-definitions/)上指定 `cellEditorPopupPosition='under'`。
+
+{% /if %}
+
+```{% frameworkTransform=true %}
+colDef = {
+  cellEditorPopup: true,
+  cellEditorPopupPosition: 'under',
+  // ...其他属性
+}
+```
+
+以下示例演示了同一编辑器定位为内联、单元格上方的弹出窗口和单元格下方的弹出窗口：
+
+{% gridExampleRunner title="弹出编辑器组件" name="popup-editor"  exampleHeight=370 /%}
+
+{% note %}
+如果自定义单元格编辑器创建了自己的弹出窗口，该弹出窗口锚定在编辑器组件外部（例如像第三方日期选择器），则弹出元素需要具有 `'ag-custom-component-popup'` CSS 类。这允许表格正确确定何时停止编辑。
+{% /note %}
+
+## 键盘导航
+
+在自定义编辑器中，您可能希望禁用某些表格键盘导航。例如，如果您提供简单的文本编辑器，您可能希望表格在按下右箭头和左箭头时不做任何操作（默认情况下表格将移动到下一个/上一个单元格），因为您可能希望右箭头和左箭头在编辑器内移动光标。在其他单元格编辑器中，您可能希望表格正常行为。
+
+由于不同的单元格编辑器对表格行为有不同的要求，由单元格编辑器决定它希望表格处理哪些事件，哪些不处理。
+
+您有两个选项可以阻止表格在某些键事件上执行其默认操作：
+
+1. 在单元格编辑器中停止事件传播到表格。
+1. 通过 `colDef.suppressKeyboardEvent()` 回调告诉表格不做任何操作。
+
+### 选项 1 - 停止传播
+
+如果您不希望表格对事件采取行动，请调用 `event.stopPropagation()`。此方法的优点是您的单元格编辑器处理所有事情，这对于创建可重用的单元格编辑器很有好处。
+
+以下代码片段是您可以为简单文本编辑器包含的代码，它将阻止表格进行导航。
+
+{% partial file="./_keyboard-option-1-javascript.mdoc" /%}
+{% partial file="./_keyboard-option-1-angular.mdoc" /%}
+{% partial file="./_keyboard-option-1-react.mdoc" /%}
+{% partial file="./_keyboard-option-1-vue.mdoc" /%}
+
+### 选项 2 - 禁止键盘事件
+
+如果您实现 `colDef.suppressKeyboardEvent()`，您可以告诉表格您想要处理哪些事件，哪些不处理。此方法相对于前一种方法的优点是它将责任从单元格编辑器转移到列定义。因此，如果您使用可重用或第三方单元格编辑器，并且编辑器中没有此逻辑，您可以通过配置添加逻辑。
+
+{% apiDocumentation source="column-properties/properties.json" section="columns" names=["suppressKeyboardEvent"] /%}
+
+{% partial file="./_keyboard-option-2-javascript.mdoc" /%}
+{% partial file="./_keyboard-option-2-angular.mdoc" /%}
+{% partial file="./_keyboard-option-2-react.mdoc" /%}
+{% partial file="./_keyboard-option-2-vue.mdoc" /%}
+
+## 访问实例
+
+在表格为单元格创建编辑器组件实例后，可以访问该实例。如果您想调用您在编辑器上提供的与表格操作无关的方法，这很有用。访问编辑器使用表格 API `getCellEditorInstances(params)` 完成。
+
+{% apiDocumentation source="grid-api/api.json" section="editing" names=["getCellEditorInstances"] /%}
+
+如果您正在进行正常编辑，则任何时候只有一个单元格可编辑。因此，如果您不带参数调用 `getCellEditorInstances()`，如果单元格正在编辑，它将返回编辑单元格的编辑器，如果没有单元格正在编辑，则返回空列表。
+
+调用 `getCellEditorInstances()` 的示例如下：
+
+{% if isFramework("javascript", "angular", "vue") %}
+
+```js
+const instances = api.getCellEditorInstances(params);
+if (instances.length > 0) {
+    const instance = instances[0];
+}
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+```js
+const instances = api.getCellEditorInstances(params);
+if (instances.length > 0) {
+    getInstance(instances[0], instance => {
+        ...
+    });
+}
+```
+
+{% /if %}
+
+下面的示例显示使用 `getCellEditorInstances`。可以注意到以下几点：
+
+-   所有单元格都可编辑。
+-   **名字**和**姓氏**使用默认编辑器。
+-   所有其他列使用提供的 `MySimpleCellEditor` 编辑器。
+-   示例设置一个间隔以从活动单元格编辑器打印信息。有三种结果：1) 没有编辑 2) 使用默认单元格渲染器编辑 和 3) 使用自定义单元格编辑器编辑。所有结果都打印到开发者控制台。
+
+{% gridExampleRunner title="获取编辑器实例" name="get-editor-instance" /%}
+
+## API 参考
+
+{% if isFramework("angular") %}
+
+### ICellEditorAngularComp
+
+{% interfaceDocumentation interfaceName="ICellEditorAngularComp" config={"description": "ICellEditorAngularComp 接口具有以下方法："} /%}
+{% /if %}
+
+{% if isFramework("vue") %}
+
+### ICellEditor
+
+{% interfaceDocumentation interfaceName="ICellEditor" config={"description": "ICellEditor 接口具有以下方法："} /%}
+{% /if %}
+
+{% if isFramework("javascript", "angular", "vue") %}
+
+### ICellEditorParams
+
+{% interfaceDocumentation interfaceName="ICellEditorParams" /%}
+{% /if %}
+
+{% if isFramework("react") %}
+
+### CustomCellEditorProps
+
+{% interfaceDocumentation interfaceName="CustomCellEditorProps"  /%}
+{% /if %}

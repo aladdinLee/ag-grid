@@ -1,0 +1,10 @@
+{% if isFramework("angular") %}
+
+要创建自定义单元格编辑器，请实现 `ICellEditorAngularComp` 接口，该接口定义了两个必需方法：
+
+-   `agInit(params: ICellEditorParams)` - 编辑器初始化时调用
+-   `getValue()` - 编辑完成时由表格调用以获取最终值。
+
+`ICellEditorAngularComp` 和 `ICellEditorParams` 接口的完整详细信息在下面的 [API 参考](#api-reference)中列出。
+
+{% /if %}

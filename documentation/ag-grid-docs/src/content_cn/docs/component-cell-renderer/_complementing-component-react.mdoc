@@ -1,0 +1,31 @@
+{% if isFramework("react") %}
+
+```js
+// 定义要重用的单元格组件
+const ColourCellComp = props => <span style={{color: props.color}}>{props.value}</span>;
+
+const GridExample = () => {
+  const [columnDefs] = useState([
+       {
+           headerName: "Colour 1",
+           field: "value",
+           cellRenderer: ColourCellComp,
+           cellRendererParams: {
+              color: 'guinnessBlack'
+           }
+       },
+       {
+           headerName: "Colour 2",
+           field: "value",
+           cellRenderer: ColourCellComp,
+           cellRendererParams: {
+              color: 'irishGreen'
+           }
+       }
+  ]);
+
+  //...
+};
+```
+
+{% /if %}

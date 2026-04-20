@@ -1,0 +1,302 @@
+---
+title: "单元格数据类型"
+---
+
+通过使用单元格数据类型，可以轻松处理不同数据类型的值。
+
+这使得不同的表格功能无需任何额外配置即可工作，包括[渲染](./cell-content/)、[编辑](./cell-editing/)、[筛选](./filtering/)、[排序](./row-sorting/)、[行分组](./grouping/)以及导入和导出（[CSV 导出](./csv-export/)、[Excel 导出](./excel-export/)、[剪贴板](./clipboard/)）。
+
+## 启用单元格数据类型
+
+有许多预定义的单元格数据类型：`'text'`、`'number'`、`'bigint'`、`'boolean'`、`'date'`、`'dateString'`、`'dateTime'`、`'dateTimeString'` 和 `'object'`。
+
+这些默认启用，数据类型会从行数据中推断（如果可能）（请参阅[推断数据类型](#inferring-data-types)）。
+
+也可以通过在列定义上设置 `cellDataType` 属性来定义特定的单元格数据类型。
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'athlete',
+            // 启用单元格数据类型 `text`
+            cellDataType: 'text'
+        }
+    ]
+}
+```
+
+以下示例演示了预定义的单元格数据类型（大多数从行数据中推断）：
+
+-   **运动员**列具有 `'text'` 数据类型。
+-   **年龄**列具有 `'number'` 数据类型。
+-   **总计 (BigInt)** 列具有 `'bigint'` 数据类型。
+-   **金牌**列具有 `'boolean'` 数据类型。
+-   **日期**列具有 `'date'` 数据类型（单元格值是 `Date` 对象）。
+-   **日期时间**列具有 `'dateTime'` 数据类型（单元格值是 `Date` 对象）。这显式设置为 `cellDataType: 'dateTime'`，因为 `Date` 对象被推断为 `'date'` 数据类型。
+-   **日期 (字符串)** 列具有 `'dateString'` 数据类型（单元格值是表示日期的 `string`）。
+-   **日期时间 (字符串)** 列具有 `'dateTimeString'` 数据类型（单元格值是表示日期的 `string`）。
+-   **国家**列具有 `'object'` 数据类型。这也[覆盖了预定义的单元格数据类型定义](#overriding-the-pre-defined-cell-data-type-definitions)，以便值解析器和格式化器与对象结构一起工作。
+
+{% gridExampleRunner title="启用单元格数据类型" name="enable-cell-data-types" /%}
+
+## 推断数据类型
+
+默认情况下，使用客户端行模型时，表格将在第一次将行数据传递到表格时推断单元格数据类型，前提是满足以下条件：
+
+**列必须：**
+
+-   设置了 `field` 属性
+-   包含至少一个非空值
+
+**列不得：**
+
+-   在解析的列定义上设置 `valueGetter`、`valueParser` 或 `refData` 属性（包括默认列定义和列类型）
+-   使用[迷你图](./sparklines-overview/)
+
+如果不满足任何条件，则不会推断单元格数据类型。您仍然可以通过列定义上的 `cellDataType` 显式设置一个。
+
+如果推断可能但值不匹配任何预定义类型，则默认为 `'object'`。
+
+### 禁用推断
+
+在单个列上设置 `cellDataType: false`，或在[默认列定义](./column-definitions/#default-column-definitions)上全局禁用它。
+
+### 日期 vs 日期时间
+
+由于 `'dateTime'` 值是 `Date` 对象 —— 与 `'date'` 相同 —— 表格在推断期间无法区分它们。要使用更高精度的 `'dateTime'` 类型，请在列定义上显式设置 `cellDataType: 'dateTime'`。
+
+{% note %}
+推断仅适用于客户端行模型。对于其他行模型，请在每列上显式定义 `cellDataType`。
+{% /note %}
+
+## 预定义单元格数据类型
+
+每个预定义的单元格数据类型都通过使用默认值/回调设置特定的列定义属性来工作。这使得不同的表格功能能够为该数据类型正确工作。
+
+基于单元格数据类型设置的列定义属性将覆盖[默认列定义](./column-definitions/#default-column-definitions)中的任何属性，但将被任何[列类型](./column-definitions/#default-column-definitions)属性以及直接在单个列定义上设置的属性覆盖。请注意，对于 `filterParams`，只会覆盖默认列定义上的嵌套属性（而不是整个对象）。
+
+如果您希望为所有类型覆盖下面设置的属性之一，可以通过创建[列类型](./column-definitions/#default-column-definitions)并将列类型分配给[默认列定义](./column-definitions/#default-column-definitions)来实现。
+
+所有单元格数据类型都设置以下内容（除非指定）：
+
+-   [值解析器](./value-parsers/)将 `string` 转换为相关数据类型。
+-   [值格式化器](./value-formatters/)将相关数据类型转换为 `string`（`'text'` 除外）。
+-   [键创建器](./grouping-data/#grouping-on-object-data)使用值格式化器允许行分组工作（`'number'` 和 `'text'` 除外）。
+
+请注意，使用单元格数据类型时，值格式化器不会为组列中的值运行（因为它们已经被格式化），或者对于数据类型可能不同的聚合值。要在这些情况下应用自定义格式化，需要为基础列禁用单元格数据类型。
+
+### 文本
+
+`'text'` 单元格数据类型用于 `string` 值。由于大多数表格功能直接与 `string` 值一起工作，`'text'` 单元格数据类型不会设置上述所有数据类型指定的属性之外的任何属性。
+
+### 数字
+
+`'number'` 单元格数据类型用于 `number` 值。
+
+设置以下属性：
+
+-   使用[数字单元格编辑器](./provided-cell-editors-number/)进行编辑。
+-   当[集合筛选器默认禁用](./filter-set/#suppress-set-filter-by-default)时，使用[数字筛选器](./filter-number/)。
+-   当使用[集合筛选器](./filter-set/)时，设置 `filterParams.comparator` 为[排序筛选列表](./filter-set-filter-list/#sorting-filter-lists)。
+
+要仅显示一定数量的小数位，可以[覆盖预定义的单元格数据类型定义](#overriding-the-pre-defined-cell-data-type-definitions)并提供您自己的值格式化器。也可以通过向[数字单元格编辑器](./provided-cell-editors-number/)提供精度来控制编辑期间允许的小数位数。
+
+### BigInt
+
+`'bigint'` 单元格数据类型用于 `bigint` 值。
+
+设置以下属性：
+
+-   使用[文本单元格编辑器](./provided-cell-editors-text/)进行编辑，值解析器将输入转换为 `bigint`。
+-   当[集合筛选器默认禁用](./filter-set/#suppress-set-filter-by-default)时，使用 [BigInt 筛选器](./filter-bigint/)。
+-   当使用[集合筛选器](./filter-set/)时，设置 `filterParams.comparator` 为使用 `bigint` 比较排序筛选列表。
+-   定义了 `comparator` 以允许使用 `bigint` 值进行[自定义排序](./row-sorting/#custom-sorting)，包括绝对排序。
+
+BigInt 行为和限制：
+
+-   输入必须是十进制整数。`500` 和 `500n` 都被接受，但十六进制、二进制、小数和科学记数法被拒绝。
+-   值默认显示为纯字符串。使用值格式化器添加分隔符或自定义格式化。
+-   聚合和透视支持 `sum`、`min`、`max`、`count`。当存在任何 `bigint` 值时，`avg` 使用整数除法，因此小数部分被丢弃。
+-   CSV 和剪贴板导出使用精确的整数字符串。Excel 导出默认为文本以避免精度损失；您可以通过 [Excel 导出样式](/javascript-data-grid/excel-export-data-types/)选择数字，但大值可能会失去精度。
+
+如果您需要自定义输入格式，请通过[覆盖预定义的单元格数据类型定义](#overriding-the-pre-defined-cell-data-type-definitions)提供自定义值解析器/格式化器。
+
+### 布尔值
+
+`'boolean'` 单元格数据类型用于 `boolean` 值。
+
+设置以下属性：
+
+-   使用复选框单元格渲染器进行渲染，显示复选框。设置 `cellRendererParams.disabled=true` 使复选框只读。
+-   使用[复选框单元格编辑器](./provided-cell-editors-checkbox/)进行编辑（类似于渲染器）。
+-   设置 `suppressKeyboardEvent` 以启用 {% kbd "␣ Space" /%} 键切换渲染器值。
+-   当[集合筛选器默认禁用](./filter-set/#suppress-set-filter-by-default)时，使用[文本筛选器](./filter-text/)。
+-   当使用文本筛选器时，设置 `filterParams` 显示带有 `'True'`/`'False'` 的单个下拉列表（或使用[本地化](./localisation/)的等效项）。
+-   当使用[集合筛选器](./filter-set/)时，设置 `filterParams.valueFormatter` 显示 `'True'`/`'False'`（或使用[本地化](./localisation/)的等效项）。
+
+### 日期
+
+`'date'` 单元格数据类型用于表示为 `Date` 对象的日期值。
+
+默认值解析器和值格式化器使用 ISO 字符串格式 `'YYYY-MM-DD'`。如果您希望使用不同的日期格式，可以[覆盖预定义的单元格数据类型定义](#overriding-the-pre-defined-cell-data-type-definitions)。
+
+{% note %}
+请注意，`'date'` 单元格数据类型比较完整的 Date 对象，包括时间部分。因此，如果日期包含午夜以外的时间（`00:00:00.000`），筛选或编辑可能会出现意外行为。为了在使用内置筛选器时获得一致的结果，最好将所有时间值标准化为相同的值。如果保留时间组件很重要，请考虑改用 `'dateTime'` 单元格数据类型或定义自定义比较器，如[日期筛选器比较器](./filter-date/#filter-comparator)中所述。
+{% /note %}
+
+设置以下属性：
+
+-   使用[日期单元格编辑器](./provided-cell-editors-date/)进行编辑。
+-   当[集合筛选器默认禁用](./filter-set/#suppress-set-filter-by-default)时，使用[日期筛选器](./filter-date/)。
+-   当使用[集合筛选器](./filter-set/)时，启用[集合筛选器树列表](./filter-set-tree-list/)，并通过设置 `filterParams.treeListFormatter` 将月份转换为名称以及设置 `filterParams.valueFormatter` 使用值格式化器格式化浮动筛选器值来[格式化值](./filter-set-tree-list/#formatting-values)。
+
+### 字符串日期
+
+`'dateString'` 单元格数据类型用于表示为 `string` 值的日期值。
+
+此数据类型使用 ISO 字符串格式 `'YYYY-MM-DD'`。如果您希望使用不同的日期格式，可以[覆盖预定义的单元格数据类型定义](#overriding-the-pre-defined-cell-data-type-definitions)。
+
+设置以下属性：
+
+-   使用[字符串日期单元格编辑器](./provided-cell-editors-date/#enabling-date-as-string-cell-editor)进行编辑。
+-   当[集合筛选器默认禁用](./filter-set/#suppress-set-filter-by-default)时，使用[日期筛选器](./filter-date/)。
+-   当使用日期筛选器时，设置 `filterParams.comparator` 解析 `string` 日期值。
+-   当使用[集合筛选器](./filter-set/)时，启用[集合筛选器树列表](./filter-set-tree-list/)，设置 `filterParams.treeListPathGetter` 将 `string` 日期值转换为路径，并通过设置 `filterParams.treeListFormatter` 将月份转换为名称以及设置 `filterParams.valueFormatter` 使用值格式化器格式化浮动筛选器值来[格式化值](./filter-set-tree-list/#formatting-values)。
+
+### 日期时间
+
+`'dateTime'` 单元格数据类型用于表示为 `Date` 对象的日期和时间值。与仅显示日期部分的 `'date'` 单元格数据类型不同，`'dateTime'` 显示日期和时间组件。
+
+此数据类型使用 ISO 字符串格式 `'YYYY-MM-DDThh:mm:ssZ'`。如果您希望使用不同的格式，可以[覆盖预定义的单元格数据类型定义](#overriding-the-pre-defined-cell-data-type-definitions)。
+
+设置以下属性：
+
+-   使用[日期单元格编辑器](./provided-cell-editors-date/)进行编辑。
+-   当[集合筛选器默认禁用](./filter-set/#suppress-set-filter-by-default)时，使用[日期筛选器](./filter-date/)。
+-   当使用[集合筛选器](./filter-set/)时，启用[集合筛选器树列表](./filter-set-tree-list/)，并通过设置 `filterParams.treeListFormatter` 将月份转换为名称以及设置 `filterParams.valueFormatter` 使用值格式化器格式化浮动筛选器值来[格式化值](./filter-set-tree-list/#formatting-values)。
+
+### 字符串日期时间
+
+`'dateTimeString'` 单元格数据类型用于表示为 `string` 值的日期和时间值。与仅显示日期部分的 `'dateString'` 单元格数据类型不同，`'dateTimeString'` 显示日期和时间组件。
+
+此数据类型使用 ISO 字符串格式 `'YYYY-MM-DDThh:mm:ssZ'`。如果您希望使用不同的格式，可以[覆盖预定义的单元格数据类型定义](#overriding-the-pre-defined-cell-data-type-definitions)。
+
+设置以下属性：
+
+-   使用[字符串日期单元格编辑器](./provided-cell-editors-date/#enabling-date-as-string-cell-editor)进行编辑。
+-   当[集合筛选器默认禁用](./filter-set/#suppress-set-filter-by-default)时，使用[日期筛选器](./filter-date/)。
+-   当使用日期筛选器时，设置 `filterParams.comparator` 解析 `string` 日期值。
+-   当使用[集合筛选器](./filter-set/)时，启用[集合筛选器树列表](./filter-set-tree-list/)，设置 `filterParams.treeListPathGetter` 将 `string` 日期值转换为路径，并通过设置 `filterParams.treeListFormatter` 将月份转换为名称以及设置 `filterParams.valueFormatter` 使用值格式化器格式化浮动筛选器值来[格式化值](./filter-set-tree-list/#formatting-values)。
+
+### 对象
+
+`'object'` 单元格数据类型用于复杂对象的值（即上述数据类型以外的类型）。
+
+如果您有不同类型的复杂对象，您将希望[提供自定义单元格数据类型](#providing-custom-cell-data-types)。
+
+{% note %}
+要使对象正常工作，您必须提供值格式化器，如果启用编辑则提供值解析器。这是因为它们的行为需要根据对象结构而改变。通常这些应该在数据类型定义上提供，但如果必要，可以直接在列上提供。
+{% /note %}
+
+设置以下属性：
+
+-   `cellEditorParams.useFormatter = true` 以便单元格编辑器使用值格式化器。
+-   定义了 `comparator` 以允许使用值格式化器进行[自定义排序](./row-sorting/#custom-sorting)。
+-   当使用[文本筛选器](./filter-text/)时，使用[筛选值获取器](./column-properties/#reference-filtering-filterValueGetter)用值格式化器转换值。
+-   当使用带有[复杂对象](./filter-set-filter-list/#complex-objects)的[集合筛选器](./filter-set)时，设置 `filterParams.valueFormatter` 使用值格式化器格式化值。
+
+### 预定义单元格数据类型示例
+
+上面的[启用单元格数据类型示例](#example-enable-cell-data-types)演示了 AG Grid 社区版中每种不同的预定义单元格数据类型。
+
+下面的示例显示 AG Grid 企业版中相同的数据类型：
+
+-   启用行分组，允许对每个字段进行分组。
+-   启用导入/导出功能，允许以下操作：
+    -   剪贴板（复制/粘贴）
+    -   填充句柄
+    -   CSV/Excel 导出
+
+{% gridExampleRunner title="预定义单元格数据类型" name="pre-defined-cell-data-types" /%}
+
+## 提供自定义单元格数据类型
+
+可以通过设置表格选项 `dataTypeDefinitions` 添加自定义单元格数据类型。
+
+{% apiDocumentation source="grid-options/properties.json" section="columns" names=["dataTypeDefinitions"] /%}
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    dataTypeDefinitions: {
+        percentage: {
+            extendsDataType: 'number',
+            baseDataType: 'number',
+            valueFormatter: params => params.value == null
+                ? ''
+                : `${Math.round(params.value * 100)}%`,
+        }
+    }
+}
+```
+
+每个自定义数据类型定义必须具有[预定义单元格数据类型](#pre-defined-cell-data-types)之一的 `baseDataType`，它表示基础单元格值的数据类型。
+
+数据类型定义通过 `extendsDataType` 属性支持继承。每个自定义单元格数据类型必须扩展预定义类型之一或另一个自定义类型。任何未覆盖的属性都从父定义继承。要防止从父定义继承属性，可以在定义上设置 `suppressDefaultProperties = true`。
+
+可以通过 `columnTypes` 属性设置[列类型](./column-definitions/#default-column-definitions)，以允许为数据类型设置其他列定义属性。默认情况下，这些将替换父定义中的任何列类型。要允许将这些追加到父定义列类型，可以设置 `appendColumnTypes = true`。
+
+要允许[推断单元格数据类型](#inferring-data-types)为自定义类型工作，可以设置 `dataTypeMatcher` 属性。如果值是正确的类型，则返回 `true`。请注意，数据类型匹配器将按照它们在 `dataTypeDefinitions` 中提供的顺序调用（仅限自定义），然后将调用预定义的数据类型匹配器。
+
+以下示例演示了提供自定义单元格数据类型：
+
+-   **国家**列包含复杂对象，单元格数据类型为 `'country'`。
+-   **运动**列包含不同类型的复杂对象，单元格数据类型为 `'sport'`。
+-   **日期**列从非标准日期格式解析日期值。
+-   为所有三个单元格数据类型定义了 `dataTypeMatcher` 回调以允许推断类型。
+
+{% gridExampleRunner title="提供自定义单元格数据类型" name="providing-custom-cell-data-types" /%}
+
+## 覆盖预定义单元格数据类型定义
+
+可以覆盖[预定义单元格数据类型](#pre-defined-cell-data-types)的默认属性。
+
+例如，如果需要不同的日期格式，则需要这样做。
+
+这与[提供自定义单元格数据类型](#providing-custom-cell-data-types)时的工作方式相同。
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    dataTypeDefinitions: {
+        // 覆盖 `date` 以处理自定义日期格式 `dd/mm/yyyy`
+        date: {
+            baseDataType: 'date',
+            extendsDataType: 'date',
+            valueParser: params => {
+                if (params.newValue == null) {
+                    return null;
+                }
+                // 从 `dd/mm/yyyy` 转换
+                const dateParts = params.newValue.split('/');
+                return dateParts.length === 3 ? new Date(
+                    parseInt(dateParts[2]),
+                    parseInt(dateParts[1]) - 1,
+                    parseInt(dateParts[0])
+                ) : null;
+            },
+            valueFormatter: params => {
+                // 转换为 `dd/mm/yyyy`
+                const date = params.value;
+                return date == null
+                    ? ''
+                    : `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+            },
+        }
+    }
+}
+```
+
+以下示例演示了覆盖预定义单元格数据类型：
+
+-   **日期**列的类型为 `'dateString'`，已被覆盖为使用不同的日期格式（`dd/mm/yyyy`）。
+-   `'dateString'` 的数据类型定义提供了 `dateParser` 和 `dateFormatter`，因为它是[字符串日期数据类型定义](#date-as-string)。

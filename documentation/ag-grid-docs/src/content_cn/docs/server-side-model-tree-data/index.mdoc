@@ -1,0 +1,146 @@
+---
+title: "SSRM 树形数据"
+enterprise: true
+---
+
+本节展示如何将树形数据与服务端行模型一起使用。
+
+## 树形数据
+
+树形数据定义为具有父/子关系的数据，其中父/子关系作为数据的一部分提供。这与行分组形成对比，行分组的父/子关系是分组的结果。使用树形数据时，没有列被分组。
+
+树形数据 JSON 结构的示例如下所示：
+
+```json
+[{
+    "employeeId": 101,
+    "employeeName": "Erica Rogers",
+    "jobTitle": "CEO",
+    "employmentType": "Permanent",
+    "children": [{
+        "employeeId": 102,
+        "employeeName": "Malcolm Barrett",
+        "jobTitle": "Exec. Vice President",
+        "employmentType": "Permanent",
+        "children": [
+            {
+                "employeeId": 103,
+                "employeeName": "Leah Flowers",
+                "jobTitle": "Parts Technician",
+                "employmentType": "Contract"
+            },
+            {
+                "employeeId": 104,
+                "employeeName": "Tammy Sutton",
+                "jobTitle": "Service Technician",
+                "employmentType": "Contract"
+            }
+        ]
+    }]
+}]
+```
+
+预期数据集太大而无法通过网络发送，因此使用 SSRM 在展开父行时延迟加载子行。
+
+## 树形数据模式
+
+要将网格设置为使用树形数据，只需通过网格选项启用树形数据模式：`gridOptions.treeData = true`。
+
+## 提供树形数据
+
+树形数据通过[服务端数据源](./server-side-model-datasource/)提供，就像平面数据一样，但是有两个额外的 gridOptions 回调：`isServerSideGroup(dataItem)` 和 `getServerSideGroupKey(dataItem)`。
+
+{% apiDocumentation source="grid-options/properties.json" section="serverSideRowModel" names=["isServerSideGroup", "getServerSideGroupKey"] /%}
+
+以下代码片段显示了使用服务端行模型配置树形数据的相关 `gridOptions` 条目：
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    // 选择服务端行模型
+    rowModelType: 'serverSide',
+    // 启用树形数据
+    treeData: true,
+    // 指示行是否为组节点
+    isServerSideGroup: dataItem => {
+        return dataItem.group;
+    },
+    // 指定要使用的组键
+    getServerSideGroupKey: dataItem => {
+        return dataItem.employeeId;
+    },
+}
+```
+
+{% note %}
+注意不要错误地与[客户端树形数据](./tree-data/)配置混淆。
+{% /note %}
+
+下面的示例显示了此操作，可以注意到以下几点：
+
+-   使用 `gridOptions.treeData = true` 启用服务端行模型的树形数据。
+-   使用回调 `gridOptions.isServerSideGroup(dataItem)` 确定组节点。
+-   从回调 `gridOptions.getServerSideGroupKey(dataItem)` 返回组键。
+
+{% gridExampleRunner title="树形数据" name="tree-data"  exampleHeight=590 /%}
+
+## 刷新树形数据
+
+树形数据可以像不使用树形数据时刷新组一样刷新。这在 [SSRM 刷新](./server-side-model-updating-refresh/)中解释。
+
+下面的示例显示了此操作，可以注意到以下几点：
+
+-   单击 **Refresh Everything** 通过调用 `api.refreshServerSide({ route: [], purge: true })` 清除所有缓存。
+-   单击 **Refresh \['Kathryn Powers','Mabel Ward']** 通过调用 `api.refreshServerSide({ route: ['Kathryn Powers','Mabel Ward'], purge: true })` 清除单个缓存。
+
+{% gridExampleRunner title="清除树形数据" name="purging-tree-data"  exampleHeight=615 /%}
+
+## 树形数据事务
+
+树形数据可以像行组一样应用事务。这在 [SSRM 事务](./server-side-model-updating-transactions/)部分中解释。
+
+下面的示例演示树形数据的事务。请注意以下几点：
+
+-   **Add Child to Selected** 在选定的行下添加子行，即使它最初不是组。
+-   **Update Selected** 更改选定行的 `Employment Type`。
+-   **Delete Selected** 删除选定的行及其所有子行。
+-   **Move Selected to Robert Peterson** 将选定的行及其子行直接移动到 `Robert Peterson` 下。
+
+{% gridExampleRunner title="树形数据事务" name="transactions-tree-data"  exampleHeight=615 /%}
+
+## 树形数据选择
+
+树形数据可以像行组一样应用行选择。这在 [SSRM 行选择](./server-side-model-selection/)部分中解释。
+
+下面的示例演示树形数据的行选择，其中网格已配置 `rowSelection.groupSelects = 'descendants'`。
+这意味着选择具有后代的行会选择其所有后代。选择行的部分（但不是全部）后代会使该行处于不确定状态。
+
+{% gridExampleRunner title="树形数据选择" name="selecting-tree-data"  exampleHeight=615 /%}
+
+## 过滤树形数据
+
+服务端树形数据过滤的行为应与客户端[树形数据过滤](./tree-data-filtering)相同。如果满足以下条件，组将被包括：
+
+1. 它有任何通过过滤器的子行，或
+
+1. 它有通过过滤器的父行，或
+
+1. 它自己的数据通过过滤器
+
+以下示例演示使用[集合过滤器树列表](./filter-set-tree-list/)的服务端树形数据过滤，它在过滤器中复制树形数据结构。
+
+-   **Group** 列通过 `filterParams.treeList = true` 启用了集合过滤器树列表。指定了键创建器以将路径转换为字符串。
+-   **Group** 列的过滤器值作为匹配数据路径的嵌套字符串数组异步提供。提供的值仅位于子级别。
+-   **Date** 列通过 `filterParams.treeList = true` 启用了集合过滤器树列表，并按年 -> 月 -> 日分组。
+-   **Date** 列的过滤器值作为 `Date` 对象数组异步提供。
+-   **Date** 列提供了 `filterParams.keyCreator` 以将 `Date` 值转换为服务器在过滤器模型中期望的（字符串）格式。
+-   **Group** 和 **Date** 列都设置了 `filterParams.excelMode = 'windows'`，这允许批量应用树过滤器的更改。
+
+{% gridExampleRunner title="过滤树形数据" name="filtering-tree-data"  exampleHeight=590 /%}
+
+## 通过 API 提供层次结构数据
+
+下面是利用 `api.applyServerSideRowData` 填充数据的示例。数据源仅用于提供根级别行，当加载这些行时，网格通过 API 获得子行数据。
+
+{% gridExampleRunner title="层次结构数据" name="supplying-hierarchy" /%}
+
+继续下一节了解如何将[主从](./server-side-model-master-detail/)与 SSRM 结合使用。

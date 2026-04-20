@@ -1,0 +1,161 @@
+---
+title: "提供的覆盖层"
+---
+
+网格在数据加载或导出时以及没有数据或没有行匹配当前过滤器时显示内置覆盖层。
+
+以下示例演示所有提供的覆盖层。
+
+- 切换加载状态以显示/隐藏加载覆盖层。
+- 请注意，如果同时显示，加载覆盖层优先于其他提供的覆盖层。
+- Clear Row Data 显示无行覆盖层。
+- Set Non Matching Filter 设置行数据和不匹配的过滤器以显示无匹配行覆盖层。
+- Export CSV 将数据导出到 CSV 并显示导出覆盖层。
+
+{% gridExampleRunner title="提供的覆盖层" name="provided-overlays"  exampleHeight=300 /%}
+
+## 加载
+
+当网格属性 `loading` 设置为 `true` 时显示加载覆盖层，并优先于其他提供的覆盖层。
+
+{% apiDocumentation source="grid-options/properties.json" section="overlays" names=["loading"] /%}
+
+## 无行
+
+当没有行时，网格自动显示无行覆盖层。
+
+## 无匹配行
+
+当网格有行但没有行匹配当前过滤条件时，显示无匹配行覆盖层。
+
+## 导出
+
+当数据从网格导出到 CSV 或 Excel 时，显示导出覆盖层。
+
+## 自定义
+
+可以自定义提供的覆盖层以更改其内容或完全替换为自定义组件。网格仍然根据网格状态管理覆盖层显示的时间。
+
+### 文本自定义
+
+通过 `overlayComponentParams` 网格选项使用 `OverlayComponentUserParams` 接口自定义提供的覆盖层内的文本。
+
+{% interfaceDocumentation interfaceName="OverlayComponentUserParams" /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    overlayComponentParams: {
+        loading: { overlayText: 'Please wait while your data is loading...' },
+        noRows: { overlayText: 'This grid has no data!' },
+        noMatchingRows: { overlayText: 'Current Filter Matches No Rows' },
+        exporting: { overlayText: 'Exporting your data...' },
+    }
+};
+```
+
+{% gridExampleRunner title="提供的覆盖层自定义文本" name="provided-overlays-text"  exampleHeight=300 /%}
+
+### 自定义覆盖层组件
+
+{% if isFramework("javascript") %}
+要为提供的覆盖层提供自定义组件，请实现以下接口之一：`ILoadingOverlayComp`、`INoRowsOverlayComp`、`INoMatchingRowsOverlayComp` 或 `IExportingOverlayComp`。
+{% /if %}
+
+{% if isFramework("angular") %}
+要为提供的覆盖层提供自定义组件，请实现以下接口之一：`ILoadingOverlayAngularComp`、`INoRowsOverlayAngularComp`、`INoMatchingRowsOverlayAngularComp` 或 `IExportingOverlayAngularComp`。
+{% /if %}
+
+{% if isFramework("vue") %}
+任何有效的 Vue 组件都可以是覆盖层组件，但是也可以实现以下可选方法：
+
+{% interfaceDocumentation interfaceName="ILoadingOverlay" config={"asCode":true } /%}
+{% /if %}
+{% if isFramework("javascript", "angular") %}
+实现此接口以在数据加载时提供自定义覆盖层。
+{% /if %}
+
+{% if isFramework("angular") %}
+{% interfaceDocumentation interfaceName="ILoadingOverlayAngularComp" config={"asCode":true } /%}
+`INoRowsOverlayAngularComp`、`INoMatchingRowsOverlayAngularComp` 或 `IExportingOverlayAngularComp` 接口遵循与上面的 `ILoadingOverlayAngularComp` 类似的模式。
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+{% interfaceDocumentation interfaceName="ILoadingOverlayComp" config={"asCode":true } /%}
+
+`INoRowsOverlayComp`、`INoMatchingRowsOverlayComp` 或 `IExportingOverlayComp` 接口遵循与上面的 `ILoadingOverlayComp` 类似的模式。
+{% /if %}
+
+然后在 `components` 映射中将自定义覆盖层设置为其匹配的键，如[覆盖网格组件](./components/#overriding-grid-components)中所述。可以通过 `overlayComponentParams` 网格选项提供自定义参数。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    components: {
+        agLoadingOverlay: CustomLoadingOverlay,
+        agNoRowsOverlay: CustomNoRowsOverlay,
+        agNoMatchingRowsOverlay: CustomNoMatchingRows,
+        agExportingOverlay: CustomExportingOverlay
+    },
+};
+```
+
+### 覆盖层组件选择器
+
+要使用自定义组件动态覆盖提供的覆盖层，请实现 `overlayComponentSelector(params)` 回调。回调参数包括 `overlayType` 属性，该属性标识网格要显示的提供的覆盖层中的哪一个。返回类型应匹配 `OverlaySelectorResult` 接口。
+
+{% apiDocumentation source="grid-options/properties.json" section="overlays" names=["overlayComponentSelector"] /%}
+
+从选择器返回 `undefined` 将回退到 `params.overlayType` 中指定的覆盖层。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    overlayComponentSelector: (params) => {
+        if (params.overlayType === 'loading') {
+            return {
+                component: CustomLoadingOverlay,
+                params: {
+                    loadingMessage: 'Please wait while data is loading...'
+                }
+            };
+        }
+        // 返回 undefined 以对其他覆盖层类型使用提供的覆盖层
+        return undefined;
+    },
+};
+```
+
+在下面的示例中，加载覆盖层通过 `overlayComponentSelector` 覆盖，但无行覆盖层没有。
+
+{% gridExampleRunner title="覆盖层组件选择器" name="custom-overlay-selector"  exampleHeight=300 /%}
+
+### 组合覆盖层组件
+
+向 `overlayComponent` 提供自定义组件以代替所有提供的覆盖层使用。自定义组件接收 `overlayType` 参数，该参数标识应显示提供的覆盖层中的哪一个。这可用于根据覆盖层类型有条件地呈现不同内容。
+
+可以通过 `overlayComponentParams` 网格选项向覆盖层组件提供自定义参数。
+
+{% apiDocumentation source="grid-options/properties.json" section="overlays" names=["overlayComponent", "overlayComponentParams"] /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    overlayComponent: CustomOverlay,
+    overlayComponentParams: {
+        loadingMessage: 'Custom loading message',
+        noRowsMessage: 'Custom no rows message'
+    },
+};
+```
+
+在下面的示例中，向网格提供单个自定义组件，其中包含有关每个 `overlayType` 呈现什么内容的条件逻辑。
+
+{% gridExampleRunner title="覆盖层组件" name="custom-overlay-component"  exampleHeight=300 /%}
+
+## 禁止覆盖层
+
+可以通过 `suppressOverlays` 网格选项禁止每个提供的覆盖层，该选项接受要禁止的覆盖层类型数组。
+
+{% apiDocumentation source="grid-options/properties.json" section="overlays" names=["suppressOverlays"] /%}
+
+## 旧版自定义
+
+以前，加载和无行覆盖层通过以下方式自定义：`loadingOverlayComponent` 和 `noRowsOverlayComponent`。此方法现在被 `overlayComponent` 取代，但属性保留以向后兼容。这些属性的文档可在[此处](./overlays)获得。

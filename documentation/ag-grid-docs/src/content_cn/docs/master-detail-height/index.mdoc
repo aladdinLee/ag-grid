@@ -1,0 +1,106 @@
+---
+title: "主/从 - 详细信息高度"
+enterprise: true
+---
+
+本节展示如何自定义详细信息高度以满足应用程序需求。
+
+## 详细信息高度选项
+
+每个详细信息部分的默认高度（即主网格中包含详细信息网格的行）固定为 `300px`。该高度不会根据详细信息部分中显示的数据量而改变。
+
+要从默认值更改详细信息部分的高度，您有以下选项：
+
+-   [固定高度](./master-detail-height/#fixed-height)：可以为所有详细信息部分提供自定义固定高度，而不是默认的 `300px`。
+
+-   [自动高度](./master-detail-height/#auto-height)：详细信息部分可以根据内容自动调整大小以适应。
+
+-   [动态高度](./master-detail-height/#dynamic-height)：可以为每个详细信息部分提供不同的高度。
+
+## 固定高度
+
+使用网格属性 `detailRowHeight` 为每个详细信息行设置固定高度。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    // 静态固定所有详细信息网格的行高度
+    detailRowHeight: 200,
+}
+```
+
+以下示例为所有详细信息行设置固定行高度。
+
+{% gridExampleRunner title="固定详细信息行高度" name="fixed-detail-row-height"  exampleHeight=575 /%}
+
+## 自动高度
+
+设置网格属性 `detailRowAutoHeight=true` 以使详细信息网格动态更改其高度以适应其行。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    // 动态设置所有详细信息网格的行高度
+    detailRowAutoHeight: true,
+}
+```
+
+{% gridExampleRunner title="自动高度" name="auto-height" exampleHeight=600 /%}
+
+请注意，使用自动高度时，详细信息网格的行部分将具有 150px 的最小高度。有关如何更改此设置的信息，请参阅[自动高度的最小高度](./grid-size/#min-height-with-auto-height)。
+
+{% note %}
+使用自动高度功能时，详细信息网格将始终渲染其所有行。
+[行虚拟化](./dom-virtualisation/)不会发生。
+这意味着如果详细信息网格有许多行，可能会减慢您的应用程序并可能导致浏览器停滞。
+
+如果详细信息网格中有许多行（例如 100+），请不要使用自动高度。要了解这是否对您的网格和数据集有影响，请尝试一下并检查性能。
+{% /note %}
+
+### 带自定义详细信息的自动高度
+
+如果您提供自己的[详细信息单元格渲染器](./master-detail-custom-detail)，请在主级 gridOptions 中设置 `detailRowAutoHeight: true`，并确保嵌套在详细信息单元格渲染器组件内的内容设置高度值。
+
+{% if isFramework("angular") %}
+如果在 Angular 中提供详细信息单元格渲染器，这可能是一个特别的问题。请注意，默认情况下自定义 Angular 标签不会继承其子元素的高度。这可以通过向组件的最顶层元素添加 `display: inline-block` 样式来修复。具体做法如下：
+{% /if %}
+
+{% if isFramework("angular") %}
+
+```js
+@Component({
+  styles: [':host { display: inline-block; }'],
+  // 此处为其他项
+}
+```
+
+{% /if %}
+
+以下是自动高度与自定义详细信息单元格渲染器一起使用的示例：
+
+{% gridExampleRunner title="带自定义详细信息的自动高度" name="custom-detail-auto-height" exampleHeight=450 /%}
+
+## 动态高度
+
+使用回调 `getRowHeight(params)` 为每行单独设置高度。这是[获取行高度](./row-height/#getrowheight-callback)中更详细说明的回调的特定用途
+
+{% apiDocumentation source="grid-options/properties.json" section="styling" names=["getRowHeight"] /%}
+
+请注意，此回调会为主网格中的**所有行**调用，而不仅仅是包含详细信息网格的行。如果您不想为其他行显式设置行高度，只需返回 `undefined / null`，网格将忽略该特定行的结果。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    // 动态分配详细信息行高度
+    getRowHeight: params => {
+        const isDetailRow = params.node.detail;
+        // 对于所有不是详细信息行的行，不返回任何内容
+        if (!isDetailRow) { return undefined; }
+
+        // 否则根据详细信息网格中的行数返回高度
+        const detailPanelHeight = params.data.children.length * 50;
+        return detailPanelHeight;
+    }
+}
+```
+
+以下示例演示动态详细信息行高度：
+
+{% gridExampleRunner title="动态详细信息行高度" name="dynamic-detail-row-height" /%}

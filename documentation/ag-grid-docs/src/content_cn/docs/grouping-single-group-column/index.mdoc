@@ -1,0 +1,191 @@
+---
+title: "行分组 - 单列"
+enterprise: true
+---
+
+使用网格中生成的单列显示组结构。
+
+{% gridExampleRunner title="启用单一组列" name="enabling-single-group-column" /%}
+
+## 启用单一组列
+
+上面的示例演示了 `country` 和 `year` 都已分组。仅使用单个组列显示组值单元格。
+
+单一组列默认启用，但可以通过将 `groupDisplayType` 网格选项设置为 `"singleColumn"` 来显式设置，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupDisplayType: 'singleColumn',
+}
+```
+
+## 配置
+
+当存在行分组时，单一组列会添加到网格中，可以通过 `autoGroupColumnDef` 网格选项配置以定义[列选项](./column-properties/)。
+
+{% gridExampleRunner title="单一组列配置" name="single-group-column-configuration" /%}
+
+上面的示例使用下面演示的配置更改列标题名称、应用最小宽度，并在叶级别行中显示 `athlete` 值。
+它还使用 `cellRendererParams` 选项[配置组单元格组件](./grouping-single-group-column/#cell-component)以从每个行组中删除计数。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    autoGroupColumnDef: {
+        headerName: 'My Group',
+        field: 'athlete',
+        minWidth: 220,
+        cellRendererParams: {
+            suppressCount: true,
+        }
+    },
+}
+```
+
+## 单元格组件
+
+组列使用 `agGroupCellRenderer` 组件显示组信息，以及用于展开和折叠行的箭头控件。渲染器还嵌入分组列的渲染器，并在组单元格内显示此内容。
+
+可以使用 `autoGroupColumnDef` 属性 `cellRendererParams` 配置多个[组渲染器属性](./grouping-single-group-column/#configurable-options)。下面的示例删除了行计数，并[配置行选择](./grouping-row-selection/#checkboxes-in-group-cells)以为行选择启用复选框。
+
+{% gridExampleRunner title="组单元格渲染器配置" name="renderer-config-group-cell" /%}
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'total', rowGroup: true, cellRenderer: CustomMedalCellRenderer },
+        // ... 其他列定义
+    ],
+    autoGroupColumnDef: {
+        cellRendererParams: {
+            suppressCount: true,
+        }
+    },
+    rowSelection: {
+        mode: 'singleRow',
+        checkboxLocation: 'autoGroupColumn',
+    }
+}
+```
+
+### 可配置选项
+
+{% interfaceDocumentation interfaceName="IGroupCellRendererParams" overrideSrc="group-cell-renderer/group-cell-renderer.json" config={ "description": "" } /%}
+
+### 复选框选择
+
+可以配置 `agGroupCellRenderer` 显示行选择的复选框。将[行选择](./row-selection/) `checkboxLocation` 属性设置为 `'autoGroupColumn'` 会隐藏[复选框列](./row-selection-single-row/#customising-the-checkbox-column)，而是使用组单元格渲染器显示复选框。
+
+{% gridExampleRunner title="组单元格渲染器复选框选择" name="renderer-config-checkbox" /%}
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowSelection: {
+        mode: 'multiRow',
+        selectAll: 'all',
+        checkboxLocation: 'autoGroupColumn',
+    },
+}
+```
+
+### 自定义内部渲染器
+
+使用组单元格渲染器时，`agGroupCellRenderer` 组件将继承分组列的渲染器，并在组单元格内显示此内容，与任何配置的复选框、单元格计数和展开/折叠箭头控件相邻。
+
+可以通过在 `cellRendererParams` 配置上设置 `innerRenderer` 和 `innerRendererParams` 属性，使用[自定义单元格组件](./component-cell-renderer/)覆盖此内部渲染器。
+
+{% gridExampleRunner title="组单元格渲染器配置" name="renderer-config-inner" /%}
+
+上面的示例使用以下配置为组列提供自定义内部渲染器：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    autoGroupColumnDef: {
+        cellRendererParams: {
+            innerRenderer: CustomMedalCellRenderer,
+        },
+    },
+}
+```
+
+### 自定义单元格渲染器
+
+可以通过在 `autoGroupColumnDef` 配置上设置 `cellRenderer` 属性，用[自定义单元格组件](./component-cell-renderer/)完全替换组单元格渲染器。
+
+{% gridExampleRunner title="自定义组单元格渲染器" name="renderer-config-custom" /%}
+
+{% note %}
+也可以[动态确定单元格渲染器](./component-cell-renderer/#providing-custom-components-dynamically)。
+{% /note %}
+
+## 过滤
+
+网格默认过滤叶行，如果组的所有子行都被过滤掉，则该组也会被隐藏。
+
+### 继承行分组列过滤器
+
+单一组列内容根据启用行分组的列而变化。可以使用 `agGroupColumnFilter` 显示启用行分组的列的过滤器。
+
+{% gridExampleRunner title="组列过滤" name="filtering-grouped-columns" /%}
+
+上面的示例演示了以下配置以启用组列过滤器：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    autoGroupColumnDef: {
+        filter: 'agGroupColumnFilter',
+        floatingFilter: true,
+    },
+}
+```
+
+{% warning %}
+通过 API 访问过滤器实例时，访问启用行分组的列上的过滤器。
+{% /warning %}
+
+### 树形过滤器
+
+可以使用 `agSetColumnFilter` 以[树形列表](./filter-set-tree-list/)过滤组列，表示行组的层次结构。
+
+{% gridExampleRunner title="层次结构集合过滤器" name="filtering-set-hierarchy" /%}
+
+{% note %}
+树形过滤器需要每个叶行的值。如果组列上没有 `field` 或 `valueGetter`，请向组列定义提供 `filterValueGetter`。
+{% /note %}
+
+上面的示例演示了以下配置以启用树形集合过滤器：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    autoGroupColumnDef: {
+        filter: 'agSetColumnFilter',
+        filterValueGetter: (params) => params.data.athlete,
+        filterParams: {
+            treeList: true,
+            keyCreator: (params) => (params.value ? params.value.join('#') : null),
+        },
+    },
+}
+```
+
+有关更多配置选项，请参阅[树形列表过滤器](./filter-set-tree-list/)文档。
+
+### 文本过滤
+
+向组列提供过滤器值获取器允许对任何组级别进行简单的字符串搜索。
+
+{% gridExampleRunner title="自定义组列过滤器" name="filtering-custom" /%}
+
+上面的示例演示了使用返回祖先行键数组的过滤器值获取器。这允许搜索包含过滤器文本的任何组值：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    autoGroupColumnDef: {
+        filter: 'agTextColumnFilter',
+        filterValueGetter: (params) => params.node.parent.getRoute(),
+    },
+}
+```

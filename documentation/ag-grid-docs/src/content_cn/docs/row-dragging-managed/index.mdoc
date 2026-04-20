@@ -1,0 +1,67 @@
+---
+title: "托管行拖动"
+---
+
+在托管行拖动中，网格负责在拖动行时重新排列行。托管拖动使用属性 `rowDragManaged=true` 启用。
+
+下面的示例显示简单的托管拖动。可以注意以下几点：
+
+- 第一列有 `rowDrag=true`，导致单元格中包含可拖动区域。
+- 设置了属性 `rowDragManaged`，告诉网格在拖动行时移动行。
+- 如果对列应用了排序（单击标题）或过滤（打开列菜单），则行拖动的拖动图标将被禁用。这与示例后面解释的约束条件一致。
+
+{% gridExampleRunner title="行拖动简单托管" name="simple-managed" /%}
+
+托管拖动的逻辑很简单，具有以下约束：
+
+- 仅适用于[客户端](./row-models/#client-side)行模型；不适用于[无限](./infinite-scrolling/)、[服务器端](./server-side-model/)或[视口](./viewport/)行模型。
+- 如果启用[分页](./row-pagination/)，则不工作。
+- 应用排序时不能工作。这是因为行的排序顺序取决于数据，移动数据会破坏排序顺序。
+- 应用过滤时不能工作。这是因为过滤会删除行，使得无法知道某些行缺失时的"真实"顺序。
+
+这些约束可以通过使用[非托管行拖动](./row-dragging-unmanaged)来绕过。
+
+另请参见[行组行拖动](./grouping-row-dragging/)，用于支持托管和非托管行拖动的分组。
+
+另请参见[树数据行拖动](./tree-data-row-dragging)，用于支持托管和非托管行拖动的树数据。
+
+另请参见[行拖动事件](./row-dragging-unmanaged/#row-drag-events)。
+
+## 拖动时禁止移动
+
+默认情况下，托管行拖动在您拖动时移动行。出于您的应用程序设计，可能不需要此默认行为。要防止此默认行为，请在 `gridOptions` 中将 `suppressMoveWhenRowDragging` 设置为 `true`。
+
+{% gridExampleRunner title="行拖动与抑制移动" name="managed-suppress-move-when-dragging" /%}
+
+## 多行拖动
+
+当在 `gridOptions` 中将 `rowDragMultiRow` 设置为 `true`，并与 `rowSelection.mode='multiRow'` 结合时，可以同时拖动多行。
+
+对于此示例，请注意以下几点：
+
+- 当您选择多个项目并拖动其中一个时，选择中的所有项目都将被拖动。
+- 当您拖动一个未选中的项目而其他项目被选中时，只有未选中的项目将被拖动。
+
+{% gridExampleRunner title="行拖动与多行拖动" name="managed-with-multi-row-drag" /%}
+
+## 抑制行拖动
+
+您可以通过设置网格选项 `suppressRowDrag = true` 来隐藏可拖动区域。
+
+下面的示例与[托管拖动](./row-dragging-managed)示例几乎相同，区别如下：
+
+- **Suppress** 按钮将隐藏拖动图标。
+- **Remove Suppress** 按钮将取消隐藏拖动图标。
+- 应用排序或过滤或进入透视模式将禁用拖动图标。
+
+{% gridExampleRunner title="抑制行拖动" name="suppress-row-drag" /%}
+
+### 防止在某些行上放置
+
+`isRowValidDropPosition` 回调允许您控制在托管或非托管行拖动期间是否允许行放置，并可选择覆盖放置的行、父级或位置。
+这对于限制可以放置行的位置或自定义放置行为很有用。
+返回对象可以改为过滤要放置的行，或更改放置的父级或位置。
+
+这也会影响拖动行时显示的图标和标签，无论是托管还是非托管拖动。
+
+{% apiDocumentation source="grid-options/properties.json" section="rowDragging" names=["isRowValidDropPosition"] /%}

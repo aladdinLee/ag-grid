@@ -1,0 +1,101 @@
+---
+title: "主/从 - 详情刷新"
+enterprise: true
+---
+
+当有新数据可用时，希望从网格刷新。当父主网格行更新时，网格将尝试刷新从网格中的数据。
+
+导致详情行刷新的更新操作如下：
+
+- 更改[行数据](./data-update-row-data/)更新父行并提供[行 ID](./row-ids/)\*。
+- [事务更新](./data-update-transactions/)更新父行。
+- 在父行的[行节点](./row-object/)上调用方法 `rowNode.setRowData(data)`。
+
+{% note %}
+\*如果未提供行 ID，网格将不匹配行并将新行数据视为新集合。在这种情况下，所有行都被销毁并重新创建。
+{% /note %}
+
+刷新如何发生取决于详情单元格渲染器上设置的刷新策略。有三种刷新策略，如下所示：
+
+1. **刷新行** - 详情面板再次调用 `getDetailRowData(params)` 并使用其 `setRowData` 网格 API 在从网格中设置行数据。这将保留从网格实例，因此从网格中的任何更改（滚动、列位置等）都将保留。如果从网格实现了 [getRowId()](./row-ids/)，则将保留更多网格上下文，例如行选择等。
+
+{% if isFramework("javascript", "angular", "vue") %}
+
+2. **刷新所有内容** - 详情面板将被销毁，并重新绘制新的详情面板。这将导致再次调用 `getDetailRowData(params)`。从网格将是一个新实例，从网格中的任何更改（滚动、列位置、行选择等）都将丢失。如果详情面板使用自定义模板，则将重新创建模板。如果要更新模板或想要新的从网格实例，请使用此选项。
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+2. **刷新所有内容** - 详情面板将被销毁，并重新绘制新的详情面板。这将导致再次调用 `getDetailRowData(params)`。从网格将是一个新实例，从网格中的任何更改（滚动、列位置、行选择等）都将丢失。如果要使用新的从网格实例，请使用此选项。
+
+{% /if %}
+
+3. **什么都不做** - 详情面板将什么都不做。不会调用方法 `getDetailRowData(params)`。如果从网格内需要任何刷新，则需要由应用程序独立处理。如果其他两个选项不能满足您的刷新要求，请使用此选项。
+
+该策略通过详情单元格渲染器参数的 `refreshStrategy` 参数设置。有效值为 `rows` 表示刷新行，`everything` 表示刷新所有内容，`nothing` 表示不刷新。默认策略是刷新行。
+
+下面是演示每种刷新策略的不同示例。每个示例都相同，除了使用的刷新策略。请注意每个示例的以下内容：
+
+{% if isFramework("javascript", "angular", "vue") %}
+
+- 每个从网格都有一个标题，包含记录的名称和调用计数，例如'Nora Thomas 24 calls'。这是通过提供自定义详情单元格渲染器模板设置的。只有"刷新所有内容"策略会导致此更新。
+
+{% /if %}
+
+- 网格每两秒刷新第一个主行，如下所示：
+  - 调用计数增加。
+  - 一半的调用记录（显示在从网格中）的持续时间更新。
+
+所有刷新策略都将更新主网格（因为策略仅适用于从网格），但是每种策略将以不同方式更新从网格。
+
+## 刷新行
+
+此示例显示刷新行策略。请注意以下几点：
+
+- 详情单元格渲染器参数具有 `refreshStrategy='rows'`。
+
+- 从网格**不**重新创建。调用回调 `getDetailRowData(params)`。从网格中的行数据更新以反映新值。网格的上下文（列位置、垂直滚动）保留。尝试与第一行的从网格交互（移动列、垂直滚动）并观察网格保持完整。
+
+- 因为从网格配置了 [getRowId()](./row-ids/)，数据行被更新而不是替换。这允许保留上下文，例如维护行选择和数据更改时闪烁单元格。
+
+{% if isFramework("javascript", "angular", "vue") %}
+
+- 从网格标题'Nora Thomas 24 calls'不会更改，因为模板仅为详情面板设置一次。
+
+{% /if %}
+
+{% gridExampleRunner title="刷新行" name="refresh-rows"  exampleHeight=550 /%}
+
+## 刷新所有内容
+
+此示例显示刷新所有内容策略。请注意以下几点：
+
+- 详情单元格渲染器参数具有 `refreshStrategy='everything'`。
+- 调用回调 `getDetailRowData(params)`。从网格被重新创建并包含最新数据。网格的上下文（列位置、垂直滚动）丢失。
+- 从网格提供 [getRowId()](./row-ids/) 无关紧要，因为从网格被重新创建。
+
+{% if isFramework("javascript", "angular", "vue") %}
+
+- 从网格标题'Nora Thomas 24 calls'使用新的调用计数更新，因为刷新导致模板重置。
+
+{% /if %}
+
+{% gridExampleRunner title="刷新所有内容" name="refresh-everything"  exampleHeight=550 /%}
+
+## 不刷新
+
+此示例显示不刷新策略。请注意以下几点：
+
+- 详情单元格渲染器参数具有 `refreshStrategy='nothing'`。
+- 不尝试刷新。
+- **不**调用回调 `getDetailRowData(params)`。
+- 从网格显示旧数据。
+
+{% if isFramework("javascript", "angular", "vue") %}
+
+- 从网格的标题保持不变。
+
+{% /if %}
+
+{% gridExampleRunner title="不刷新" name="refresh-nothing"  exampleHeight=550 /%}

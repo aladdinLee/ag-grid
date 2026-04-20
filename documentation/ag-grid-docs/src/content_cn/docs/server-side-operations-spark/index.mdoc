@@ -1,0 +1,299 @@
+---
+title: "使用 Java 和 Spark 的服务端操作"
+enterprise: true
+---
+
+了解如何使用 Apache Spark 执行服务端操作，并提供完整的参考实现。
+
+近年来，分析师和数据科学家正在请求基于浏览器的大数据分析应用程序。这些数据通常分散在不同的系统和大型文件存储卷中。
+
+本指南将展示如何结合 Apache Spark 强大的服务端转换与 AG Grid 的[服务端行模型](./server-side-model/)来创建用于大数据分析的交互式报告。
+
+我们将开发一个奥林匹克奖牌应用程序，演示如何在执行分组、过滤、排序和透视操作时根据需要延迟加载数据。
+
+{% warning %}
+本指南中涵盖的参考实现仅用于演示目的。如果您在生产中使用它，它不提供任何保证或支持。
+{% /warning %}
+
+源代码可以在这里找到：<https://github.com/ag-grid/ag-grid-server-side-apache-spark-example>
+
+## 概述
+
+Apache Spark 已迅速成为大数据环境中迭代数据处理和报告的流行选择。这主要归功于其能够在内存中缓存分布式数据集以获得更快的执行时间。
+
+### DataFrame
+
+Apache Spark SQL 库包含一个称为 [DataFrame](https://spark.apache.org/docs/latest/sql-programming-guide.html#datasets-and-dataframes) 的分布式集合，它将数据表示为具有行和命名列的表。其分布式特性意味着大数据集可以跨越多台计算机以增加存储和并行执行。
+
+在我们的示例中，我们将从单个 CSV 文件创建一个 DataFrame 并将其缓存在内存中以进行连续转换。在实际应用程序中，数据通常来自多个输入系统和文件。
+
+### 转换
+
+将应用程序数据加载到 DataFrame 后，我们可以使用 API 调用执行数据转换。重要的是要注意，转换只是指定在由 _count_ 或 _collect_ 等操作触发时将发生的处理。
+
+下图说明了我们将在应用程序中执行的转换管道：
+
+{% imageCaption imagePath="resources/spark-transformations.png" alt="Spark" constrained=true enableDarkModeFilter=true /%}
+
+这些单独的转换将在本指南中详细描述。
+
+在继续本指南之前，请务必查看[行模型概述](./server-side-operations-oracle/#overview)，因为它为大数据应用程序选择服务端行模型提供了一些背景。
+
+## 先决条件
+
+假设读者已经熟悉 Java、Maven、Spring Boot 和 Apache Spark。
+
+此示例使用以下版本进行测试：
+
+-   ag-grid-enterprise (v18.0.0)
+-   Java(TM) SE Runtime Environment (build 1.8.0_162-b12)
+-   Java HotSpot(TM) 64-Bit Server VM (build 25.162-b12, mixed mode)
+-   Apache Maven (3.5.2)
+-   Apache Spark Core 2.11(v2.2.1)
+-   Apache Spark SQL 2.11(v2.2.1)
+
+## 下载和安装
+
+使用以下命令克隆示例项目：
+
+```bash
+git clone https://github.com/ag-grid/ag-grid-server-side-apache-spark-example.git
+```
+
+导航到项目目录：
+
+```bash
+cd ag-grid-server-side-apache-spark-example
+```
+
+使用以下命令安装项目依赖并构建项目：
+
+```bash
+mvn clean install
+```
+
+要确认一切顺利，您应该看到以下 maven 输出：
+
+{% imageCaption imagePath="resources/mvn-success.png" alt="MVN" constrained=true enableDarkModeFilter=true /%}
+
+## Spark 配置
+
+示例应用程序配置为在本地模式下运行，如下所示：
+
+```java
+// src/main/java/com/ag/grid/enterprise/spark/demo/service/OlympicMedalsService.java
+
+SparkConf sparkConf = new SparkConf()
+    .setAppName("OlympicMedals")
+    .setMaster("local[*]")
+    .set("spark.sql.shuffle.partitions", "2");
+```
+
+默认情况下，`spark.sql.shuffle.partitions` 设置为 200。这将在本地模式下导致性能下降。它已被任意设置为 2 个分区，但是在集群模式下，应该增加此值以启用并行性并防止内存不足异常。
+
+## 设置数据
+
+项目包含在以下 CSV 文件中的小型数据集：`src/main/resources/data/result.csv`
+
+但是，已提供 `OlympicMedalDataLoader` 实用程序来生成更大的数据集：
+
+```java
+// src/test/java/util/OlympicMedalDataLoader.java
+
+public class OlympicMedalDataLoader {
+    private static String FILENAME = "src/main/resources/data/result.csv";
+    private static int BATCH_SIZE = 10_000_000;
+
+    public static void main(String[] args) throws IOException {
+        Files.write(Paths.get(FILENAME),
+        (Iterable<String>) IntStream
+            .range(0, BATCH_SIZE)
+            .mapToObj(i -> randomResult())::iterator, APPEND);
+    }
+
+    ...
+}
+```
+
+执行时，它将向 `results.csv` 追加额外的 1000 万条记录，但是您可以通过更改 `BATCH_SIZE` 来修改此值。
+
+## 运行应用程序
+
+从项目根目录运行：
+
+```bash
+mvn spring-boot:run
+```
+
+如果成功，您应该看到类似这样的内容：
+
+{% imageCaption imagePath="resources/tomcat-started.png" alt="Tomcat" constrained=true enableDarkModeFilter=true /%}
+
+要测试应用程序，请将浏览器指向 <http://localhost:9090>
+
+## 服务端获取行请求
+
+我们的 Java 服务将使用以下请求：
+
+```java
+// src/main/java/com/ag/grid/enterprise/spark/demo/request/ServerSideGetRowsRequest.java
+
+public class ServerSideGetRowsRequest implements Serializable {
+
+    private int startRow, endRow;
+
+    // 行组列
+    private List<ColumnVO> rowGroupCols;
+
+    // 值列
+    private List<ColumnVO> valueCols;
+
+    // 透视列
+    private List<ColumnVO> pivotCols;
+
+    // 如果透视模式开启则为 true，否则为 false
+    private boolean pivotMode;
+
+    // 用户正在查看的组
+    private List<String> groupKeys;
+
+    // 如果过滤，过滤器模型是什么
+    private Map<String, ColumnFilter> filterModel;
+
+    // 如果排序，排序模型是什么
+    private List<SortModel> sortModel;
+
+    ...
+}
+```
+
+我们将在本指南中详细讨论此内容，但有关更多详细信息，请参阅：[服务端数据源](./server-side-model-datasource/)。
+
+## 服务控制器
+
+我们的服务将包含一个端点 `/getRows`，它接受上面定义的请求：
+
+```java
+// src/main/java/com/ag/grid/enterprise/spark/demo/controller/OlympicMedalsController.java
+
+@RestController
+public class OlympicMedalsController {
+
+    @Autowired
+    private OlympicMedalDao medalDao;
+
+    @RequestMapping(method = RequestMethod.POST, value = "/getRows")
+    public ResponseEntity<String> getRows(@RequestBody ServerSideGetRowsRequest request) {
+        DataResult data = medalDao.getData(request);
+        return new ResponseEntity<>(asJsonResponse(data), HttpStatus.OK);
+    }
+
+    ...
+}
+```
+
+`OlympicMedalsController` 利用 [Spring Controller](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-controller) 处理 HTTP 和 JSON 序列化。
+
+## 数据访问
+
+`OlympicMedalDao` 包含大部分应用程序代码。它直接与 Spark 交互，并使用 API 执行各种数据转换。
+
+初始化时，它使用上面讨论的配置创建 Spark 会话。然后从 `result.csv` 读入数据以创建一个 DataFrame，该 DataFrame 被缓存以用于后续转换。
+
+```java
+// src/main/java/com/ag/grid/enterprise/spark/demo/dao/OlympicMedalDao.java
+
+private SparkSession sparkSession;
+
+@PostConstruct
+public void init() {
+    SparkConf sparkConf = new SparkConf()
+        .setAppName("OlympicMedals")
+        .setMaster("local[*]")
+        .set("spark.sql.shuffle.partitions", "1");
+
+    this.sparkSession = SparkSession.builder()
+        .config(sparkConf)
+        .getOrCreate();
+
+    Dataset<Row> dataFrame = this.sparkSession.read()
+        .option("header", "true")
+        .option("inferSchema", "true")
+        .csv("src/main/resources/data/result.csv");
+
+    dataFrame.cache();
+
+    dataFrame.createOrReplaceTempView("medals");
+}
+```
+
+使用 `dataFrame.createOrReplaceTempView("medals")` 创建包含奖牌数据的视图。这是延迟评估的，但支持数据集之前已使用 `dataFrame.cache()` 缓存。
+
+由于 DataFrame 是结构化集合，我们提供了 `inferSchema=true` 选项以允许 Spark 使用 `result.csv` 中包含的前几行推断模式。
+
+此类的其余部分将在以下部分中讨论。
+
+## 过滤
+
+我们的示例将使用网格的 `NumberFilter` 和 `SetFilter` [列过滤器](./filtering/)。相应的服务端类如下：
+
+```java
+// src/main/java/com/ag/grid/enterprise/spark/demo/filter/NumberColumnFilter.java
+
+public class NumberColumnFilter extends ColumnFilter {
+    private String type;
+    private Integer filter;
+    private Integer filterTo;
+    ...
+}
+```
+
+```java
+// src/main/java/com/ag/grid/enterprise/spark/demo/filter/SetColumnFilter.java
+
+public class SetColumnFilter extends ColumnFilter {
+    private List<String> values;
+    ...
+}
+```
+
+这些过滤器通过以下属性在 `ServerSideGetRowsRequest` 中按列提供：
+
+```java
+Map<String, ColumnFilter> filterModel;
+```
+
+由于这些过滤器在结构上不同，因此需要使用 [Jackson Annotations](https://github.com/FasterXML/jackson-annotations) 项目提供的类型注释执行一些专门的反序列化。
+
+当 `filterModel` 属性反序列化时，我们需要选择适当的具体 `ColumnFilter`，如下所示：
+
+```java
+// src/main/java/com/ag/grid/enterprise/spark/demo/filter/ColumnFilter.java
+
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "filterType")
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = NumberColumnFilter.class, name = "number"),
+    @JsonSubTypes.Type(value = SetColumnFilter.class, name = "set") })
+public abstract class ColumnFilter {
+    String filterType;
+}
+```
+
+这里我们使用 `filterType` 属性来确定需要将哪个具体的过滤器类与 `filterModel` 映射中的 `ColumnFilter` 条目关联。
+
+使用标准 SQL 语法将过滤器提供给 DataFrame，如下所示：
+
+```java
+// src/main/java/com/ag/grid/enterprise/spark/demo/dao/OlympicMedalDao.java
+
+Stream<String> columnFilters = filterModel.entrySet()
+    .stream()
+    .map(applyColumnFilters);
+
+Stream<String> groupToFilter = zip(groupKeys.stream(), rowGroups.stream(),
+    (key, group) -> group + " = '" + key + "'");
+
+String filters = concat(columnFilters, groupToFilter).collect(joining(" AND "));

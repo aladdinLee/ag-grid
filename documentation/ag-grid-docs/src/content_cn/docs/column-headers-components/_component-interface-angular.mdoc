@@ -1,0 +1,16 @@
+{% if isFramework("angular") %}
+
+```js
+interface IHeaderAngularComp {
+    // agInit(params) 方法在标题组件上调用一次。
+    // 参数详情见下文。
+    agInit(params: IHeaderParams): void;
+
+    // 当为此标题设置了新的列定义时调用。
+    // 如果您处理标题的刷新，则返回 true，否则返回 false，
+    // 表格将从头重新创建您的标题。
+    refresh(params: IHeaderParams): boolean;
+}
+```
+
+{% /if %}

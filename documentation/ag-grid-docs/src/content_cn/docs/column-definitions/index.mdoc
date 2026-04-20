@@ -1,0 +1,169 @@
+---
+title: "列定义"
+description: "列定义定义 $framework 数据表格中的每一列。单独配置和更新列属性，或将默认值应用于所有列。"
+---
+
+{% if isFramework("javascript", "angular", "vue") %}
+表格中的每一列都使用列定义（`ColDef`）定义。列在表格中的位置根据网格选项中指定的列定义顺序确定。
+{% /if %}
+
+{% if isFramework("react") %}
+{% videoSection id="aDCepyF_DUY" title="React 列定义" showHeader=true %}
+表格中的每一列都使用列定义（`ColDef`）定义。列在表格中的位置根据网格选项中指定的列定义顺序确定。
+{% /videoSection %}
+{% /if %}
+
+{% gridExampleRunner title="简单定义" name="simple" exampleHeight=300 /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'athlete' },
+        { field: 'sport' },
+        { field: 'age' }
+    ]
+}
+```
+
+有关所有可用属性，请参阅[列选项](./column-properties/)。
+
+## 列默认值 {% #default-column-definitions %}
+
+使用 `defaultColDef` 设置所有列的属性。
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    defaultColDef: {
+        width: 150,
+        cellStyle: { fontWeight: 'bold' },
+    }
+}
+```
+
+{% gridExampleRunner title="默认列定义" name="default-col-def" exampleHeight=300 /%}
+
+## 单元格数据类型
+
+表格为常见数据类型（如 `text`、`number`、`boolean`、`date` 等）提供内置的[单元格数据类型](./cell-data-types/)。默认情况下，这些类型从行数据[推断](./cell-data-types/#inferring-data-types)，并为每列配置适当的渲染、编辑、筛选和排序行为，无需通过 `columnDefs` 进行显式配置。
+
+## 列类型
+
+使用 `columnTypes` 定义一组要一起应用的列属性。列类型中的属性通过设置列的 `type` 属性应用于列。
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    // 定义列类型
+    columnTypes: {
+        currency: {
+            width: 150,
+            valueFormatter: CurrencyFormatter
+        },
+        shaded: {
+            cellClass: 'shaded-class'
+        }
+    },
+    columnDefs: [
+        { field: 'productName'},
+
+        // 使用 currency 类型的属性
+        { field: 'boughtPrice', type: 'currency'},
+
+        // 使用 currency 和 shaded 类型的属性
+        { field: 'soldPrice', type: ['currency', 'shaded'] },
+    ]
+}
+```
+
+{% note %}
+列类型仅适用于列，不适用于列组。
+{% /note %}
+
+以下示例显示列类型。
+
+{% gridExampleRunner title="列定义示例" name="column-types" exampleHeight=300 /%}
+
+## 内置列类型
+
+表格提供 `rightAligned` 和 `numericColumn` 列类型。
+这两种类型都通过将 CSS 类 `ag-right-aligned-header` 应用于列标题，将 `ag-right-aligned-cell` 应用于单元格，来右对齐标题和单元格内容。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { headerName: '列 A', field: 'a' },
+        { headerName: '列 B', field: 'b', type: 'rightAligned' },
+        { headerName: '列 C', field: 'c', type: 'numericColumn' },
+    ]
+}
+```
+
+{% note %}
+内置列类型使用单元格类来应用样式。这些类型需要 `CellStyleModule` 才能正常工作。
+{% /note %}
+
+## 更新列
+
+可以通过更新列状态或更新列定义来控制列。
+
+[列状态](./column-state/)应在恢复用户表格时使用，例如保存和恢复列宽度。
+
+列定义应在修改用户无法控制的属性时更新，因此列状态不支持这些属性。
+虽然列定义可用于更改有状态属性，但这可能会导致额外的副作用。
+
+### 使用列状态
+
+[表格 API](./grid-api/#reference-state-applyColumnState) 函数 `applyColumnState` 可用于更新[列状态](./column-state/)。
+
+```{% frameworkTransform=true %}
+// 按升序对运动员列排序
+api.applyColumnState({
+    state: [
+        {
+            colId: 'athlete',
+            sort: 'asc'
+        }
+    ]
+});
+```
+
+在下面的示例中，使用"排序运动员"按钮应用列状态。
+
+{% gridExampleRunner title="列状态" name="column-state" exampleHeight=321 /%}
+
+### 更新列定义
+
+要通过[更新列定义](./column-updating-definitions/#changing-column-definition)来更新属性，将新的[列定义](./column-definitions/)数组传递给网格选项。
+
+{% if isFramework("javascript", "angular", "vue") %}
+
+```{% frameworkTransform=false %}
+// 定义新的列定义
+const updatedHeaderColumnDefs = [
+  { field: 'athlete', headerName: 'C1' },
+  { field: 'age', headerName: 'C2' },
+  { field: 'country', headerName: 'C3' },
+  { field: 'sport', headerName: 'C4' },
+]
+// 向表格提供新的列定义
+gridApi.setGridOption('columnDefs', updatedHeaderColumnDefs);
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+```{% frameworkTransform=false %}
+// 向表格提供新的列定义
+setColumnDefs([
+  { field: 'athlete', headerName: 'C1' },
+  { field: 'age', headerName: 'C2' },
+  { field: 'country', headerName: 'C3' },
+  { field: 'sport', headerName: 'C4' },
+]);
+```
+
+{% /if %}
+
+在下面的示例中，使用"更新标题名称"按钮更新列定义。
+
+{% gridExampleRunner title="列定义更新" name="column-definition-update" exampleHeight=321 /%}

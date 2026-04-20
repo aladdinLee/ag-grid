@@ -1,0 +1,158 @@
+---
+title: "快速筛选"
+---
+
+快速筛选是提供给网格的一段文本（通常用户会在应用程序的某处输入），用于通过与所有列中的数据进行比较来筛选行。这可以用于补充特定列的筛选。
+
+## 设置快速筛选
+
+{% gridExampleRunner title="快速筛选" name="quick-filter" /%}
+
+{% if isFramework("react") %}
+您可以通过 `quickFilterText` 网格选项设置快速筛选文本。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    quickFilterText: 'new filter text'
+}
+```
+
+{% /if %}
+
+{% if isFramework("javascript", "angular", "vue") %}
+您可以通过在网格 API 上调用 `setGridOption('quickFilterText', text)` 方法来设置快速筛选文本。
+
+```{% frameworkTransform=true %}
+api.setGridOption('quickFilterText', 'new filter text');
+```
+
+您还可以通过 `quickFilterText` 网格选项设置初始快速筛选文本。
+{% /if %}
+
+提供的快速筛选文本将被拆分为单词，每个单词将与行进行比较。如果任何列的字符串值包含该单词，则单词与行匹配（检查不区分大小写）。所有单词都必须与行匹配才能包含该行。例如，如果文本是 "Tony Ireland"，快速筛选将仅包含同时包含 "Tony" 和 "Ireland" 的行。
+
+## 检查快速筛选
+
+通常，快速筛选文本的状态将在网格外部维护。但是，可以通过 API 方法 `isQuickFilterPresent()` 检查是否应用了快速筛选，并通过 `getQuickFilter()` 获取当前文本。
+
+## 覆盖快速筛选值
+
+如果您的数据包含复杂对象，快速筛选最终将与 `[object Object]` 进行比较，而不是可搜索的字符串值。在这种情况下，您需要实现 `getQuickFilterText` 以从复杂对象中提取可搜索的字符串。
+
+或者，您可能希望专门为搜索格式化字符串值（例如，替换字符串中的重音字符，或从数字中删除逗号）。
+
+最后，如果您希望快速筛选忽略某个列，请让 `getQuickFilterText` 返回空字符串 `''`。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'country',
+            getQuickFilterText: params => {
+                return params.value.name;
+            }
+        }
+    ]
+}
+```
+
+{% note %}
+快速筛选在大多数情况下都可以"开箱即用"，因此只有在需要解决特定问题时才应覆盖快速筛选值。
+{% /note %}
+
+## 快速筛选缓存
+
+默认情况下，快速筛选每次执行时都会检查每列的值，包括运行值获取器（如果存在）。如果您的数据集很大，您可能希望通过设置 `cacheQuickFilter = true` 来启用快速筛选缓存。
+
+启用缓存时，通过连接每列的所有值为每个节点生成"快速筛选文本"。例如，具有"Employee Name"和"Job"列的表格可能有一行的快速筛选文本为 `'NIALL CROSBY\nCOFFEE MAKER'`。然后，网格执行简单的字符串搜索，因此如果您搜索 `'Niall'`，它将找到我们的示例文本。将所有列值连接成一个字符串可以提高性能。值在首次请求快速筛选后连接，并存储在 `rowNode` 中 - 您提供的原始数据不会更改。
+
+### 重置缓存文本
+
+使用时，可以通过以下方式之一手动重置快速筛选缓存文本：
+
+-   每个行节点都有一个 `resetQuickFilterAggregateText()` 方法，可以调用它来重置缓存文本。
+-   `api.resetQuickFilter()` 将重置每个行节点上的缓存文本。
+
+[更新数据](./data-update/)、[单元格编辑](./cell-editing/)、从快速筛选中[排除/包括隐藏列](#include-hidden-columns)以及[更新列定义](./column-updating-definitions/)将自动重置任何受影响行节点上的缓存文本。
+
+## 包括隐藏列
+
+默认情况下，快速筛选仅检查可见列值。如果要检查隐藏列值，则可以设置网格选项 `includeHiddenColumnsInQuickFilter = true`。请注意，如果有大量隐藏列，这可能会影响性能。
+
+这也可以通过 API 方法 `setGridOption('includeHiddenColumnsInQuickFilter', toInclude)` 设置。
+
+## 快速筛选解析器
+
+默认情况下，快速筛选将文本拆分为单词列表，然后将每个单词与每行进行比较。您可能希望覆盖此行为，例如允许使用引号搜索精确的字符串值。这可以通过提供 `quickFilterParser` 来实现。请注意，传递给解析器的值将已经转换为大写。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    // 用逗号而不是空格拆分单词
+    quickFilterParser: (quickFilter) => quickFilter.split(','),
+}
+```
+
+## 快速筛选匹配器
+
+快速筛选的默认行为是检查解析的快速筛选文本中的每个搜索词是否出现在任何列的[快速筛选值](#overriding-the-quick-filter-value)中。可以通过提供 `quickFilterMatcher` 来覆盖匹配逻辑，例如通过正则表达式执行搜索。
+
+传递给匹配器函数的 `rowQuickFilterAggregateText` 参数是所有快速筛选值的连接（如果启用，则使用[快速筛选缓存](#quick-filter-cache)）。请注意，此值将是大写的。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    // 执行正则表达式搜索
+    quickFilterMatcher: (quickFilterParts, rowQuickFilterAggregateText) => {
+        return quickFilterParts.every(part => rowQuickFilterAggregateText.match(part));
+    },
+}
+```
+
+## 示例：快速筛选配置
+
+下面的示例显示了快速筛选在不同数据类型上的工作。每列演示了不同的内容，如下所示：
+
+-   `Name` - 简单列，没有复杂内容。
+-   `Age` - 字段中带有'dot'的复杂对象，快速筛选工作正常。
+-   `Country` - 使用了复杂对象和值获取器，快速筛选同样工作正常。
+-   `Results` - 复杂对象，快速筛选会在复杂对象上调用 `toString`，因此提供了 `getQuickFilterText`。
+-   `Hidden` - 所有值都是字符串'hidden'的隐藏列。在筛选器中输入 `hidden`，将不会匹配任何行。单击 `Include Hidden Columns` 按钮设置 `includeHiddenColumnsInQuickFilter = true`，所有行都将匹配。请注意，更改选项时将自动清除快速筛选缓存。
+
+定义了 `quickFilterParser` 以允许使用引号进行精确搜索，例如 `"gold: 1"` 将仅匹配具有该值的 `Results`。还定义了 `quickFilterMatcher` 以允许输入正则表达式，例如 `2[012]` 将匹配 `Age` 20、21 和 22。
+
+该示例还演示了启用快速筛选缓存。即使关闭缓存，网格工作也非常快，因此对于小数据集，您可能不需要它。对于大数据集（例如超过 10,000 行），打开缓存将提高快速筛选速度。在示例中调整 `cacheQuickFilter` 选项允许试验两种模式：
+
+-   **Cache Quick Filter（示例默认值）：** 使用缓存。首次运行快速筛选时执行值获取器。点击'Print Quick Filter Cache Texts'将返回每行的快速筛选文本，最初将是 `undefined`，然后在首次执行快速筛选后返回快速筛选文本。这将打印到开发者控制台。
+-   **Normal Quick Filter：** 不使用缓存。每次执行筛选器时，都会在每个节点上执行值获取器。点击'Print Quick Filter Cache Texts'将始终为每行返回 `undefined`，因为不使用缓存。
+
+{% gridExampleRunner title="快速筛选配置" name="quick-filter-configuration" /%}
+
+## 透视 / 筛选聚合值
+
+当启用[透视](./pivoting/)或[筛选聚合值](./aggregation-filtering/#filtering-for-aggregated-values)时，默认情况下，快速筛选应用于执行透视/聚合后的数据。这意味着筛选不会更改聚合值，并且只有用于透视的列才能用于筛选。
+
+可以改为在应用透视/聚合之前筛选数据。这可以通过设置网格选项 `applyQuickFilterBeforePivotOrAgg = true` 来完成。
+
+以下示例演示了启用/禁用 `applyQuickFilterBeforePivotOrAgg` 时筛选行为的差异。列 **Athlete** 和 **Sport** 存在，但未用于透视：
+
+-   搜索"Swimming"或 2000，注意网格中没有匹配项，因为筛选是在透视后应用的。
+-   单击按钮在透视和聚合之前应用快速筛选，注意网格中有匹配项，因为筛选是在透视之前应用的。
+
+{% gridExampleRunner title="快速筛选透视/聚合" name="quick-filter-pivot-agg" /%}
+
+## 服务器端数据
+
+快速筛选仅支持[客户端行模型](./row-models/#client-side)。对于其他行模型，您需要实现自己的服务器端筛选以复制快速筛选功能。
+
+## API 参考
+
+### 网格选项
+
+{% apiDocumentation source="grid-options/properties.json" section="filter" names=["quickFilterText", "cacheQuickFilter", "includeHiddenColumnsInQuickFilter", "quickFilterParser", "quickFilterMatcher"] /%}
+
+### 列属性
+
+{% apiDocumentation source="column-properties/properties.json" section="filtering" names=["getQuickFilterText"] /%}
+
+### 网格 API 方法
+
+{% apiDocumentation source="grid-api/api.json" section="filter" names=["isQuickFilterPresent", "getQuickFilter"] /%}

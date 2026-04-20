@@ -1,0 +1,150 @@
+---
+title: "CSV 导出"
+---
+
+可以通过 API 调用或使用网格上的右键上下文菜单（仅限企业版）将网格数据导出为 CSV。
+
+## 导出内容
+
+网格中的相同数据将被导出，并包含一些数据的 GUI 表示。这意味着：
+
+-   将使用原始值，而不是单元格渲染器的结果，这意味着：
+
+    -   将使用值获取器。
+    -   将**不**使用单元格渲染器。
+    -   默认情况下将通过[导出使用值格式化器](./value-formatters/#formatting-for-export)功能使用单元格格式化器。
+
+-   不导出单元格样式。
+
+-   如果行分组：
+
+    -   将导出所有数据，无论 UI 中的组是否打开。
+    -   默认情况下，组名称将采用格式 "-> Parent Name -> Child Name"（使用 `processRowGroupCallback` 更改此设置）。
+
+{% note %}
+CSV 导出将默认启用。如果要禁用它，可以在 gridOptions 中设置属性 `suppressCsvExport = true`。
+{% /note %}
+
+## 安全问题
+
+打开 CSV 文件时，Excel、Apple Numbers、Google Sheets 等电子表格应用程序会自动将以以下符号开头的单元格值作为公式执行：`+`、`-`、`=`、`@`、`Tab (0x09)` 和 `Carriage Return (0x0D)`。为了防止导出任何恶意内容，我们建议使用 [CSV 导出参数](./csv-export/#csvexportparams)中显示的 `callback` 方法修改导出的单元格值，使它们**不**以上述任何字符开头。这样，如果单元格值以上述字符开头，应用程序将不会直接执行该单元格值。如果您希望在导出时保持单元格值不变，请仅允许导出到 Excel。
+
+{% note %}
+有关 CSV 注入的详细信息，请参阅 [OWASP CSV 注入](https://owasp.org/www-community/attacks/CSV_Injection)网站。
+{% /note %}
+
+## 标准导出
+
+下面的示例显示了将网格数据导出为 CSV 时的默认行为。
+
+请注意以下内容：
+
+-   您可以使用 `Show CSV export content text` 按钮预览输出。
+-   您可以使用 `Download CSV export file` 按钮下载 csv 文件。
+-   文件将使用默认名称导出：`export.csv`。
+-   社区版支持 API CSV 导出，但不支持上下文菜单。
+
+{% gridExampleRunner title="CSV 导出" name="csv-export"  exampleHeight=400 /%}
+
+## 更改列分隔符
+
+默认情况下，CSV 文件使用 `,` 分隔其列。但可以使用 `columnSeparator` 参数更改此值 `token`。
+
+请注意以下内容：
+
+-   您可以使用顶部的选择字段切换 `columnSeparator` 参数的值。
+-   您可以使用 `Show CSV export content text` 按钮预览输出。
+-   企业版通过上下文菜单的右键单击启用 CSV 导出。
+
+{% gridExampleRunner title="CSV 导出 - 列分隔符" name="csv-export-column-separator"  exampleHeight=400 /%}
+
+## 禁止引号
+
+默认情况下，单元格值根据 CSV 格式规则进行编码：值用双引号括起来，值内的任何双引号都会被转义，因此 `my"value` 变为 `"my""value"`。传递 true 以将值插入 CSV 文件而不进行转义。在这种情况下，您有责任确保没有单元格包含 columnSeparator 字符。
+
+请注意以下内容：
+
+-   您可以使用顶部的选择字段切换 `suppressQuotes` 参数的值。
+-   您可以编辑单元格以预览不同输入的结果。
+-   您可以使用 `Show CSV export content text` 按钮预览输出。
+-   您可以使用 `Download CSV export file` 按钮下载 csv 文件。
+
+{% gridExampleRunner title="CSV 导出 - 禁止引号" name="csv-export-suppress-quotes"  exampleHeight=400 /%}
+
+## 前置和附加内容
+
+前置或附加内容的推荐方法是将 CsvCell 对象数组传递给 `appendContent` 或 `prependContent`。这可确保您的内容正确转义。
+
+为了与早期版本的网格兼容，您还可以传递字符串，该字符串将在没有任何处理的情况下插入到 CSV 文件中。您有责任根据 CSV 标准格式化字符串。
+
+请注意以下内容：
+
+-   您可以使用顶部的选择字段切换 `prependContent` 和 `appendContent` 的值。
+
+    -   使用 `prependContent=CsvCell[][]` 或 `appendContent=CsvCell[][]`，将插入包含逗号和引号的自定义内容。这些逗号和引号在 Excel 中打开时将可见，因为它们已正确转义。
+    -   使用 `prependContent=string` 或 `appendContent=string`，将插入字符串到 CSV 文件中，而不进行任何处理，也不受 suppressQuotes 和 columnSeparator 的影响。它包含在 Excel 中不可见的逗号和引号。
+
+-   您可以使用 `Show CSV export content text` 按钮预览输出。
+
+-   您可以使用 `Download CSV export file` 按钮下载 csv 文件。
+
+{% gridExampleRunner title="CSV 导出 - 自定义页眉和页脚" name="csv-export-header-footer"  exampleHeight=400 /%}
+
+## 列表头
+
+在某些情况下，您可能只想导出网格数据，而不导出表头单元格。对于这种情况，我们提供 `skipColumnGroupHeaders=true` 和 `skipColumnHeaders=true` 参数。
+
+请注意以下内容：
+
+-   最初，导出分组表头和表头。
+-   如果选中 `Skip Column Group Headers`，将跳过组表头。
+-   如果选中 `Skip Column Headers`，将跳过普通表头。
+
+{% gridExampleRunner title="CSV 导出 - 列表头" name="csv-export-column-headers"  exampleHeight=400 /%}
+
+## 固定行
+
+如果固定行与数据无关，可以使用 `skipPinnedTop=true` 和 `skipPinnedBottom=true` 参数将其从导出中排除。
+
+请注意以下内容：
+
+-   默认情况下，导出所有固定行。
+-   如果选中 `Skip Pinned Top Rows`，将跳过固定在顶部的行。
+-   如果选中 `Skip Pinned Bottom Rows`，将跳过固定在底部的行。
+
+{% gridExampleRunner title="CSV 导出 - 固定行" name="csv-export-pinned-rows"  exampleHeight=400 /%}
+
+## 隐藏列
+
+默认情况下，不导出隐藏列。如果您希望导出所有列，无论网格的当前状态如何，请使用 `allColumns=true` 参数。
+
+请注意以下内容：
+
+-   默认情况下，只导出可见列。bronze、silver 和 gold 列将不会导出。
+-   如果选中 `Export All Columns`，bronze、silver 和 gold 列将包含在导出中。
+
+{% gridExampleRunner title="CSV 导出 - 隐藏列" name="csv-export-hidden-columns"  exampleHeight=400 /%}
+
+## API
+
+### 网格属性
+
+{% apiDocumentation source="grid-options/properties.json" section="export" names=["defaultCsvExportParams", "suppressCsvExport"] /%}
+
+### API 方法
+
+{% apiDocumentation source="grid-api/api.json" section="export" names=["exportDataAsCsv", "getDataAsCsv"] /%}
+
+## 接口
+
+### CsvExportParams
+
+{% interfaceDocumentation interfaceName="CsvExportParams" overrideSrc="csv-export/csv.json" /%}
+
+### CsvCell
+
+{% interfaceDocumentation interfaceName="CsvCell" overrideSrc="csv-export/csv.json" /%}
+
+### CsvCellData
+
+{% interfaceDocumentation interfaceName="CsvCellData" overrideSrc="csv-export/csv.json" /%}

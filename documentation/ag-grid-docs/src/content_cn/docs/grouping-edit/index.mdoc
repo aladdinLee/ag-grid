@@ -1,0 +1,374 @@
+---
+title: "行分组 - 编辑组"
+enterprise: true
+---
+
+当使用[客户端行模型](./row-models/#client-side)时，网格支持编辑分组数据。
+本页介绍如何使组行单元格可编辑、将编辑的值分发给后代行，以及在编辑后刷新分组层次结构。
+
+## 编辑组行单元格
+
+双击任何组行的 `Sales` 单元格进行编辑。新值平均分配给组的子行，四舍五入为整数。当子行本身是一个组时，级联会递归遍历整个层次结构。
+
+{% gridExampleRunner title="内置总和分发" name="distribute-group-value-sum" exampleHeight=540 /%}
+
+在应该接受组行编辑的任何列上设置 `groupRowEditable`。
+此属性接受 `boolean` 或回调函数；回调仅对 `rowNode.group === true` 的节点调用，而叶行继续遵守 `editable`。
+
+当列同时定义了 `groupRowEditable` 和 `editable` 时，网格仅评估与当前节点类型匹配的属性，从而为组行和叶行启用单独的规则。
+
+当定义了 `groupRowEditable` 时，网格会使用内置分发自动将编辑的值分发给后代行。要自定义此行为，请将 `groupRowValueSetter` 设置为选项对象、自定义回调函数，或设置为 `false` 以禁用分发。
+
+{% apiDocumentation source="column-properties/properties.json" section="editing" names=["groupRowEditable", "groupRowValueSetter"] /%}
+
+## 内置值分发
+
+内置分发将编辑的值级联到后代行，调整每个子行以使聚合值与新总数匹配。将选项对象传递给 `groupRowValueSetter` 以自定义策略或精度。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'sales',
+            aggFunc: 'sum',
+            editable: true,
+            groupRowEditable: true,
+            // 内置分发：将总和平均分配给子行。
+            // precision: 0 将子行值四舍五入为整数并分散余数。
+            groupRowValueSetter: { precision: 0 },
+        },
+    ],
+}
+```
+
+### 分发策略
+
+`distribution` 选项控制如何将编辑的值分散到子行。省略时，策略根据列的 `aggFunc` 自动选择：
+
+| 策略           | 行为                                                                   | 默认用于          |
+| -------------- | ---------------------------------------------------------------------- | ----------------- |
+| `'uniform'`    | 将新值平均分配给所有子行。                                             | `sum`             |
+| `'overwrite'`  | 将新值直接写入每个子行。                                               | `avg`, 无 aggFunc |
+| `'percentage'` | 按比例缩放每个子行，保持相对权重。当当前总数为零时回退到 `'uniform'`。 | —                 |
+| `'increment'`  | 仅将差值（`newValue − oldValue`）分发给子行，将其添加到当前值。        | —                 |
+
+对于 `count`、`min`、`max`、`first`、`last` 和**自定义聚合函数**，编辑**默认禁用**，因为对于这些函数，没有单一正确的方法将编辑值拆分回子行。要启用编辑，您可以：
+
+-   将 `distribution` 设置为 `'overwrite'` 以将新值直接写入每个子行。
+-   提供带有 `'overwrite'`、`true` 或实现应用程序特定逻辑的自定义回调函数的每聚合函数记录条目（请参阅[每聚合策略](#per-aggregation-strategies)）。
+-   将自定义[回调函数](#custom-distribution-with-a-callback)分配给 `groupRowValueSetter` 以完全控制分发。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'price',
+            aggFunc: 'min',
+            editable: true,
+            groupRowEditable: true,
+            // 'overwrite' 将编辑的值写入每个子行
+            groupRowValueSetter: { distribution: 'overwrite' },
+        },
+        {
+            field: 'quantity',
+            aggFunc: 'count',
+            editable: true,
+            groupRowEditable: true,
+            // 每聚合函数记录：仅启用 count 使用 overwrite
+            groupRowValueSetter: { distribution: { count: 'overwrite' } },
+        },
+    ],
+}
+```
+
+将 `distribution` 设置为 `true` 会为 `sum`、`avg`、无聚合函数列和自定义聚合函数使用内置默认值。使用 `true` 时，`count`/`min`/`max`/`first`/`last` 函数仍然禁用 — 使用 `'overwrite'`、每聚合函数记录条目或自定义回调来启用它们。
+
+将 `distribution` 设置为 `false` 或 `null` 会抑制分发并使单元格不可编辑，即使 `groupRowEditable` 为 `true`。
+
+对于 `avg` 聚合，分发器调整子行值以使平均值等于编辑的值。
+
+{% note %}
+`precision` 选项四舍五入写入**子行**的值，而不是组行显示的值。
+组值由列的 `aggFunc` 从四舍五入的子行重新计算。对于 `sum`，这总是精确的。
+对于 `avg`，重新聚合的值可能不同 — 例如，在 3 个子行之间分发 `precision: 0` 会产生整数，但它们的平均值（`10 / 3 ≈ 3.33`）不是整数。使用[值格式化器](./value-formatters/)来控制组行如何显示重新聚合的值。
+{% /note %}
+
+### 分发选项
+
+{% interfaceDocumentation interfaceName="GroupRowValueSetterOptions" /%}
+
+### 与默认列定义合并
+
+当在 `defaultColDef` 和单个列定义上都设置 `groupRowValueSetter` 为选项对象时，网格会深度合并这两个对象 — 与所有列定义属性的合并方式相同。列自己的属性优先，列上未指定的任何属性都从默认值继承。这包括嵌套的 `distribution` 记录。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    defaultColDef: {
+        editable: true,
+        groupRowEditable: true,
+        // 默认：将子行值四舍五入为整数，禁用 count
+        groupRowValueSetter: { precision: 0, distribution: { count: false } },
+    },
+    columnDefs: [
+        {
+            field: 'sales',
+            aggFunc: 'sum',
+            // 列级别覆盖：使用百分比分发。
+            // precision: 0 从 defaultColDef 继承。
+            groupRowValueSetter: { distribution: 'percentage' },
+        },
+        {
+            field: 'quantity',
+            aggFunc: 'count',
+            // 用 true 覆盖 defaultColDef 的 false 以启用 count 编辑。
+            groupRowValueSetter: { distribution: { count: true } },
+        },
+        {
+            field: 'profit',
+            aggFunc: 'sum',
+            // 无列级别覆盖 — 从 defaultColDef 继承 { precision: 0 }。
+        },
+    ],
+}
+```
+
+{% note %}
+深度合并仅适用于 `defaultColDef` 和列都将 `groupRowValueSetter` 定义为普通对象的情况。如果列定义了回调函数，它会完全替换默认值。
+{% /note %}
+
+### 多个聚合函数
+
+内置分发处理标准聚合函数。以下示例演示了内置策略、非聚合列和自定义回调的混合。双击任何组行单元格进行编辑：
+
+-   **Salary**（`sum`）：将新总数平均分配给子行，四舍五入为整数（`precision: 0`）。例如，在 3 个子行之间编辑组总数 300 会产生每个 100。
+-   **Bonus**（`avg`）：用编辑的值覆盖每个子行（`avg` 的默认值）。例如，将组平均值编辑为 15 会将所有子行的奖金设置为 15。
+-   **Projects**（无 `aggFunc`）：用编辑的值覆盖每个子行（无聚合时的默认值）。组单元格为空白但仍可编辑。
+-   **Rate %**（自定义回调）：读取每个叶子的薪水并计算其奖金为 `salary × rate / 100`。例如，输入 20 会将每个子行的奖金设置为其个人薪水的 20%。使用 `allLeafChildren` 直接访问所有后代数据行。
+-   **SumSq**（自定义 `sumOfSquares` aggFunc）：使用自定义回调，为每个子行计算 `√(newValue / count)` — 平方和的正确逆运算。
+
+{% gridExampleRunner title="多个聚合函数" name="distribute-group-value-all-agg" exampleHeight=540 /%}
+
+### 每聚合策略
+
+当不同的列使用不同的聚合函数但共享 `groupRowValueSetter`（例如通过 `defaultColDef`）时，`distribution` 属性可以设置为记录，将每个聚合函数名称映射到策略字符串、选项对象、自定义回调函数、`true` 以使用内置默认值启用，或 `false`/`null` 以抑制该聚合函数的分发：
+
+```{% frameworkTransform=true %}
+const myCustomAgg = (params) => {
+    let total = 0;
+    for (const value of params.values) {
+        total += Number(value) || 0;
+    }
+    return total;
+};
+
+// 可选：逆运算在行更改时启用增量聚合
+myCustomAgg.inverse = (params) => {
+    let total = Number(params.result) || 0;
+    for (const value of params.values) {
+        total -= Number(value) || 0;
+    }
+    return total;
+};
+
+const gridOptions = {
+    aggFuncs: {
+        myCustomAgg,
+    },
+    defaultColDef: {
+        editable: true,
+        groupRowEditable: true,
+        groupRowValueSetter: {
+            precision: 0,
+            distribution: {
+                sum: 'percentage',                          // 策略字符串
+                avg: { distribution: 'increment' },         // 选项对象
+                myCustomAgg: (params) => {                  // 自定义回调函数
+                    for (const child of params.aggregatedChildren) {
+                        child.setDataValue(params.column, params.newValue, 'data');
+                    }
+                    return true;
+                },
+            },
+        },
+    },
+}
+```
+
+自定义聚合函数默认禁用。要启用编辑，请在 `distribution` 记录中添加显式条目 — 可以是策略字符串、选项对象或实现聚合逻辑逆运算的自定义回调函数：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    defaultColDef: {
+        editable: true,
+        groupRowEditable: true,
+        groupRowValueSetter: {
+            precision: 0,
+            distribution: {
+                sum: 'percentage',
+                avg: 'increment',
+                count: 'overwrite',
+                // 自定义 aggFunc：提供反转聚合的回调
+                myCustomAgg: (params) => {
+                    for (const child of params.aggregatedChildren) {
+                        child.setDataValue(params.column, params.newValue, 'data');
+                    }
+                    return true;
+                },
+            },
+        },
+    },
+}
+```
+
+未在记录中列出的聚合函数会回退到 `default` 回退，然后是内置默认值（参见上面的策略表）。
+
+### 默认回退
+
+当多个自定义聚合函数共享相同的分发逻辑时，`default` 属性避免为每个函数重复条目。它适用于 `distribution` 记录中未明确列出的任何聚合函数 — 包括自定义聚合函数（没有它则禁用）和无 `aggFunc` 的列（已通过内置默认值默认为 `'overwrite'`）。不可分发的函数（`count`、`min`、`max`、`first`、`last`）**不**受 `default` 影响，必须始终明确列出。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    defaultColDef: {
+        editable: true,
+        groupRowEditable: true,
+        groupRowValueSetter: {
+            precision: 0,
+            distribution: {
+                sum: 'percentage',
+                count: 'overwrite',
+            },
+            // 未列出的自定义 aggFunc 和无 aggFunc 列的回退。
+            default: 'overwrite',
+        },
+    },
+}
+```
+
+## 使用回调自定义分发
+
+要完全控制组级别编辑如何级联，请将函数分配给 `groupRowValueSetter`。
+回调接收 `GroupRowValueSetterParams` 对象，如果任何子行值发生更改，应返回 `true`。
+
+以下示例演示了一个自定义函数，它将编辑的总数平均分配给子行，将子行值四舍五入为整数（最大余数法）。该函数对每个子行调用 `setDataValue`，这会触发聚合自动刷新父总数。
+
+{% gridExampleRunner title="自定义可编辑组总数" name="group-editable-totals-custom" exampleHeight=620 /%}
+
+### GroupRowValueSetterParams
+
+{% interfaceDocumentation interfaceName="GroupRowValueSetterParams" /%}
+
+### 聚合子行
+
+`groupRowValueSetter` 回调接收一个 `aggregatedChildren` 数组，包含对编辑列进行[聚合](./aggregation/)的直接子行。此数组使将编辑值级联到后代行变得容易，无需手动遍历行层次结构。
+
+`aggregatedChildren` 返回的子行取决于列和网格配置：
+
+-   **常规值列**：返回用于聚合的直接子行。这遵守 `suppressAggFilteredOnly` 网格选项和 `groupAggFiltering` — 当这些导致聚合包含所有子行（不仅仅是过滤的子行）时，`aggregatedChildren` 相应地返回所有子行。
+-   **叶组上的透视列**：仅返回匹配列透视键的子行，因为透视聚合按透视键值对行进行分组。
+-   **非组行**：始终返回空数组 — 只有组行有聚合子行。
+
+或者，可以在代码中的任何地方调用 `rowNode.getAggregatedChildren(colKey)` 以编程方式检索相同的子行。
+要收集所有后代叶行而不是仅直接子行，请传递 `true` 作为第二个参数：`rowNode.getAggregatedChildren(colKey, true)`。
+
+有关更多详细信息，请参阅[检索聚合子行](./aggregation/#retrieving-aggregated-children)。
+
+### 级联编辑
+
+实现级联编辑的关键点：
+
+-   对每个子行调用 `rowNode.setDataValue` 会将更新的数字向下推送。
+-   当子行也是定义了自己的 `groupRowValueSetter` 的组时，级联会进一步递归。
+-   父聚合自动刷新，因为子 `data` 更改会重新运行列 `aggFunc`，因此编辑组行总数会立即重新平衡子行以达到该值。
+-   聚合自动批处理 — 单个 `groupRowValueSetter` 调用中的所有 `setDataValue` 调用都在重新聚合运行之前处理。
+
+{% note %}
+`aggregatedChildren` 参数和 `rowNode.getAggregatedChildren()` 方法仅受客户端行模型支持。对于其他行模型，`aggregatedChildren` 是空数组。
+{% /note %}
+
+### 调用 distributeGroupValue
+
+内置分发函数 `distributeGroupValue` 从 `ag-grid-enterprise` 导出，可以直接在自定义 `groupRowValueSetter` 回调中调用。这在分发之前或之后需要自定义逻辑时很有用：
+
+```ts
+import { distributeGroupValue } from 'ag-grid-enterprise';
+
+colDef.groupRowValueSetter = (params) => {
+    // 自定义预处理
+    const adjusted = Math.max(0, Number(params.newValue));
+    return distributeGroupValue({ ...params, newValue: adjusted }, { distribution: 'percentage' });
+};
+```
+
+您也可以直接分配 `distributeGroupValue` 而不使用包装器以获得默认行为：
+
+```ts
+import { distributeGroupValue } from 'ag-grid-enterprise';
+
+colDef.groupRowValueSetter = distributeGroupValue;
+```
+
+### 自定义 getValue 和 setValue
+
+`getValue` 和 `setValue` 回调允许您覆盖内置分发器如何从子行读取和写入子行。默认情况下，分发器使用 `node.getDataValue(column, 'value')` 读取，使用 `node.setDataValue(column, value, 'data')` 写入。
+
+这在以下情况下很有用：
+
+-   子行值存储在不同的字段或自定义数据结构中。
+-   您需要在分发期间应用转换或副作用。
+-   列的 `valueSetter` 或 `valueGetter` 与分发需求不匹配。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'amount',
+            aggFunc: 'sum',
+            editable: true,
+            groupRowEditable: true,
+            groupRowValueSetter: {
+                distribution: 'percentage',
+                getValue: (params) => (params.data && params.data.weight) || 0,
+                setValue: (params) => params.node.setDataValue(params.column, params.value, 'data'),
+            },
+        },
+    ],
+}
+```
+
+## 编辑透视列
+
+使用[透视](./pivoting/)时，`groupRowValueSetter` 也适用于透视结果列。
+关键区别在于 `aggregatedChildren` 仅返回匹配列透视键的子行，而不是组的所有子行。
+
+以下示例在透视模式下使用内置分发。由于定义了 `groupRowEditable`，分发会自动启用。双击任何透视单元格进行编辑。编辑的值在匹配该透视列键的子行之间均匀分发。
+
+{% gridExampleRunner title="内置透视编辑" name="pivot-editable-builtin" exampleHeight=500 /%}
+
+要完全控制透视编辑，请使用自定义 `groupRowValueSetter` 回调。
+在以下示例中：
+
+-   网格按 `product`（电子产品、服装、食品）透视，按 `region` 和 `country` 分组。
+-   双击任何透视列单元格会打开聚合值的编辑器。
+-   编辑透视单元格（例如，"Europe" 行上的 "Electronics" 列）时，`aggregatedChildren` 数组仅包含销售电子产品的欧洲行 — 而不是所有欧洲行。
+-   编辑仅在那些匹配的子行之间平均分发，其他产品类别保持不变。
+
+{% gridExampleRunner title="自定义可编辑透视总数" name="pivot-editable-totals-custom" exampleHeight=500 /%}
+
+此行为确保透视列上的编辑仅影响有助于该特定透视值的数据，使级联编辑与透视数据正确配合工作。
+
+## 树形数据
+
+`groupRowEditable` 和 `groupRowValueSetter` 功能也适用于[树形数据](./tree-data/)。
+在树形数据模式下，父节点充当组行 — 编辑父节点的聚合值会将更改级联到其子行，就像行分组一样。
+
+以下示例显示组织为树的公司预算：部门包含团队，团队包含员工。编辑部门或团队的预算将其新总数平均分配给其成员，四舍五入为整数。级联自动递归遍历整个层次结构。
+
+{% gridExampleRunner title="树形数据可编辑" name="tree-data-editable" exampleHeight=500 /%}
+
+## 编辑后刷新组
+
+当分组列可编辑时，设置 `refreshAfterGroupEdit=true` 会导致网格在每次提交编辑后更新行数据并重新计算分组。如果没有此选项，行数据会更新，但分组不会更新，直到下次完全刷新。
+
+启用 `refreshAfterGroupEdit` 时，还要提供 `getRowId`，以便网格在重建分组层次结构时可以通过稳定的 ID 跟踪行。
+
+以下示例演示了此行为。双击 `department` 或 `team` 单元格进行编辑 — 网格会立即重新评估分组并将行移动到正确的组。

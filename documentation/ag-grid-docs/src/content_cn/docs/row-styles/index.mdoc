@@ -1,0 +1,172 @@
+---
+title: "行样式"
+---
+
+可以通过以下方式实现行自定义：
+
+-   **行样式**：为行提供 CSS 样式。单独应用于每个元素。
+-   **行类**：为行提供 CSS 类。数据刷新时不会移除。
+-   **行类规则**：提供应用 CSS 类的规则。这些样式是动态的并批量应用。
+
+{% note %}
+对于大多数用例，我们推荐使用行类规则。有关更多详细信息，请参阅[样式刷新](./row-styles/#refresh-of-styles)。
+
+当跨越行时，行不是视觉组件，因此应该设置单元格的样式。
+{% /note %}
+
+以下各节介绍了每种方法。
+
+## 行样式
+
+您可以通过以下方式向每行添加 CSS 样式：
+
+{% apiDocumentation source="grid-options/properties.json" section="styling" names=["rowStyle", "getRowStyle"] /%}
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    // 在每行上设置背景颜色，这可能不好，应该使用 CSS 类
+    rowStyle: { background: 'black' },
+    // 再次在偶数行上设置背景颜色，这看起来不好，应该使用 CSS 类
+    getRowStyle: params => {
+        if (params.node.rowIndex % 2 === 0) {
+            return { background: 'red' };
+        }
+    }
+}
+```
+
+如果您的数据是静态的，请使用行类来应用样式以获得更好的性能。
+
+## 行类
+
+您可以通过以下方式向每行添加 CSS 类：
+
+{% apiDocumentation source="grid-options/properties.json" section="styling" names=["rowClass", "getRowClass"] /%}
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    // 所有行分配 CSS 类 'my-green-class'
+    rowClass: 'my-green-class',
+    // 所有偶数行分配 'my-shaded-effect'
+    getRowClass: params => {
+        if (params.node.rowIndex % 2 === 0) {
+            return 'my-shaded-effect';
+        }
+    },
+}
+```
+
+## 行类规则
+
+您可以通过网格选项 `rowClassRules` 定义规则来应用特定的 CSS 类。这些规则作为映射提供，其中键是类名，值是表达式，如果评估为 `true`，则使用该类。表达式可以是函数，也可以是字符串，网格将其视为函数的简写。
+
+{% apiDocumentation source="grid-options/properties.json" section="styling" names=["rowClassRules"] /%}
+
+以下代码片段显示了使用函数和年份列值的 `rowClassRules`：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowClassRules: {
+        // 将绿色应用于 2008
+        'rag-green-outer': (params) => { return params.data.year === 2008; },
+
+        // 将琥珀色应用于 2004
+        'rag-amber-outer': (params) => { return params.data.year === 2004; },
+
+        // 将红色应用于 2000
+        'rag-red-outer': (params) => { return params.data.year === 2000; }
+    }
+}
+```
+
+## 行样式/类函数
+
+所有 rowStyle、rowClass 和 rowClassRules 函数都接受 `RowClassParams` 参数对象。
+
+{% interfaceDocumentation interfaceName="RowClassParams" /%}
+
+作为替代方案，您也可以使用表达式提供函数的简写。
+表达式由网格通过将字符串作为 Javascript 表达式执行来评估。表达式具有以下可用属性（映射等效参数对象的属性）：
+
+-   `ctx`：映射 context
+-   `node`：映射 node
+-   `data`：映射 data
+-   `rowIndex`：映射 rowIndex
+-   `api`：映射 grid api
+
+以下代码片段显示了 `rowClassRules` 使用年龄列值的表达式将类应用于行：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowClassRules: {
+        'rag-green': 'data.age < 20',
+        'rag-amber': 'data.age >= 20 && data.age < 25',
+        'rag-red': 'data.age >= 25',
+    }
+}
+```
+
+## 样式刷新
+
+如果您刷新行，或由于编辑而更新单元格，则会再次应用 `rowStyle`、`rowClass` 和 `rowClassRules`。这具有以下效果：
+
+-   **rowStyle**：应用所有新样式。新结果中不存在的样式属性不会被移除 — 之前应用的样式属性将保留在行元素上。
+-   **rowClass**：应用所有新类。旧类不会被移除，因此请注意类会累积。如果要移除旧类，请使用 rowClassRules。
+-   **rowClassRules**：返回 true 的规则将第二次应用该类。返回 false 的规则将第二次移除该类。
+
+## 行类规则示例
+
+下面的示例演示 `rowClassRules`：
+
+-   `rowClassRules` 用于在病假天数 > 5 且 <= 7 时应用类 `sick-days-warning`，在病假天数 >= 8 时应用类 `sick-days-breach`。
+
+-   当数据更改时，网格会重新评估 rowClassRules 并应用样式，无论机制如何。有关更新数据的方法的详细信息，请参阅[更新数据](./data-update/)。
+
+{% gridExampleRunner title="行类规则" name="row-class-rules" /%}
+
+## 高亮行和列
+
+当鼠标悬停在行和列上时，网格可以高亮它们。
+
+默认情况下，高亮行是开启的。要关闭它，请设置网格属性 `suppressRowHoverHighlight=true`。
+
+默认情况下，高亮列是关闭的。要开启它，请设置网格属性 `columnHoverHighlight=true`。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    // 关闭行悬停，默认开启
+    suppressRowHoverHighlight: true,
+    // 开启列悬停，默认关闭
+    columnHoverHighlight: true
+}
+```
+
+在此示例中，行和列都被高亮。
+
+请注意，如果将鼠标悬停在标题组上，组中的所有列都将被高亮。
+
+{% gridExampleRunner title="高亮行和列" name="highlight-rows-and-columns" /%}
+
+在此示例中，默认情况下禁用列高亮，并使用 `suppressRowHoverHighlight=true` 禁用了行高亮。
+
+{% gridExampleRunner title="不高亮行和列" name="highlight-nothing" /%}
+
+行高亮通过网格向悬停的行添加 CSS 类 `ag-row-hover` 来工作。网格不能依赖使用 CSS `:hover` 选择器，因为如果列被固定，这将不会高亮整行。
+
+列高亮通过网格向所有要高亮的单元格添加 CSS 类 `ag-column-hover` 来工作。
+
+## 设置第一行和最后一行的样式
+
+可以通过使用 CSS 以 `.ag-row-first` 和 `.ag-row-last` 选择器为目标来设置网格的第一行和最后一行的样式，如下所示：
+
+```css
+.ag-row.ag-row-first {
+    background-color: #2244CC44;
+}
+
+.ag-row.ag-row-last {
+    background-color: #CC333344;
+}
+```
+
+{% gridExampleRunner title="行样式第一行和最后一行" name="row-styling-first-last" /%}

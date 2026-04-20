@@ -1,0 +1,61 @@
+---
+title: "时间序列"
+enterprise: true
+---
+
+本节介绍如何使用集成图表绘制时间序列数据。
+
+当选择时间轴而不是类别轴或数字轴时，集成图表支持使用折线图和面积图绘制时间序列数据。
+
+## 时间轴与类别轴
+
+[时间轴](https://www.ag-grid.com/charts/react/axes-types/#time)用于绘制连续的日期/时间值，而[类别轴](https://www.ag-grid.com/charts/react/axes-types/#category)用于绘制离散值或类别。
+
+下面的示例突出显示了时间轴和类别轴之间的差异。请注意，时间轴包含提供的值范围的所有天数，而类别轴仅显示提供的离散值的轴标签。
+
+{% gridExampleRunner title="时间轴与类别轴" name="time-vs-category"  exampleHeight=790 /%}
+
+## 时间轴配置
+
+可以通过在列定义上设置 `chartDataType = 'time'` 来配置[时间轴](https://www.ag-grid.com/charts/react/axes-types/#time)。
+
+为了使时间轴正常工作，列必须包含以下格式之一的值：
+
+-   `Date`
+-   ISO 8601 格式的 `string`
+-   表示数字时间戳的 `number`
+
+此外，如果未指定 `chartDataType` 且列包含 `Date` 值，它将自动使用时间轴。
+
+以下代码片段显示了如何配置不同的时间序列值以启用时间轴：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        // date 对象默认被视为时间
+        { field: 'someDate' },
+        { field: 'someIsoString', chartDataType: 'time' },
+        { field: 'someTimestamp', chartDataType: 'time' },
+    ],
+    rowData: [
+        {
+            someDate: new Date('Mon Apr 17 2023 12:43:17'), // date 对象
+            someIsoString: '2023-04-17T11:43:17.000Z', // ISO 8601 字符串
+            someTimestamp: 1681735397000, // 数字时间戳（JavaScript 格式）
+        },
+        // ... 更多行
+    ]
+}
+```
+
+以下示例演示配置数字时间戳以使用时间轴：
+
+{% gridExampleRunner title="时间轴配置" name="time-axis-config"  exampleHeight=740 /%}
+
+## 时间轴组合图表
+
+时间轴也可以用于组合图表，如下例所示。
+
+有关如何配置组合图表的更多详细信息，请参阅[范围图表 API 示例](./integrated-charts-api-range-chart/#combination-charts)。
+
+{% gridExampleRunner title="时间轴组合图表" name="time-combination-chart"  exampleHeight=790 /%}

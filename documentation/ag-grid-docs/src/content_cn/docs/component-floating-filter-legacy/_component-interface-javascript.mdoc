@@ -1,0 +1,49 @@
+{% if isFramework("javascript") %}
+自定义浮动筛选器组件的接口如下：
+{% /if %}
+
+{% if isFramework("javascript") %}
+
+```ts
+interface IFloatingFilterComp<ParentFilter = any> {
+    // 必需方法
+
+    // 每当父筛选器更改时调用。您的浮动
+    // 筛选器通常会刷新其 UI 以反映新的筛选器
+    // 状态。提供的 parentModel 是父筛选器从其 getModel() 方法返回的内容。
+    // event 是网格触发的 FilterChangedEvent。
+    onParentModelChanged(parentModel: any, event: FilterChangedEvent): void;
+
+    // 返回此浮动筛选器的 HTML 元素。
+    getGui(): HTMLElement;
+
+    // 可选方法
+
+    // init(params) 方法在浮动筛选器上调用一次。
+    // 有关参数的详细信息，请参见下文。
+    init(params: IFloatingFilterParams<ParentFilter>): void;
+
+    // 当列定义更新时执行任何必要操作的钩子。
+    refresh(params: IFloatingFilterParams): void;
+
+    // 每次显示弹出窗口时都会调用，在 getGui 返回的 GUI 附加到 DOM 之后。
+    // 如果筛选器弹出窗口关闭并重新打开，则每次显示筛选器时都会调用此方法。
+    // 这对于任何需要在执行之前附加的逻辑很有用，例如将焦点放在特定的 DOM 元素上。
+    afterGuiAttached(params?: IAfterGuiAttachedParams): void;
+
+    // 当浮动筛选器被销毁时调用。像列标题一样，
+    // 浮动筛选器的生命周期仅在列可见时，
+    // 因此如果列变为不可见或用户通过水平滚动将列滚动出视图，它们将被销毁。
+    destroy(): void;
+}
+```
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+
+### 自定义浮动筛选器参数
+
+`init(params)` 方法接受一个包含下面列出的项目的参数对象。如果通过 `colDef.floatingFilterComponentParams` 属性提供了自定义参数，
+这些参数将额外添加到参数对象中，如果存在名称冲突，将覆盖同名项目。
+{% /if %}

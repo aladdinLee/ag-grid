@@ -1,0 +1,23 @@
+{% if isFramework("vue") %}
+
+```ts
+loadingCellRendererSelector: (params) => {
+    const useCustomRenderer = ...某些条件/检查...
+    if (useCustomRenderer) {
+        return {
+            // 要使用的组件 - 之前已注册
+            component: 'customLoadingCellRenderer',
+            params: {
+                // 提供给自定义加载单元格渲染器的参数
+                loadingMessage: '--- CUSTOM LOADING MESSAGE ---',
+            },
+        };
+        } else {
+            // 没有加载单元格渲染器
+            return undefined;
+        }
+    }
+}
+```
+
+{% /if %}

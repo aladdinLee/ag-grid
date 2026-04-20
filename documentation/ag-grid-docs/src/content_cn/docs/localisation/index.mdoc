@@ -1,0 +1,140 @@
+---
+title: "本地化"
+description: "为您的区域设置自定义网格内的文本。使用提供的区域设置或完全创建您自己的区域设置。使用区域设置回调挂钩到应用程序的本地化系统。"
+---
+
+网格的显示文本可以自定义以进行本地化。您可以通过提供所需语言的区域设置信息来实现这一点。使用 localeText 属性应用提供的区域设置之一，创建自定义区域设置，或使用 getLocaleText 回调将网格与应用程序的本地化系统集成。
+
+{% apiDocumentation source="grid-options/properties.json" section="localisation" config={"overrideBottomMargin":"1rem"} /%}
+
+## 提供的区域设置
+
+网格的默认语言是[美式英语](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/en-US.ts)，但是，我们提供了许多翻译，可以用作常用语言的起点：
+
+| 语言                 | BCP47 标签 | 区域设置模块                                                                                              |
+| -------------------- | ---------- | --------------------------------------------------------------------------------------------------------- |
+| 阿拉伯语（埃及）     | ar-EG      | [AG_GRID_LOCALE_EG](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/ar-EG.ts) |
+| 保加利亚语           | bg-BG      | [AG_GRID_LOCALE_BG](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/bg-BG.ts) |
+| 中文（繁体）         | zh-HK      | [AG_GRID_LOCALE_HK](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/zh-HK.ts) |
+| 中文（简体）         | zh-CN      | [AG_GRID_LOCALE_CN](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/zh-CN.ts) |
+| 中文（台湾）         | zh-TW      | [AG_GRID_LOCALE_TW](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/zh-TW.ts) |
+| 克罗地亚语           | hr-HR      | [AG_GRID_LOCALE_HR](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/hr-HR.ts) |
+| 捷克语               | cs-CZ      | [AG_GRID_LOCALE_CZ](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/cs-CZ.ts) |
+| 丹麦语               | da-DK      | [AG_GRID_LOCALE_DK](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/da-DK.ts) |
+| 荷兰语               | nl-NL      | [AG_GRID_LOCALE_NL](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/nl-NL.ts) |
+| 芬兰语               | fi-FI      | [AG_GRID_LOCALE_FI](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/fi-FI.ts) |
+| 法语                 | fr-FR      | [AG_GRID_LOCALE_FR](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/fr-FR.ts) |
+| 德语                 | de-DE      | [AG_GRID_LOCALE_DE](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/de-DE.ts) |
+| 希腊语               | el-GR      | [AG_GRID_LOCALE_GR](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/el-GR.ts) |
+| 希伯来语             | he-IL      | [AG_GRID_LOCALE_IL](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/he-IL.ts) |
+| 匈牙利语             | hu-HU      | [AG_GRID_LOCALE_HU](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/hu-HU.ts) |
+| 意大利语             | it-IT      | [AG_GRID_LOCALE_IT](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/it-IT.ts) |
+| 日语                 | ja-JP      | [AG_GRID_LOCALE_JP](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/ja-JP.ts) |
+| 韩语                 | ko-KR      | [AG_GRID_LOCALE_KR](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/ko-KR.ts) |
+| 挪威语（博克马尔语） | nb-NO      | [AG_GRID_LOCALE_NO](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/nb-NO.ts) |
+| 波斯语               | fa-IR      | [AG_GRID_LOCALE_IR](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/fa-IR.ts) |
+| 波兰语               | pl-PL      | [AG_GRID_LOCALE_PL](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/pl-PL.ts) |
+| 葡萄牙语             | pt-PT      | [AG_GRID_LOCALE_PT](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/pt-PT.ts) |
+| 葡萄牙语（巴西）     | pt-BR      | [AG_GRID_LOCALE_BR](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/pt-BR.ts) |
+| 罗马尼亚语           | ro-RO      | [AG_GRID_LOCALE_RO](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/ro-RO.ts) |
+| 斯洛伐克语           | sk-SK      | [AG_GRID_LOCALE_SK](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/sk-SK.ts) |
+| 西班牙语             | es-ES      | [AG_GRID_LOCALE_ES](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/es-ES.ts) |
+| 瑞典语               | sv-SE      | [AG_GRID_LOCALE_SE](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/sv-SE.ts) |
+| 土耳其语             | tr-TR      | [AG_GRID_LOCALE_TR](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/tr-TR.ts) |
+| 乌克兰语             | uk-UA      | [AG_GRID_LOCALE_UA](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/uk-UA.ts) |
+| 乌尔都语（巴基斯坦） | ur-PK      | [AG_GRID_LOCALE_PK](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/ur-PK.ts) |
+| 越南语               | vi-VN      | [AG_GRID_LOCALE_VN](https://github.com/ag-grid/ag-grid/tree/latest/community-modules/locale/src/vi-VN.ts) |
+
+{% note %}
+翻译仅作为示例提供，不保证准确或无错误。它们旨在向开发人员展示在目标语言中存储所选短语或拼写变体的位置。
+{% /note %}
+
+## 使用提供的区域设置模块
+
+上面列出的所有提供的区域设置都在 `@ag-grid-community/locale` 包中可用。要在应用程序中使用任何提供的区域设置，请按照以下步骤操作：
+
+首先，从 `@ag-grid-community/locale` 包导入所需的区域设置模块。例如，要使用德语区域设置，导入 `AG_GRID_LOCALE_DE`：
+
+```js
+import { AG_GRID_LOCALE_DE } from '@ag-grid-community/locale';
+```
+
+接下来，将导入的区域设置对象分配给网格选项中的 `localeText` 属性：
+
+```js {% frameworkTransform=true %}
+const gridOptions = {
+    localeText: AG_GRID_LOCALE_DE,
+};
+```
+
+最后，确保 `@ag-grid-community/locale` 模块在应用程序的包配置中列为依赖项：
+
+```js
+"dependencies": {
+    "@ag-grid-community/locale": "{% $agGridVersion %}",
+    ...
+}
+```
+
+以下示例演示将 `AG_GRID_LOCALE_DE` 区域设置应用于网格：
+
+{% gridExampleRunner title="本地化" name="localisation"  exampleHeight=650 /%}
+
+{% note %}
+某些本地化变量中有 `${variable}`。当出现这种情况时，意味着字符串的那部分将被变量值替换。
+{% /note %}
+
+## 自定义提供的区域设置
+
+如果要自定义提供的区域设置，可以通过创建新对象并将提供的区域设置与您的自定义设置合并来实现。
+
+```{% frameworkTransform=false %}
+import { AG_GRID_LOCALE_DE } from '@ag-grid-community/locale';
+
+const customGermanLocale = {
+    ...AG_GRID_LOCALE_DE,
+    // 在此处自定义区域设置
+};
+
+const gridOptions = {
+    localeText: customGermanLocale,
+};
+```
+
+下面的示例通过向每个区域设置键添加"zzz"前缀来创建新的 `zzzLocale` 对象，然后将此自定义区域设置应用于网格：
+
+{% gridExampleRunner title="自定义本地化" name="customLocalisation"  exampleHeight=650 /%}
+
+## 更改区域设置
+
+网格根据需要使用区域设置。它不会随着区域设置的更改而刷新。如果您的应用程序允许更改应用程序的区域设置，则必须销毁并重新创建网格以使其使用新的区域设置。
+
+## 创建区域设置
+
+默认情况下，网格不需要区域设置。如果未提供区域设置，网格将默认为英语。如果提供了区域设置但缺少值，则缺失值将使用默认英语。
+
+上面列出了所有提供的区域设置，它们也在 `@ag-grid-community/locale` 包中可用。
+
+要支持其他语言，第一步是导入 `@ag-grid-community/locale` 包并引用您感兴趣的区域设置。
+
+有一个单一的区域设置文件涵盖 AG Grid Enterprise 和 AG Grid Community 的所有模块。这是有意为之的，因为为每个模块设置单独的本地化文件会更难管理。
+
+## 区域设置回调
+
+为网格提供区域设置不适合本地化库或更广泛应用程序的本地化。如果希望网格从应用程序范围的区域设置中获取，则实现 `getLocaleText` 以充当网格和应用程序本地化之间的桥梁。
+
+下面的示例显示了为网格本地化提供回调。该示例为简单起见，只返回大写的默认值。在实际应用程序中，回调将使用应用程序的本地化。
+
+{% gridExampleRunner title="回调" name="callback"  exampleHeight=650 /%}
+
+在实际应用程序中，回调看起来像这样：
+
+```js
+const getLocaleText = (params) => {
+    // 为避免与外部键冲突，我们在每个键的开头添加 'grid'
+    const gridKey = 'grid.' + params.key;
+
+    // 使用应用程序范围的服务查找值
+    return applicationLocaleService(gridKey);
+}
+```

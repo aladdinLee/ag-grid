@@ -1,0 +1,43 @@
+---
+title: "SSRM 刷新"
+enterprise: true
+---
+
+本节演示在使用服务端行模型 (SSRM) 时如何刷新行以反映源端的更改。
+
+{% note %}
+建议在使用服务端刷新时使用[行 ID](./server-side-model-configuration/#providing-row-ids)。行 ID 允许网格在刷新之间保留行状态，例如行高度、展开状态和单元格闪烁。
+{% /note %}
+
+## 刷新 API
+
+网格 API `refreshServerSide(params)` 指示网格开始重新加载指定组的所有已加载行。
+
+{% apiDocumentation source="grid-api/api.json" section="serverSideRowModel" names=["refreshServerSide"] config={"overrideBottomMargin":"0rem"} /%}
+
+## 简单示例
+
+为了确保您的网格反映服务器上的最新数据，您可以定期指示网格刷新所有已加载的行（称为轮询），或根据您的应用程序需求策略性地刷新。
+
+以下示例提供了刷新 API 不同行为的简单演示，请注意以下几点：
+
+-   使用 **Refresh** 按钮，您可以请求从服务器再次请求所有行，使它们与服务器版本保持最新。
+-   由于已实现[行 ID](./server-side-model-configuration/#providing-row-ids)，网格能够检测哪些行已更新，并在使用 `enableCellChangeFlash` 时闪烁单元格。
+-   `Purge` 复选框在 API 调用中启用 purge 选项，这会导致在调用刷新时重置所有行（以及除行选择状态外的所有行状态），并替换为加载行。
+-   刷新完成时，请注意会触发 `storeRefreshed` 事件，并记录在控制台中。当启用 purge 选项时不会触发此事件，因为行是重置而不是刷新。
+
+{% gridExampleRunner title="简单示例" name="refreshing-the-grid"  exampleHeight=615 /%}
+
+## 刷新组
+
+当使用行分组与刷新时，您需要提供指定要刷新的行组的 route 参数。当刷新行组时，仅刷新其直接子行。这意味着为了刷新特定行组中的行，您需要将要刷新的行的父行作为 route 参数提供。
+
+以下示例演示如何刷新服务器上的指定组，请注意以下几点：
+
+-   使用 **Refresh Root Level** 按钮，您可以强制刷新根级别组中的所有行，这相当于从 `refreshServerSide` API 调用中省略 route 参数。
+-   **Refresh \['Canada']** 按钮仅刷新 `Canada` 行组的直接子行。
+-   **Refresh \['Canada', '2002']** 按钮仅刷新属于 `Canada` 行组的 `2002` 行组的直接子行。
+-   由于已实现[行 ID](./server-side-model-configuration/#providing-row-ids)，网格能够保留重新加载行的状态，例如组行是否已展开。
+-   刷新完成时，请注意会触发 `storeRefreshed` 事件，并记录在控制台中。
+
+{% gridExampleRunner title="刷新组" name="refreshing-the-groups"  exampleHeight=615 /%}

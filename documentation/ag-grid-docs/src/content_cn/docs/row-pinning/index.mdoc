@@ -1,0 +1,144 @@
+---
+title: "行固定"
+---
+
+固定行显示在表格正常行的上方或下方。
+这有时也称为**冻结行**或**浮动行**。
+行可以通过[上下文菜单](./context-menu)或网格选项进行固定。
+
+## 启用行固定
+
+要启用行固定，请将 `enableRowPinning` 设置为 `true`。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    enableRowPinning: true,
+}
+```
+
+## 首次渲染时固定行
+
+要让行在网格最初渲染数据时显示为固定，请使用 `isRowPinned` 回调。
+从此回调返回 `'top'` 或 `'bottom'` 将分别把行固定到顶部或底部，返回 `null` 或 `undefined` 将使行不固定。
+例如，下面的代码片段将把 `country` 字段为 `null` 的所有行固定到顶部容器中，所有其他行将不固定。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    enableRowPinning: true,
+    isRowPinned: (rowNode) => {
+        return rowNode.data.country == null ? 'top' : null;
+    }
+}
+```
+
+这在下面的示例中进行了说明。固定的行显示在网格的顶部（或底部），并保留在主视口中。固定行默认以粗体样式显示，以在视觉上区分它们。
+
+{% gridExampleRunner title="首次渲染时固定" name="pinning-on-render" /%}
+
+请注意，此页面上的所有示例还应用了额外的样式，以在视觉上将固定行与主视口中的行分开。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    theme: themeQuartz.withParams({
+        pinnedRowBorder: {
+            width: 2
+        },
+    })
+}
+```
+
+要查看固定行主题的其他可用参数，请参阅[主题构建器](/theme-builder)。
+
+## 通过上下文菜单固定行
+
+{% note %}
+此方法需要[上下文菜单](./context-menu)，这是一个企业功能。
+{% /note %}
+
+要固定行，请使用右键单击调出[上下文菜单](./context-menu)并选择"固定行"子菜单中的一个选项。在下面的示例中，尝试以下操作：
+
+1. 将行固定到顶部。
+2. 将行切换到底部固定。
+3. 取消固定行。
+
+{% gridExampleRunner title="简单行固定" name="simple-pinning" /%}
+
+## 防止行被固定
+
+要防止用户通过上下文菜单固定行，请使用 `isRowPinnable` 回调。例如，下面的代码片段将防止 `sport` 字段为 `'Swimming'` 的任何行被固定。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    enableRowPinning: true,
+    isRowPinnable: (rowNode) => {
+        return rowNode.data.sport != 'Swimming';
+    }
+}
+```
+
+这在下面的示例中进行了说明。请注意，对于 `sport` 字段为 `'Swimming'` 的行，上下文菜单中不会出现"固定行"子菜单。
+
+{% gridExampleRunner title="防止行被固定" name="prevent-pinning" /%}
+
+## 对固定行进行排序和过滤
+
+当对网格应用排序和过滤时，它们也会应用于固定行。
+
+{% gridExampleRunner title="对固定行进行排序和过滤" name="sorting-and-filtering" /%}
+
+## 选择固定行
+
+固定行可以像普通行一样被选择。固定行的选择状态将反映原始行的选择状态。
+
+{% gridExampleRunner title="选择固定行" name="selecting-pinned" /%}
+
+## 固定总计行
+
+[总计行](./aggregation-total-rows/#enabling-a-grand-total-row)可以通过三种方式固定。
+
+1. 将 `grandTotalRow` 网格选项的值设置为 `'pinnedTop'` 或 `'pinnedBottom'`。
+2. 当 `grandTotalRow` 为 `'top'` 或 `'bottom'` 时，通过上下文菜单手动固定总计行。
+3. 当在总计行节点上调用 `isRowPinned` 回调时返回 `'top'` 或 `'bottom'`。
+
+{% gridExampleRunner title="固定总计行" name="pinning-grand-total" exampleHeight=650 /%}
+
+请注意，当 `grandTotalRow` 为 `'pinnedTop'` 或 `'pinnedBottom'` 时，用户无法取消固定总计行。
+
+## 提供固定行数据
+
+{% note %}
+您不能在使用 `enableRowPinning` 手动固定行的同时提供固定行数据。
+{% /note %}
+
+固定行数据可以通过网格选项直接提供给网格。以这种方式提供固定行意味着最终用户无法更改它们。
+
+{% gridExampleRunner title="固定行数据" name="pinned-row-data" /%}
+
+使用网格属性 `pinnedTopRowData` 和 `pinnedBottomRowData` 设置固定行。
+
+{% if isFramework("javascript") %}
+使用 `api.setGridOption('pinnedTopRowData', rows)` 和 `api.setGridOption('pinnedBottomRowData', rows)` 更新固定行。
+{% /if %}
+
+{% apiDocumentation source="grid-options/properties.json" section="rowPinning" names=["pinnedTopRowData", "pinnedBottomRowData"] /%}
+
+### 不支持的功能
+
+当通过 `pinnedTopRowData` 和 `pinnedBottomRowData` 直接提供固定行数据时，以下功能不可用：
+
+-   **排序**：固定行无法排序。
+-   **过滤**：固定行不会被过滤。
+-   **行分组**：固定行无法分组。
+-   **行选择**：固定行无法选择。
+
+## API 参考
+
+{% note %}
+固定行状态可以作为[网格状态](./grid-state/)的一部分保存和恢复。
+{% /note %}
+
+{% apiDocumentation source="grid-options/properties.json" section="rowPinning" names=["enableRowPinning", "isRowPinnable", "isRowPinned"] /%}
+
+### 事件
+
+{% apiDocumentation source="grid-events/events.json" section="rowPinning" names=["pinnedRowsChanged"] /%}

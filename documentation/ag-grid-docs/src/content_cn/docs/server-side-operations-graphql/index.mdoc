@@ -1,0 +1,284 @@
+---
+title: "使用 GraphQL 的服务端操作"
+enterprise: true
+---
+
+了解如何使用 GraphQL 执行服务端操作，并提供一个使用 MySQL 数据库的完整参考实现。
+
+在本指南中，我们将开发一个奥林匹克奖牌应用程序，演示如何将 GraphQL 端点与 AG Grid 的[服务端行模型](./server-side-model/)集成。具体来说，它将展示如何在处理大数据集时甚至在执行分组、过滤、排序操作时根据需要延迟加载数据。
+
+{% warning %}
+本指南中涵盖的参考实现仅用于演示目的。如果您在生产中使用它，它不提供任何保证或支持。
+{% /warning %}
+
+源代码可以在这里找到：<https://github.com/ag-grid/ag-grid-server-side-graphql-example>。
+
+## 概述
+
+近年来，GraphQL 已成为客户端获取数据时 REST 的流行替代方案。假设您熟悉 GraphQL，但是这个 [GraphQL 简介](https://graphql.org/learn/)应该提供遵循本指南所需的所有必要背景信息。
+
+GraphQL 的主要好处之一是能够公开映射到多个数据源的单个端点和模式。但是在我们的奥林匹克奖牌应用程序中，我们将通过仅使用单个 [MySQL](https://www.mysql.com/) 数据源来保持简单。
+
+在我们的应用程序中，GraphQL 端点将使用由运行 [Express.js](https://expressjs.com/) 的 [Node.js](https://nodejs.org/) 组成的 Web 服务器托管。本指南中使用的技术概述如下图所示：
+
+{% imageCaption imagePath="resources/graphql-arch.png" alt="GraphQL" constrained=true enableDarkModeFilter=true /%}
+
+我们现在将继续安装和运行应用程序，然后再介绍实现细节。
+
+## 下载和安装
+
+使用以下命令克隆示例项目：
+
+```bash
+git clone https://github.com/ag-grid/ag-grid-server-side-graphql-example.git
+```
+
+导航到项目目录：
+
+```bash
+cd ag-grid-server-side-graphql-example
+```
+
+使用以下命令安装项目依赖并构建项目：
+
+```bash
+yarn install
+```
+
+## 数据库设置
+
+按照 [MySQL 下载](https://www.mysql.com/downloads/)文档下载并安装数据库。
+
+创建一个名为 `'sample_data'` 的数据库。然后通过 MySQL 命令行运行以下脚本创建表 `olympic_winners` 并用数据填充它：
+
+```bash
+mysql -u root -p -D sample_data < ./data/olympic_winners.sql
+```
+
+就是这样！我们现在准备运行和探索应用程序。
+
+## 运行应用程序
+
+要从命令行运行应用程序，请执行以下命令：
+
+```bash
+yarn start
+```
+
+然后将浏览器指向 <http://localhost:4000/>
+
+## 定义 GraphQL 模式
+
+为了保持简单，我们的模式只包含一个实体 `OlympicWinner`。
+
+```ts
+// server/schema.js
+
+type OlympicWinner {
+    athlete: String
+    country: String
+    age: Int
+    sport: String
+    year: Int
+    gold: Int
+    silver: Int
+    bronze: Int
+}
+```
+
+还定义了一个 `rows` 查询及其支持的输入类型和枚举：
+
+```ts
+// server/schema.js
+type Query {
+  rows(
+    startRow: Int,
+    endRow: Int,
+    sorting: [SortModel],
+    rowGroups: [RowGroup],
+    groupKeys: [String]
+  ): [OlympicWinner]!
+}
+
+input SortModel {
+    colId: String
+    sort: String
+}
+
+input RowGroup {
+    colId: String
+    aggFunc: String
+}
+```
+
+模式中定义的输入类型直接映射到 [IServerSideGetRowsRequest](./server-side-model-datasource/#registering-the-datasource)。我们将在以下部分详细讨论这些映射。
+
+相应的 `rows` 解析器函数实现如下：
+
+```js
+// server/schema.js
+
+import { fetchRows } from './olympicService';
+
+const resolvers = {
+  Query: {
+    rows: (obj, args) =>
+      new Promise((resolve, reject) => {
+        const resultCallback = (err, results) => err ? reject(err) : resolve(results);
+         fetchRows(args, resultCallback);
+      }).then(rows => rows)
+  },
+};
+```
+
+`OlympicService` 只是获取查询参数并使用动态 SQL 技术构建相应的 SQL 查询。本指南中省略了实现细节，但可以在项目存储库中查看。
+
+GraphQL 模式是使用 `graphql-tools` 包中的 `makeExecutableSchema` 辅助函数创建的，通过将模式 `typeDefs` 与相应的 `resolvers` 包组合如下：
+
+```js
+// server/schema.js
+
+const schema = makeExecutableSchema({
+  typeDefs,
+  resolvers,
+});
+
+export default schema;
+```
+
+## GraphQL 端点
+
+托管我们的 GraphQL 端点是在 `express-graphql` npm 包的帮助下完成的。它提供了我们上面定义的模式。
+
+```js
+// server/server.js
+
+import express from 'express';
+import graphqlHTTP from 'express-graphql';
+import schema from './schema';
+
+const app = express();
+
+app.use('/graphql', graphqlHTTP({ schema: schema, graphiql: true }));
+
+app.listen(4000, () => {
+  console.log('Started on localhost:4000');
+});
+```
+
+请注意，我们提供了选项：`graphiql: true` 以启用 GraphiQL 客户端，这是一个在开发过程中测试查询的有用工具，可在以下位置获得：[http://localhost:4000/graphql](http://localhost:4000/graphql/)。
+
+{% imageCaption imagePath="resources/graphiql.png" alt="GraphQL" constrained=true /%}
+
+## 服务端数据源
+
+为了为服务端行模型获取数据，我们必须实现 `IServerSideDatasource`，它包含一个方法 `getRows(params)`，该方法接受来自网格的请求参数。
+
+要从我们的 GraphQL 端点检索数据，我们将使用 [Apollo 客户端](https://www.apollographql.com/client/)。响应然后通过 `params.successCallback(rows, lastRow)` 传回网格，如下所示：
+
+```js
+// client/serverSideDatasource.js
+
+class ServerSideDatasource {
+  constructor(gridOptions) {
+    this.gridOptions = gridOptions;
+    this.client = new ApolloClient({ uri: 'http://localhost:4000/graphql/' });
+  }
+
+  getRows(params) {
+    const columns = this.gridOptions.columnDefs;
+
+    // 查询 GraphQL 端点
+    this.client.query(query(params.request, columns))
+      .then(response => {
+
+        const rows = response.data.rows;
+
+        // 确定最后一行以正确调整滚动条和最后块大小
+        let lastRow = -1;
+        if (rows.length <= this.gridOptions.cacheBlockSize) {
+          lastRow = params.request.startRow + rows.length;
+        }
+
+        // 将结果传递给网格
+        params.successCallback(rows, lastRow);
+      })
+      .catch(err => {
+        console.error(err);
+        params.failCallback()
+      });
+  }
+}
+```
+
+`params` 中提供的 `IServerSideGetRowsRequest` 只是映射到我们的 GraphQL 查询输入参数，如下所示：
+
+```js
+// client/serverSideDatasource.js
+
+const query = (request, columns) => {
+  return {
+    query: gql`
+      query GetRows(\$start: Int, \$end: Int, \$sortModel: [SortModel], \$groups: [RowGroup], \$groupKeys: [String]) {
+        rows(
+            startRow: \$start,
+            endRow: \$end,
+            sorting: \$sortModel,
+            rowGroups: \$groups,
+            groupKeys: \$groupKeys
+        ) {
+            \${getFields(columns)}
+        }
+      }
+    `,
+    variables: {
+      start: request.startRow,
+      end: request.endRow,
+      sortModel: mapSortModel(request),
+      groups: mapGroups(request),
+      groupKeys: mapGroupKeys(request)
+    },
+  }
+};
+
+const getFields = columnDefs => {
+  return columnDefs.map(colDef => colDef.field).join();
+};
+
+const mapGroups = request => {
+  return request.rowGroupCols.map(grp => {
+    return { colId: grp.field }
+  });
+};
+
+const mapGroupKeys = request => {
+  return request.groupKeys.map(key => key.toString());
+};
+
+const mapSortModel = request => {
+  return request.sortModel.map(srt => {
+    return { colId: srt.colId, sort: srt.sort }
+  });
+};
+```
+
+请注意，我们使用 [Apollo graphql-tag](https://github.com/apollographql/graphql-tag) 包来帮助创建 GraphQL AST。
+
+然后通过网格 API 将 `ServerSideDatasource` 注册到网格，如下所示：
+
+```js
+// client/index.js
+
+const datasource = new ServerSideDatasource(gridOptions);
+api.setGridOption('serverSideDatasource', datasource);
+```
+
+## 结论
+
+在本指南中，我们提供了一个参考实现，用于将服务端行模型与托管在 Node 中并连接到 MySQL 数据库的 GraphQL 服务器集成。这包括所有必要的配置和安装说明。
+
+给出了高级概述以说明此方法解决的问题，然后提供了如何实现以下服务端操作的详细信息：
+
+-   无限滚动
+-   排序
+-   分组

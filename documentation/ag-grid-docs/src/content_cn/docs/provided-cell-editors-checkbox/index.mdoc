@@ -1,0 +1,23 @@
+---
+title: "复选框单元格编辑器"
+---
+
+使用标准 HTML 复选框 `input` 的简单布尔编辑器。
+
+## 启用复选框单元格编辑器
+
+编辑下面网格中的任何单元格以查看复选框单元格编辑器。请注意，默认情况下显示复选框单元格渲染器，编辑器仅在您开始编辑时显示（例如在单元格内双击）。
+
+{% gridExampleRunner title="复选框编辑器" name="checkbox-editor" /%}
+
+使用 `agCheckboxCellEditor` 启用，通常与[复选框单元格组件](./cell-data-types/#enable-cell-data-types)一起使用。
+
+```js
+columnDefs: [
+    {
+        cellRenderer: 'agCheckboxCellRenderer',
+        cellEditor: 'agCheckboxCellEditor',
+        // ...其他属性
+    }
+]
+```

@@ -1,0 +1,58 @@
+{% if isFramework("react") %}
+并非所有列组都可以打开和关闭，因此您应该相应地显示打开/关闭功能。要检查列组是否应该具有打开/关闭功能，请检查列组上的 `isExpandable()` 方法。
+{% /if %}
+
+{% if isFramework("react") %}
+
+```js
+const showExpandableIcons = props.columnGroup.isExpandable()
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+要检查列组是打开还是关闭，请检查列组上的 `isExpanded()` 方法。
+{% /if %}
+
+{% if isFramework("react") %}
+
+```js
+const groupIsOpen = props.columnGroup.isExpanded();
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+要打开/关闭列组，请使用 `props.setExpanded(boolean)` 方法。
+{% /if %}
+
+{% if isFramework("react") %}
+
+```js
+// 此代码切换展开状态
+const oldValue = props.columnGroup.isExpanded();
+const newValue = !oldValue;
+props.setExpanded(newValue);
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+要知道组是展开还是折叠，请监听列组上的 `expandedChanged` 事件。
+{% /if %}
+
+{% if isFramework("react") %}
+
+```js
+// 获取原始列组的引用
+const columnGroup = props.columnGroup.getProvidedColumnGroup();
+// 创建监听器
+const listener = () => { console.log('组被打开或关闭'); };
+// 添加监听器
+columnGroup.addEventListener('expandedChanged', listener);
+
+// 不要忘记在您的 destroy 方法中删除监听器
+columnGroup.removeEventListener('expandedChanged', listener);
+```
+
+{% /if %}

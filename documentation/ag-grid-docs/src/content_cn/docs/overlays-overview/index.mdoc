@@ -1,0 +1,27 @@
+---
+title: "覆盖层"
+---
+
+覆盖层用于在网格顶部显示消息。
+网格根据当前状态自动显示提供的覆盖层之一。应用程序可以按需显示自定义覆盖层。
+
+以下示例在 `loading=true` 时显示网格提供的加载覆盖层。
+
+{% gridExampleRunner title="加载覆盖层" name="loading-overlay"  exampleHeight=260 /%}
+
+## 网格提供的覆盖层
+
+网格提供以下覆盖层，将根据网格状态自动显示（除非禁用）：
+
+- [加载](./overlays-provided/#loading) - 在数据加载时显示
+- [无行](./overlays-provided/#no-rows) - 在没有要显示的行时显示
+- [无匹配行](./overlays-provided/#no-matching-rows) - 在没有行匹配当前过滤器时显示
+- [导出](./overlays-provided/#exporting) - 在数据导出到 CSV/Excel 时显示
+
+有关提供的覆盖层以及如何自定义它们的详细信息，请参见：[提供的覆盖层](./overlays-provided)。
+
+## 活动覆盖层
+
+应用程序可以提供自定义覆盖层并控制何时显示它。这可以完全控制覆盖层显示的内容和时间。
+
+有关自定义覆盖层的详细信息，请参见：[活动覆盖层](./overlays-active)。

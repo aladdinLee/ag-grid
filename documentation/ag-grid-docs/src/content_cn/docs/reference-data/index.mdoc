@@ -1,0 +1,132 @@
+---
+title: "引用数据"
+---
+
+本节介绍在应用程序中管理引用数据的两种不同策略。两种方法实现了相同的网格示例，因此可以轻松比较。
+
+{% note %}
+术语**引用数据**在这里以一般方式使用，用于描述可以使用键/值对关系定义的数据（例如 `'tyt': 'Toyota'`）。此数据通常是静态的，即在服务器请求之间不期望更改。
+{% /note %}
+
+本节中包含的示例使用以下引用数据。请注意，从服务器返回的数据仅包含代码（键），必须映射到名称（值）以供显示。
+
+```js
+// 来自服务器的数据
+const rowData = [
+    { make: 'tyt', exteriorColour: 'fg', interiorColour: 'bw', price: 35000 },
+    { make: 'frd', exteriorColour: 'bw', interiorColour: 'cb', price: 32000 },
+    ...
+]
+
+// 支持引用数据
+const carMappings = {
+    'tyt': 'Toyota',
+    'frd': 'Ford',
+    'prs': 'Porsche',
+    'nss': 'Nissan'
+};
+
+const colourMappings = {
+    'cb': 'Cadet Blue',
+    'bw': 'Burlywood',
+    'fg': 'Forest Green'
+};
+```
+
+## 使用值处理器
+
+值处理器可用于将行数据中包含的键映射到其相应的显示值。此方法涉及更多编码，但允许不同的数据格式，并提供更大的数据管理灵活性。
+
+此方法的主要思想是使用 `valueFormatter` 将代码（键）转换为单元格中显示的值。然后使用 `valueParser` 在保存到底层数据时将名称转换回代码（键）。
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'make',
+            cellEditor: 'agSelectCellEditor',
+            cellEditorParams: {
+                values: extractKeys(carMappings)
+            },
+            // 将代码转换为值
+            valueFormatter: params => {
+                return lookupValue(carMappings, params.value);
+            },
+            // 将值转换为代码
+            valueParser: params => {
+                return lookupKey(carMappings, params.newValue);
+            }
+        }
+    ]
+}
+```
+
+{% note %}
+使用单元格编辑器编辑时，确保底层数据使用代码（键）而不是单元格中显示的值进行更新非常重要。
+{% /note %}
+
+当使用带有 `valueFormatter` 的 `TextCellEditor` 时，您可能希望在编辑时显示格式化文本而不是代码。在这种情况下，您还应该包含 `useFormatter` 属性，如下所示：
+
+```js
+cellEditor: 'agTextCellEditor',
+cellEditorParams: {
+    useFormatter: true
+}
+```
+
+### 示例：值处理器
+
+以下示例演示如何将 `Value Handlers` 组合使用引用数据：
+
+- **'Make' 列：** 使用内置的 `'select'` 单元格编辑器。映射的名称显示在下拉列表中，选择作为 `'make'` 代码保存在底层数据中。
+
+- **'Exterior Colour' 列：** 使用内置的 `'richSelect'` 单元格编辑器。映射的名称显示在下拉列表中，选择作为 `'colour'` 代码保存在底层数据中。
+
+- **'Interior Colour' 列：** 使用带有 `useFormatter=true` 的文本单元格编辑器。映射的名称显示在单元格中，编辑的值作为 `'colour'` 代码保存在底层数据中。（注意：必须输入有效名称，否则值将保存为 undefined。）
+
+- **集合过滤器：** 显示名称列表而不是代码。
+
+- **'Price' 列：** 另外演示了 `valueGetters` 和 `valueSetters` 的使用。
+
+{% gridExampleRunner title="值处理器" name="ref-data-value-handler" /%}
+
+## 使用 'refData' 属性
+
+这里我们展示相同的示例，但这次使用 `refData` ColDef 属性。此方法需要较少的编码，更直接，但对于涉及更复杂引用数据格式的场景可能不够灵活。
+
+{% apiDocumentation source="column-properties/properties.json" section="columns" names=["refData"] /%}
+
+此方法所需的就是指定 `refData`，网格将处理其余部分，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'make',
+            cellEditor: 'agSelectCellEditor',
+            cellEditorParams: {
+               values: extractKeys(carMappings)
+            },
+            refData: carMappings
+        }
+    ]
+}
+```
+
+与之前使用值处理器的示例一样，底层数据包含代码，网格将使用指定的引用数据在单元格中显示关联的值，并在编辑时将代码（键）保存在数据中。
+
+### 示例：'refData' 属性
+
+以下示例演示 `refData` 属性如何简化引用数据的使用：
+
+- **'Make' 列：** 使用内置的 `'select'` 单元格编辑器并指定了 `refData` 属性。映射的名称显示在下拉列表中，选择作为 `'make'` 代码保存在底层数据中。
+
+- **'Exterior Colour' 列：** 使用内置的 `'richSelect'` 单元格编辑器并指定了 `refData` 属性。映射的名称显示在下拉列表中，选择作为 `'colour'` 代码保存在底层数据中。
+
+- **'Interior Colour' 列：** 使用带有 `refData` 的文本单元格编辑器（不推荐）。映射的名称显示在单元格中，但在编辑时，必须直接输入颜色代码（`cb`、`bw`、`fg`）。由于用户不应知道代码，因此不建议在实际应用程序中将文本单元格编辑器与 `refData` 一起使用。
+
+- **集合过滤器：** 显示名称列表而不是代码。
+
+- **'Price' 列：** 另外演示了 `valueGetters` 和 `valueSetters` 的使用。
+
+{% gridExampleRunner title="引用数据属性" name="ref-data-property" /%}

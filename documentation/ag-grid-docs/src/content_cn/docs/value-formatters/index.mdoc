@@ -1,0 +1,72 @@
+---
+title: "文本格式化"
+---
+
+使用值格式化器提供值的文本格式化。
+
+在下面的示例中：
+
+-   列 `原始值` 显示行数据的 `a` 字段的值。
+-   列 `货币金额 (£)` 使用 `currencyFormatter` 将值显示为货币。
+-   列 `括号值` 使用 `bracketsFormatter` 将值显示在括号内。
+
+{% gridExampleRunner title="值格式化器" name="value-formatters" /%}
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        // 简单货币格式化器
+        { field: 'price', valueFormatter: params => '$' + params.value },
+        // 简单大写格式化器
+        { field: 'code', valueFormatter: params => params.value.toUpperCase() }
+    ]
+}
+```
+
+## 值格式化器定义
+
+下面显示值格式化器的列定义属性。
+
+{% apiDocumentation source="column-properties/properties.json" section="columns" names=["valueFormatter"] /%}
+
+请注意，值格式化器参数并不总是提供 `data` 和 `node`，
+例如在[集合筛选器](./filter-set/)中提供给值格式化器的参数。
+
+因此，建议使用依赖于 'value' 参数的格式化器实现，因为这将导致更好的值格式化器重用。
+
+{% note %}
+如果使用[单元格数据类型](./cell-data-types/)，默认情况下会设置值格式化器来处理每种不同数据类型的显示。
+{% /note %}
+
+如果您需要的不仅仅是文本格式化，例如您需要单元格中有按钮，那么请使用[单元格组件](./component-cell-renderer/)。
+
+## 导出格式化
+
+默认情况下，表格在执行需要字符串格式值的其他表格操作时使用值格式化器。
+
+可以通过设置列定义属性 `useValueFormatterForExport = false` 来防止此行为（注意这不适用于渲染）。
+
+{% apiDocumentation source="column-properties/properties.json" section="display" names=["useValueFormatterForExport"] /%}
+
+使用值格式化器进行导出适用于以下功能：
+
+-   [复制/剪切](./clipboard/#processing-pasted-data)
+-   [填充句柄](./cell-selection-fill-handle/)
+-   [向下复制范围](./cell-selection/#copy-cell-range-down)
+-   [CSV 导出](./csv-export/)
+-   [Excel 导出](./excel-export-customising-content/)
+
+使用值格式化器进行导出通常与[使用值解析器进行导入](./value-parsers/#use-value-parser-for-import)结合使用，其中定义了一个与值格式化器相反的[值解析器](./value-parsers/)。
+
+以下示例演示了使用值格式化器进行导出的默认行为，包括上面提到的每个支持的功能。
+
+{% gridExampleRunner title="使用值格式化器进行导出" name="use-value-formatter-for-export" /%}
+
+请注意，如果以下任何条件为真，则该功能将忽略 `useValueFormatterForExport`，值将是原始值或在自定义处理程序中设置的值：
+
+-   如果在使用复制/剪切时提供了 `processCellForClipboard`。
+-   如果在使用填充句柄时提供了 `fillOperation`。
+-   如果在使用向下复制范围时提供了 `processCellForClipboard`。
+-   如果在使用 CSV 导出时提供了 `processCellCallback`。
+-   如果在使用 Excel 导出时提供了 `processCellCallback` 或 [Excel 数据类型](./excel-export-data-types/)。
+-   如果在使用 Excel 导出时基础值是数字。要将格式化的数字值导出到 Excel，请使用 [Excel 数据类型](./excel-export-data-types/#strings-number-and-booleans)功能。

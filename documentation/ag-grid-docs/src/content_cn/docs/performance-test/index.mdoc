@@ -1,0 +1,38 @@
+---
+title: "性能测试"
+---
+
+这是一个内部页面，包含可用于验证不同版本和配置的网格性能的示例。
+
+{% if isFramework("javascript", "vue") %}
+
+{% /if %}
+
+{% if isFramework("angular", "react") %}
+{% warning %}
+请记住，在 localhost 中运行时，Angular 和 React 将处于开发模式。
+性能测试应在生产模式下执行，因此您可能需要在本地工作时编辑 plunker 以便与暂存进行公平比较。
+{% /warning %}
+{% /if %}
+
+{% if isFramework("react") %}
+
+{% /if %}
+
+## 大量常规单元格
+
+没有列虚拟化，使用大的 rowBuffer 强制渲染所有单元格。
+
+{% gridExampleRunner title="大量单元格" name="lots-of-cells" /%}
+
+## 大量单元格组件
+
+没有列虚拟化，使用大的 rowBuffer 强制使用自定义单元格组件渲染所有单元格。
+
+{% gridExampleRunner title="大量单元格组件" name="lots-of-cells-components" /%}
+
+## 开发占位符示例
+
+如果 plunker 不可用，可以将示例代码放入此示例中。
+
+{% gridExampleRunner title="开发占位符示例" name="dev" /%}

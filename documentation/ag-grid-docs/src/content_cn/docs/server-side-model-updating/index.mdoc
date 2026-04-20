@@ -1,0 +1,20 @@
+---
+title: "SSRM 更新数据"
+enterprise: true
+---
+
+在使用服务端行模型时，有多种不同的方法可以让网格更新以反映更改。
+
+保持网格更新的不同选项如下：
+
+-   [刷新](./server-side-model-updating-refresh/) - 从服务器重新加载所有已加载的行。
+-   [单行更新](./server-side-model-updating-single-row/) - 直接在现有行上更新数据。
+-   [事务](./server-side-model-updating-transactions/) - 在网格中添加、删除和更新行。
+
+## 选择您的策略
+
+-   您的应用程序是否有快速变化的值，需要以时间敏感的方式反映给您的用户？
+    -   如果是，您是否需要处理创建和删除行？
+        -   如果是，则使用[事务](./server-side-model-updating-transactions/)
+        -   如果不是，请尝试[单行更新](./server-side-model-updating-single-row/)
+    -   如果不是，则[刷新网格](./server-side-model-updating-refresh/)

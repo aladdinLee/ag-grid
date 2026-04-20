@@ -1,0 +1,60 @@
+---
+title: "客户端数据 - 高频更新"
+---
+
+高频更新涉及连续大量更新进入网格。每次更新网格中的数据时，网格都会重新处理所有聚合、排序和过滤器，并让浏览器更新其 DOM。如果您将多个更新流式传输到网格中，这可能会成为瓶颈。网格中使用异步事务实现高频更新。异步事务允许高效的高频网格更新。
+
+## 异步事务
+
+当您调用 `applyTransactionAsync()` 时，网格将在 50ms 后执行更新，以及您随后使用 `applyTransactionAsync()` 提供的任何其他更新。这允许网格在一个批次中执行所有事务，这更高效。
+
+{% apiDocumentation source="grid-api/api.json" section="data" names=["applyTransactionAsync"] /%}
+
+以下示例演示了使用普通事务和异步事务更新数据：
+
+-   **普通更新**：调用 `applyTransaction()` 5000 次，每次调用更新一行。
+-   **异步更新**：调用 `applyTransactionAsync()` 5000 次，每次调用更新一行。
+
+{% gridExampleRunner title="异步事务" name="async-transaction"  exampleHeight=590 /%}
+
+为了帮助理解 `applyTransaction()` 和 `applyTransactionAsync()` 的接口，这里是两个方法签名并排显示。第一个立即执行。第二个稍后使用回调提供结果执行。
+
+```ts
+// 普通 applyTransaction 接受 RowDataTransaction 并返回 RowNodeTransaction
+applyTransaction(rowDataTransaction: RowDataTransaction): RowNodeTransaction
+
+// 批处理接受 RowDataTransaction，结果稍后通过回调提供
+applyTransactionAsync(
+    rowDataTransaction: RowDataTransaction,
+    callback?: (res: RowNodeTransaction) => void
+): void
+```
+
+如果您有大量流数据进入网格，并且不希望网格的渲染和重新计算成为瓶颈，请使用异步事务。
+
+## 异步事务刷新事件
+
+每次网格执行一批异步事务时，它都会调度一个 `asyncTransactionsFlushed` 事件。
+
+该事件包含 `results` 属性，这是所有应用的事务的所有结果的列表。
+
+此事件对于调试或观察异步事务如何应用以进行学习很有用。
+
+## 刷新异步事务
+
+执行批次之间的默认等待时间为 50ms。这意味着当向网格提供异步事务时，该事务最多可能需要 50ms 才能应用。
+
+有时您可能希望在执行某些操作之前应用所有事务 - 例如，您可能希望在网格中选择一行，但希望确保网格在这样做之前具有所有最新的行数据。
+
+要确保网格没有待处理的异步事务，您可以刷新异步事务队列。这是通过调用 API `flushAsyncTransactions` 完成的。
+
+还可以从默认的 50ms 更改执行批次之间的等待时间。这是使用网格属性 `asyncTransactionWaitMillis` 完成的。
+
+下面的示例演示了设置等待时间和刷新。请注意以下内容：
+
+-   属性 `asyncTransactionWaitMillis` 设置为 4000，因此事务每 4 秒刷新一次。
+-   按钮 Flush Transactions 将调用 API 方法 `flushAsyncTransactions`。
+-   添加和执行事务被记录到控制台。
+-   示例监听事件 `asyncTransactionsFlushed` 并记录应用了多少事务。
+
+{% gridExampleRunner title="刷新事务" name="flush-transactions"  exampleHeight=590 /%}

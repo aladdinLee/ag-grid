@@ -1,0 +1,366 @@
+---
+title: "单元格组件"
+description: "组件单元格渲染器允许将图像、按钮和超链接添加到 $framework 表格单元格中。使用提供的单元格渲染器或创建自定义单元格渲染器。"
+---
+
+{% if isFramework("javascript") %}
+单元格中的自定义 HTML / DOM 是通过单元格组件实现的。
+创建自定义单元格组件以在单元格中包含任何 HTML 标记。
+网格附带一些提供的单元格组件用于常见的网格任务。
+{% /if %}
+
+{% if isFramework("vue") %}
+单元格中的自定义 HTML / DOM 是通过单元格组件实现的。
+创建自定义单元格组件以在单元格中包含任何 HTML 标记。
+网格附带一些提供的单元格组件用于常见的网格任务。
+{% /if %}
+
+{% if isFramework("react") %}
+{% videoSection id="9IbhW4z--mg" title="React Cell Renderers" showHeader=true %}
+单元格中的自定义 HTML / DOM 是通过单元格组件实现的。
+创建自定义单元格组件以在单元格中包含任何 HTML 标记。
+网格附带一些提供的单元格组件用于常见的网格任务。
+{% /videoSection %}
+{% /if %}
+
+{% if isFramework("angular") %}
+{% videoSection id="xsafnM77NVs" title="Angular Cell Renderers" showHeader=true %}
+单元格中的自定义 HTML / DOM 是通过单元格组件实现的。
+创建自定义单元格组件以在单元格中包含任何 HTML 标记。
+网格附带一些提供的单元格组件用于常见的网格任务。
+{% /videoSection %}
+{% /if %}
+
+下面的示例展示了使用自定义单元格组件向单元格添加图像、超链接和按钮。自定义按钮在点击时记录到开发者控制台。
+
+{% gridExampleRunner title="Simple Cell Renderer" name="cell-renderer-summary"  exampleHeight=460 /%}
+
+## 提供的组件
+
+网格附带一些内置的单元格组件，涵盖一些常见的单元格渲染需求。
+
+-   [组单元格组件](./grouping-single-group-column/#cell-component)：用于在使用[行分组](./grouping/)、[主从表](./master-detail/)或[树形数据](./tree-data/)时显示具有展开和折叠功能的组详细信息。
+
+-   [动画更改单元格渲染器](./change-cell-renderers/#animated-cell-renderers)：用于在数据更新时动画化更改。
+
+-   [复选框单元格渲染器](./cell-data-types/#boolean)：当使用布尔类型的 `cellDataType` 时，用于使用复选框显示布尔值。
+
+## 自定义组件
+
+要在网格单元格中渲染自定义内容，首先定义自定义单元格组件，然后通过 `cellRenderer` 或 `cellRendererSelector` 配置列定义以使用该组件，并根据需要通过 `cellRendererParams` 传递自定义参数。
+
+### 创建自定义组件
+
+{% partial file="./_component-interface-angular.mdoc" /%}
+{% partial file="./_component-interface-javascript.mdoc" /%}
+{% partial file="./_component-interface-react.mdoc" /%}
+{% partial file="./_component-interface-vue.mdoc" /%}
+
+### 提供自定义组件
+
+列的单元格组件通过 `colDef.cellRenderer` 设置，可以是以下任何类型：
+
+{% if isFramework("javascript") %}
+
+1. `String`：已注册的单元格组件的名称，请参阅[注册自定义组件](./components/#registering-custom-components)
+1. `Class`：直接引用单元格组件。
+1. `Function`：返回 HTML 字符串或 DOM 元素以供显示的函数。
+
+{% /if %}
+
+{% if isFramework("angular") %}
+
+1. `String`：已注册的单元格组件的名称，请参阅[注册自定义组件](./components/#registering-custom-components)
+1. `Class`：直接引用单元格组件。
+1. `Function`：返回 HTML 字符串或 DOM 元素以供显示的函数。
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+1. `String`：已注册的单元格组件的名称，请参阅[注册自定义组件](./components/#registering-custom-components)
+1. `Function`：返回 HTML 字符串或 DOM 元素以供显示的函数。
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+1. `String`：已注册的单元格组件的名称，请参阅[注册自定义组件](./components/#registering-custom-components)
+1. `Component`：直接引用单元格组件。
+1. `Inlined Component`：内联单元格组件。
+
+{% /if %}
+
+{% apiDocumentation source="column-properties/properties.json" section="styling" names=["cellRenderer"] /%}
+
+下面的代码片段演示了这些方法类型中的每一种。
+
+{% if isFramework("javascript", "angular") %}
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        // 1 - String - 向网格注册的单元格组件的名称。
+        {
+            field: 'age',
+            cellRenderer: 'agGroupCellRenderer',
+        },
+        // 2 - Class - 直接提供您自己的单元格组件，无需注册。
+        {
+            field: 'sport',
+            cellRenderer: MyCustomCellRendererClass,
+        },
+        // 3 - Function - 返回 HTML 字符串或 DOM 元素以供显示的函数
+        {
+            field: 'year',
+            cellRenderer: params => {
+                // 将值加粗
+                return 'Value is <b>' + params.value + '</b>';
+            }
+        }
+    ]
+}
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+```{% spaceBetweenProperties=true %}
+const [columnDefs] = useState([
+    // 1 - String - 向网格注册的单元格组件的名称。
+    {
+        field: 'age',
+        cellRenderer: 'agGroupCellRenderer',
+    },
+    // 2 - Component - 直接提供您自己的单元格组件，无需注册。
+    {
+        field: 'sport',
+        cellRenderer: MyCustomCellRendererClass,
+    },
+    // 3 - Inlined Component
+    {
+        field: 'year',
+        cellRenderer: props => {
+            // 将值加粗
+            return <>Value is <b>{props.value}</b></>;
+        }
+    }
+]);
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        // 1 - String - 向网格注册的单元格组件的名称。
+        {
+            field: 'age',
+            cellRenderer: 'agGroupCellRenderer',
+        },
+        // 2 - Function - 返回 HTML 字符串或 DOM 元素以供显示的函数
+        {
+            field: 'year',
+            cellRenderer: params => {
+                // 将值加粗
+                return 'Value is <b>' + params.value + '</b>';
+            }
+        }
+    ]
+}
+```
+
+{% /if %}
+
+### 动态提供自定义组件
+
+`colDef.cellRendererSelector` 函数允许为列中的不同行设置不同的单元格组件。
+
+传递给 `cellRendererSelector` 的 `params` 与传递给[单元格渲染器组件](./component-cell-renderer/)的参数相同。通常，选择器将使用它来检查行的内容并相应地选择渲染器。
+
+结果是一个包含 `component` 和 `params` 的对象，用于代替 `cellRenderer` 和 `cellRendererParams`。
+
+{% apiDocumentation source="column-properties/properties.json" section="styling" names=["cellRendererSelector"] /%}
+
+以下显示了选择器根据行数据在心情和性别单元格渲染器之间进行选择。
+
+{% partial file="./_selector-common.mdoc" /%}
+{% partial file="./_selector-vue.mdoc" /%}
+
+下面的示例演示了使用 `cellRendererSelector` 根据行动态选择单元格组件。
+
+-   列 'Value' 保存不同类型的数据，如列 'Type' 所示（数字/性别/心情）。
+-   `colDef.cellRendererSelector` 是一个根据行数据选择渲染器的函数。
+-   列 'Rendered Value' 显示应用了 `colDef.cellRendererSelector` 指定的组件和参数渲染的数据
+
+{% gridExampleRunner title="Dynamic Rendering Component" name="dynamic-rendering-component"  exampleHeight=335 /%}
+
+### 自定义属性
+
+传递给单元格组件的 `props` 可以通过自定义属性进行补充。这允许配置可重用的单元格组件 - 例如，一个组件可以有通过附加属性可选显示的按钮。
+
+使用列定义属性 `cellRendererParams` 向单元格渲染器补充属性。提供时，这些属性将与网格提供的属性合并。
+
+{% apiDocumentation source="column-properties/properties.json" section="styling" names=["cellRendererParams"] /%}
+
+{% partial file="./_complementing-component-javascript.mdoc" /%}
+{% partial file="./_complementing-component-angular.mdoc" /%}
+{% partial file="./_complementing-component-react.mdoc" /%}
+{% partial file="./_complementing-component-vue.mdoc" /%}
+
+此示例显示了使用和不使用自定义属性渲染图像，以及使用自定义属性将回调传递给按钮。
+`Refresh Data` 按钮通过随机化成功数据触发单元格组件刷新。`Launch` 按钮将消息记录到开发者控制台。
+
+{% gridExampleRunner title="Custom Props" name="custom-props" /%}
+
+### 动态工具提示
+
+使用自定义单元格渲染器时，可以通过在传递给组件的参数上调用 `setTooltip` 方法来注册动态显示的自定义工具提示。
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="ICellRendererParams" names=["setTooltip"] config={"description": ""} /%}
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="CustomCellRendererProps" names=["setTooltip"] /%}
+{% /if %}
+
+下面的示例演示了在单元格组件上显示动态工具提示。可以注意以下几点：
+
+-   Athlete 列使用 `shouldDisplayTooltip` 回调仅在文本未完全显示时显示工具提示。
+
+{% gridExampleRunner title="Dynamic Tooltips" name="dynamic-tooltips" /%}
+
+### 延迟慢速单元格组件
+
+如果自定义单元格组件渲染速度慢，由于自定义组件阻塞主线程，网格可能会显示无响应。可以通过如下延迟渲染慢速组件来避免这种情况：
+
+```js
+{
+    cellRenderer: 'SlowCellRenderer',
+    cellRendererParams: {
+        deferRender: true
+    }
+}
+```
+
+延迟组件将在其他单元格之后渲染，并且仅在网格停止滚动后渲染。在此期间，将显示加载单元格渲染器。如果[行分组](./grouping)处于活动状态，则只有叶节点中的自定义单元格将被延迟。
+
+下面的示例演示了使用 `deferRender` 延迟渲染人为慢速单元格组件。滚动时可以注意以下几点：
+
+-   列 'Slow Renderer' 被延迟并显示默认骨架单元格加载器。
+-   列 'Slow Renderer Custom' 被延迟，但使用通过 `colDef.loadingCellRenderer` 定义的自定义加载单元格。
+-   列 'Fast Renderer' 是自定义组件但未延迟，因此与其他普通单元格一起立即渲染。
+-   `cellRendererSelector` 仅返回叶节点的慢速单元格渲染器作为优化。
+
+{% gridExampleRunner title="Slow Cell Renderer" name="slow-cell-renderer" /%}
+
+{% if isFramework("react") %}
+{% note %}
+`deferRender` 使用 `startTransition` 降低延迟组件的优先级。React 中存在一个已知限制，即转换当前被批处理在一起，这意味着所有延迟组件同时出现。有关更多信息，请参阅 React 文档 [StartTransition - Caveats](https://react.dev/reference/react/useTransition#starttransition-caveats)。
+{% /note %}
+
+### 懒加载单元格组件
+
+网格支持懒加载自定义单元格组件，方法是在自定义单元格加载之前显示 `loadingCellRenderer`。
+
+下面的示例使用 [React.lazy](https://react.dev/reference/react/lazy) 加载 Lazy Loaded Renderer 列的单元格组件，具有 3 秒的人为延迟。
+
+{% gridExampleRunner title="Lazy Cell Renderer" name="lazy-renderer" /%}
+
+{% /if %}
+
+### 访问实例
+
+网格为单元格创建单元格组件实例后，可以访问该实例。如果您想调用您在单元格组件上提供的与网格操作无关的方法，这很有用。访问单元格组件是使用网格 API `getCellRendererInstances(params)` 完成的。
+
+{% apiDocumentation source="grid-api/api.json" section="rendering" names=["getCellRendererInstances"] /%}
+
+获取一个单元格的单元格组件示例如下：
+
+```js
+// 示例 - 获取第一行和列 'gold' 的单元格渲染器
+const firstRowNode = api.getDisplayedRowAtIndex(0);
+const params = { columns: ['gold'], rowNodes: [firstRowNode] };
+const instances = api.getCellRendererInstances(params);
+
+if (instances.length > 0) {
+    // 获取到了，用户必须滚动以使其存在
+    const instance = instances[0];
+}
+```
+
+请注意，此方法仅返回存在的单元格组件实例。由于行和列虚拟化，单元格组件仅存在于垂直和水平滚动视口内的单元格。
+
+下面的示例演示了应用程序调用的单元格组件上的自定义方法。可以注意以下几点：
+
+-   奖牌列都使用用户定义的 `MedalCellRenderer`。单元格组件有一个任意方法 `medalUserFunction()`，它将一些数据打印到开发者控制台。
+-   **Gold** 按钮在金牌列中的所有单元格组件实例上执行方法，并将数据打印到开发者控制台。
+-   **First Row Gold** 按钮仅在第一行的金牌单元格上执行方法，并将数据打印到开发者控制台。请注意，如果网格滚动到远超过第一行，`getCellRendererInstances()` 方法将不返回任何内容，显示行虚拟化正在起作用。
+-   **All Cells** 按钮在所有单元格组件的所有实例上执行方法，并将数据打印到开发者控制台。
+
+{% gridExampleRunner title="Get Cell Renderer" name="get-cell-renderer" /%}
+
+### 键盘导航
+
+使用自定义单元格组件时，自定义单元格组件负责实现其可聚焦元素之间的键盘导航支持。这就是为什么默认情况下，聚焦具有自定义单元格组件的网格单元格将聚焦整个单元格，而不是自定义单元格渲染器内的任何元素。
+
+为了在自定义单元格组件中处理焦点，请实现[自定义单元格组件键盘导航](./keyboard-navigation/#custom-cell-component)。
+
+### 处理鼠标事件
+
+默认情况下，当单击单元格时，网格将执行包括以下操作：
+
+-   聚焦单元格。
+
+-   更新单元格选择，如果启用了[单元格选择](./cell-selection/)。
+
+-   选择行，如果启用了[行选择](./row-selection/)。
+
+-   开始编辑，如果启用了[编辑](./cell-editing/)。
+
+对于自定义单元格组件，此行为可能并不理想，例如，如果它们包含交互元素。在这种情况下，可以通过向 `cellRendererParams` 传递 `suppressMouseEventHandling` 回调来阻止网格处理鼠标事件（`'click'`、`'dblclick'`、`'mousedown'` 或 `'touchstart'`）。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            colId: 'customButton',
+            cellRenderer: CustomButtonComponent,
+            cellRendererParams: {
+                suppressMouseEventHandling: (params) => true,
+            },
+        },
+    ],
+}
+```
+
+{% interfaceDocumentation interfaceName="EventCellRendererParams" config={"description":""} /%}
+
+请注意，虽然回调将阻止网格执行操作，但它仍将继续触发事件（例如 `onCellClicked`）。如果回调返回 `true`，这些事件将把 `isEventHandlingSuppressed` 属性设置为 `true`。
+
+以下示例演示了在单元格选择、行选择和编辑中使用 `suppressMouseEventHandling`。Button 列的鼠标事件被抑制。
+
+{% gridExampleRunner title="Handling Mouse Events" name="handling-mouse-events" /%}
+
+也可以从自定义单元格组件内部停止鼠标事件的传播，但这必须对上述每个鼠标事件都进行。
+
+{% if isFramework("react") %}
+要手动阻止网格处理鼠标事件，必须使用事件处理程序的 "capture" 版本，例如 `onClickCapture` 而不是 `onClick`。
+{% /if %}
+
+### API 参考
+
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="ICellRendererComp" /%}
+{% /if %}
+
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="ICellRendererParams" /%}
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="CustomCellRendererProps" /%}
+{% /if %}

@@ -1,0 +1,51 @@
+---
+title: "列跨越"
+---
+
+默认情况下，每个单元格将占用一列的宽度。您可以更改此行为以允许单元格跨越多列。此功能类似于 Excel 中的"单元格合并"或 HTML 表格中的"列跨越"。
+
+## 配置列跨越
+
+列跨越在列定义级别配置。要使单元格跨越多列，请在回调 `colDef.colSpan` 中返回要跨越的列数。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'country',
+            // 对于 Russia 的行，列跨度为 2，其他所有行为 1
+            colSpan: params => params.data.country === 'Russia' ? 2 : 1,
+        }
+    ],
+}
+```
+
+colSpan 回调的接口如下：
+
+{% apiDocumentation source="column-properties/properties.json" section="spanning" names=["colSpan"] /%}
+
+## 列跨越简单示例
+
+下面显示了一个使用列跨越的示例。该示例没有太多意义，它只是在某些单元格上任意设置列跨度以进行演示，但是我们认为在深入了解其用法之前，使用熟悉的奥运获奖者数据显示列跨越更容易。可以注意到以下几点：
+
+-   Country 列配置为当 'Russia' 时跨越 2 列，当 'United States' 时跨越 4 列。所有其他时候都是正常的（1 列）。
+-   为了帮助演示跨越的列，Country 列使用 CSS 着色为蓝色。
+-   调整任何被跨越的列的大小也会调整跨越单元格的大小。例如，调整 'Country' 右侧列的大小将调整所有跨越调整大小列的单元格的大小。
+-   前两列是固定的。如果将国家列拖到固定区域，您会注意到跨越被限制在固定区域内，例如，如果将 Country 放置为最后一个固定列，则不会发生跨越，因为跨越只能在同一区域的单元格上发生，而 Country 现在在固定区域内没有其他列。
+
+{% gridExampleRunner title="Column Spanning Simple" name="column-spanning-simple" /%}
+
+## 列跨越复杂示例
+
+列跨越通常用于使用 AG Grid 创建报告。下面是列跨越功能更典型的示例。从示例中可以注意到以下几点：
+
+-   数据以某种方式格式化，不打算让用户对此数据进行排序或重新排序列。
+-   数据集内部有元数据，即 `data.section` 属性。此元数据由应用程序提供，在网格配置中使用以设置列跨度和背景颜色。
+
+{% gridExampleRunner title="Column Spanning Complex" name="column-spanning-complex"  exampleHeight=795 /%}
+
+## 列跨越约束
+
+列跨越打破了网格中许多功能所基于的行/单元格计算。如果使用列跨越，请注意以下几点：
+
+-   [单元格选择](./cell-selection/) 在跨越单元格时无法正常工作。这是因为无法覆盖所有场景，因为范围不再是完美的矩形。

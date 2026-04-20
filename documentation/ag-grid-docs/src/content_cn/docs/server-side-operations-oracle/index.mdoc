@@ -1,0 +1,300 @@
+---
+title: "使用 Java 和 Oracle 的服务端操作"
+enterprise: true
+---
+
+了解如何使用 Oracle 数据库执行服务端操作，并提供完整的参考实现。
+
+在本指南中，我们将展示如何通过在 Oracle 数据库内执行服务端操作来管理太大而无法直接加载到浏览器中的大数据集。
+
+我们将开发一个财务报告应用程序，演示如何在执行分组、过滤、排序和透视操作时根据需要延迟加载数据。
+
+{% warning %}
+本指南中涵盖的参考实现仅用于演示目的。如果您在生产中使用它，它不提供任何保证或支持。
+{% /warning %}
+
+源代码可以在这里找到：<https://github.com/ag-grid/ag-grid-server-side-oracle-example>
+
+## 概述
+
+设计基于网格的应用程序时，关键考虑因素之一是需要从服务器向客户端发送多少数据。作为使用 AG Grid 的开发人员，您不需要根据此问题的答案在网格之间切换，而只需选择网格使用的适当行模型。
+
+### 客户端行模型
+
+最简单的方法是在初始化时响应单个请求将所有行数据发送到浏览器。对于此用例，已设计了[客户端行模型](./row-models/#client-side)。
+
+此场景如下图所示，其中 10,000 条记录直接加载到浏览器中：
+
+{% imageCaption imagePath="resources/in-memory-row-model.png" alt="In Memory Row Model" constrained=true enableDarkModeFilter=true /%}
+
+客户端行模型仅渲染当前可见的行，因此行的上限由浏览器的内存占用和数据传输时间决定，而不是网格内的任何限制。
+
+### 服务端行模型
+
+然而，许多实际应用程序包含更大的数据集，通常涉及数百万条记录。在这种情况下，一次性将所有数据加载到浏览器中根本不可行。相反，数据需要根据需要延迟加载，然后清除以限制浏览器中的内存占用。
+
+这正是[服务端行模型](./server-side-model/)解决的问题，同时委托服务端操作，如过滤、排序、分组和透视。
+
+下图显示了服务端行模型使用的方法。这里有 1000 万条记录，但是记录数量仅受服务端限制的约束：
+
+{% imageCaption imagePath="resources/enterprise-row-model.png" alt="Enterprise Row Model" constrained=true enableDarkModeFilter=true /%}
+
+当用户执行排序和分组等操作时，网格向服务器发出包含所有必要元数据的请求，包括应根据用户在数据集中的位置返回哪部分数据。
+
+浏览器永远不会耗尽堆空间，因为网格会自动清除超出范围的记录。
+
+在本指南的其余部分，我们将借助连接到 Oracle 数据库的 Java 服务演示服务端行模型的强大功能。
+
+## 先决条件
+
+假设读者已经熟悉 Java、Maven、Spring Boot 和 Oracle。
+
+此示例使用以下版本进行测试：
+
+-   ag-grid-enterprise (v18.0.0)
+-   Java(TM) SE Runtime Environment (build 1.8.0_162-b12)
+-   Java HotSpot(TM) 64-Bit Server VM (build 25.162-b12, mixed mode)
+-   Apache Maven (3.5.2)
+-   Oracle 12c Release 2 (12.2.0.1)
+-   Oracle JDBC Driver (ojdbc7-12.1.0.2)
+
+由于 Oracle 许可限制，Oracle JDBC 驱动程序在公共 Maven 存储库中不可用，应手动安装到您的本地 Maven 存储库，如下所示：
+
+```bash
+mvn install:install-file -Dfile={Path/to/ojdbc7.jar} -DgroupId=com.oracle -DartifactId=ojdbc7 -Dversion=12.1.0.2 -Dpackaging=jar
+```
+
+还要确保 Oracle JDBC 驱动程序版本也与 Oracle POM 依赖项匹配：
+
+```xml
+// pom.xml
+
+<dependency>
+    <groupId>com.oracle</groupId>
+    <artifactId>ojdbc7</artifactId>
+    <version>12.1.0.2</version>
+</dependency>
+```
+
+## 下载和安装
+
+使用以下命令克隆示例项目：
+
+```bash
+git clone https://github.com/ag-grid/ag-grid-server-side-oracle-example.git
+```
+
+导航到项目目录：
+
+```bash
+cd ag-grid-server-side-oracle-example
+```
+
+使用以下命令安装项目依赖并构建项目：
+
+```bash
+mvn clean install
+```
+
+要确认一切顺利，您应该看到以下 maven 输出：
+
+{% imageCaption imagePath="resources/mvn-success.png" alt="MVN Success" constrained=true enableDarkModeFilter=true /%}
+
+## 配置 Oracle
+
+使用您的数据库连接详细信息相应地更新 Oracle 配置：
+
+```bash
+// src/main/resources/application.properties
+
+spring.datasource.url=jdbc:oracle:thin:@//localhost:1521/orcl
+spring.datasource.username=system
+spring.datasource.password=oracle
+```
+
+## 设置数据
+
+在 Oracle 中运行以下脚本以创建此示例所需的表：
+
+```sql
+/* src/main/resources/schema.sql */
+
+CREATE TABLE trade
+(
+    product VARCHAR(255),
+    portfolio VARCHAR(255),
+    book VARCHAR(255),
+    tradeId NUMBER,
+    submitterId NUMBER,
+    submitterDealId NUMBER,
+    dealType VARCHAR(255),
+    bidType VARCHAR(255),
+    currentValue NUMBER,
+    previousValue NUMBER,
+    pl1 NUMBER,
+    pl2 NUMBER,
+    gainDx NUMBER,
+    sxPx NUMBER,
+    x99Out NUMBER,
+    batch NUMBER
+);
+```
+
+接下来运行以下实用程序以用数据填充它：
+
+`src/test/java/com/ag/grid/enterprise/oracle/demo/TradeDataLoader.java`
+
+## 运行应用程序
+
+从项目根目录运行：
+
+```bash
+mvn spring-boot:run
+```
+
+如果成功，您应该看到类似这样的内容：
+
+{% imageCaption imagePath="resources/tomcat-started.png" alt="TomCat Started" constrained=true enableDarkModeFilter=true /%}
+
+要测试应用程序，请将浏览器指向 <http://localhost:9090>
+
+## 服务端行模型接口
+
+我们的 Java 服务将使用以下请求和响应对象：
+
+```java
+// src/main/java/com/ag/grid/enterprise/oracle/demo/request/ServerSideGetRowsRequest.java
+
+public class ServerSideGetRowsRequest implements Serializable {
+
+    private int startRow, endRow;
+
+    // 行组列
+    private List<ColumnVO> rowGroupCols;
+
+    // 值列
+    private List<ColumnVO> valueCols;
+
+    // 透视列
+    private List<ColumnVO> pivotCols;
+
+    // 如果透视模式开启则为 true，否则为 false
+    private boolean pivotMode;
+
+    // 用户正在查看的组
+    private List<String> groupKeys;
+
+    // 如果过滤，过滤器模型是什么
+    private Map<String, ColumnFilter> filterModel;
+
+    // 如果排序，排序模型是什么
+    private List<SortModel> sortModel;
+
+    ...
+}
+```
+
+```java
+// src/main/java/com/ag/grid/enterprise/oracle/demo/response/ServerSideGetRowsResponse.java
+
+public class ServerSideGetRowsResponse {
+
+    private List<Map<String, Object>> data;
+
+    private int lastRow;
+
+    private List<String> pivotResultColumnsFields;
+
+    ...
+}
+```
+
+我们将在本指南中详细讨论这些，但有关更多详细信息，请参阅：[服务端数据源](./server-side-model-datasource/)
+
+## 服务控制器
+
+我们的服务将包含一个端点 `/getRows`，具有上面定义的请求和响应对象：
+
+```java
+// src/main/java/com/ag/grid/enterprise/oracle/demo/controller/TradeController.java
+
+@RestController
+public class TradeController {
+
+    private TradeDao tradeDao;
+
+    @Autowired
+    public TradeController(@Qualifier("tradeDao") TradeDao tradeDao) {
+        this.tradeDao = tradeDao;
+    }
+
+    @RequestMapping(method = POST, value = "/getRows")
+    @ResponseBody
+    public ServerSideGetRowsResponse getRows(@RequestBody ServerSideGetRowsRequest request) {
+        return tradeDao.getData(request);
+    }
+}
+```
+
+`TradeController` 利用 [Spring Controller](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller.html) 处理 HTTP 和 JSON 序列化。
+
+## 数据访问
+
+`OracleSqlQueryBuilder` 根据提供的请求动态生成 SQL。我们将使用生成的 SQL 通过 [Spring JDBC Template](https://docs.spring.io/spring-framework/reference/data-access.html) 查询 `Trade` 表。
+
+以下是我们 `TradeDao` 的实现：
+
+```java
+// src/main/java/com/ag/grid/enterprise/oracle/demo/dao/TradeDao.java
+
+@Repository("tradeDao")
+public class TradeDao {
+
+    private JdbcTemplate template;
+    private OracleSqlQueryBuilder queryBuilder;
+
+    @Autowired
+    public TradeDao(JdbcTemplate template) {
+        this.template = template;
+        queryBuilder = new OracleSqlQueryBuilder();
+    }
+
+    public ServerSideGetRowsResponse getData(ServerSideGetRowsRequest request) {
+        String tableName = "trade"; // 可以在请求中作为查找键提供？
+
+        // 首先从数据库获取请求的透视列的透视值
+        Map<String, List<String>> pivotValues = getPivotValues(request.getPivotCols());
+
+        // 生成 SQL
+        String sql = queryBuilder.createSql(request, tableName, pivotValues);
+
+        // 查询数据库获取行
+        List<Map<String, Object>> rows = template.queryForList(sql);
+
+        // 使用我们的结果创建响应
+        return createResponse(request, rows, pivotValues);
+    }
+
+    private Map<String, List<String>> getPivotValues(List<ColumnVO> pivotCols) {
+        return pivotCols.stream()
+            .map(ColumnVO::getField)
+            .collect(toMap(
+                pivotCol -> pivotCol, this::getPivotValues, (a, b) -> a, LinkedHashMap::new));
+    }
+
+    private List<String> getPivotValues(String pivotColumn) {
+        String sql = "SELECT DISTINCT %s FROM trade";
+        return template.queryForList(format(sql, pivotColumn), String.class);
+    }
+}
+```
+
+## 过滤
+
+我们的示例将使用网格的 `NumberFilter` 和 `SetFilter` [列过滤器](./filtering/)。相应的服务端类如下：
+
+```java
+// src/main/java/com/ag/grid/enterprise/oracle/demo/filter/NumberColumnFilter.java
+
+public class NumberColumnFilter extends ColumnFilter {
+    private String type;

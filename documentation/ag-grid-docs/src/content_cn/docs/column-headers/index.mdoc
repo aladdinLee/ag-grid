@@ -1,0 +1,69 @@
+---
+title: "列标题"
+description: "列标题为 $framework 表格中的每列提供标题名称和基本功能。使用提供的组件或创建自定义列标题。"
+---
+
+每列都有一个列标题，提供标题名称和典型功能，如列调整大小、行排序和行过滤。
+
+## 标题名称
+
+当未提供标题名称时，表格将从提供的 `field` 派生标题名称。表格期望字段值使用驼峰命名法，并将在单词分隔之间插入空格以构建可读的标题名称。或者，您可以使用 `ColDef` 的 `headerName` 属性提供自己的标题名称。
+
+{% apiDocumentation source="column-properties/properties.json" section="header" names=["headerName"] /%}
+
+```{% frameworkTransform=true suppressFrameworkContext=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        // 标题名称将是 '运动员'
+        { field: 'athlete' },
+        // 标题名称将是 '名字'
+        { field: 'firstName' },
+        // 标题名称将是 'foo'
+        { headerName: 'foo', field: 'bar' }
+    ]
+}
+```
+
+## 标题值获取器
+
+使用 `headerValueGetter` 而不是 `colDef.headerName` 动态提供列标题名称。
+
+{% apiDocumentation source="column-properties/properties.json" section="header" names=["headerValueGetter"] /%}
+
+`headerValueGetter` 的参数与[单元格值获取器](./value-getters)不同，如下所示：
+
+-   只有 column 或 columnGroup 之一会存在，取决于它是列还是列组。
+-   参数 `location` 允许您根据列出现的位置使用不同的列名称，例如，当列在列放置区域或工具栏中时，您可能希望使用不同的名称。
+
+有关在不同位置使用 `headerValueGetter` 的示例，请参阅[列工具面板示例](./tool-panel-columns/#columns-tool-panel-example)，您可以根据名称出现的位置更改标题名称。
+
+## 工具提示
+
+可以使用 `ColDef` 的 `headerTooltipValueGetter` 或 `headerTooltip` 属性向列标题添加工具提示。
+
+{% apiDocumentation source="column-properties/properties.json" section="header" names=["headerTooltipValueGetter", "headerTooltip"] /%}
+
+下面的示例演示使用 `headerTooltipValueGetter` 和 `headerTooltip` 属性在表格列中设置工具提示。
+
+{% gridExampleRunner title="标题工具提示" name="header-tooltip" /%}
+
+## 样式和高度
+
+可以通过 `headerClass` 和 `headerStyle` 属性使用 CSS 类和内联样式设置列标题样式。标题高度也可以配置并设置为根据内容自动调整。
+
+有关以下内容的完整文档，请参阅[样式和高度](./column-headers-styling/)：
+
+-   [标题样式](./column-headers-styling/#header-style)和[标题类](./column-headers-styling/#header-class)
+-   [标题高度](./column-headers-styling/#header-height)
+-   [自动标题高度](./column-headers-styling/#auto-header-height)
+-   [文本方向](./column-headers-styling/#text-orientation)
+
+## 自定义标题组件
+
+表格提供具有排序、过滤和菜单功能的默认标题组件。您可以使用模板、内部标题组件自定义此组件，或创建完全自定义的标题组件。
+
+有关以下内容的完整文档，请参阅[自定义标题组件](./column-headers-components/)：
+
+-   [自定义模板](./column-headers-components/#custom-template)
+-   [内部标题组件](./column-headers-components/#inner-header-component)
+-   [自定义组件](./column-headers-components/#custom-component)

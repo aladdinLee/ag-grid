@@ -1,0 +1,57 @@
+---
+title: "大文本单元格编辑器"
+---
+
+使用标准 HTML `textarea` 的简单编辑器，允许用户输入多行显示的文本。
+
+## 启用大文本单元格编辑器
+
+编辑下面网格中的任何单元格以查看大文本单元格编辑器。
+
+{% gridExampleRunner title="大文本编辑器" name="large-text-editor" /%}
+
+使用 `agLargeTextCellEditor` 启用，并使用 `ILargeTextEditorParams` 配置。
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agLargeTextCellEditor',
+        cellEditorPopup: true,
+        cellEditorParams: {
+            maxLength: 100
+        }
+        // ...其他属性
+    }
+]
+```
+
+## 自定义
+
+### 编辑器大小
+
+可以自定义大文本单元格编辑器的宽度和高度。编辑下面网格中的任何单元格以查看以修改大小显示的编辑器。
+
+{% gridExampleRunner title="大文本编辑器列和行" name="large-text-editor-cols-rows" /%}
+
+要自定义大小，有两个选项：
+
+-   `cols`：显示的平均字符数。
+-   `rows`：显示的文本行数。
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agLargeTextCellEditor',
+        cellEditorPopup: true,
+        cellEditorParams: {
+            rows: 15,
+            cols: 50
+        }
+        // ...其他属性
+    }
+]
+```
+
+## API 参考
+
+{% interfaceDocumentation interfaceName="ILargeTextEditorParams" names=["maxLength","rows","cols"] /%}

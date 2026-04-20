@@ -1,0 +1,135 @@
+---
+title: "行高"
+---
+
+默认情况下，网格中的行高基于主题（Quartz 为 `42px`）。您可以为每一行单独更改此值，为每行赋予不同的高度。
+
+{% note %}
+当使用[视口行模型](./viewport/)或[无限行模型](./infinite-scrolling/)时，不能使用可变行高。
+这是因为这些行模型需要计算未加载行的位置，因此需要假设行高是固定的。
+{% /note %}
+
+## rowHeight 属性
+
+要更改整个网格的行高，请将属性 `rowHeight` 设置为正数。
+例如，要将高度设置为 50px，请执行以下操作：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowHeight: 50,
+}
+```
+
+更改属性将为所有行设置新的行高，包括[固定行](./row-pinning)。
+
+## getRowCallback
+
+{% apiDocumentation source="grid-options/properties.json" section="styling" names=["getRowHeight"] /%}
+
+要更改行高，使每行可以具有不同的高度，请实现 `getRowHeight(params)` 回调。例如，要将所有组行的高度设置为 50px，将所有其他行的高度设置为 20px，请执行以下操作：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    getRowHeight: params => params.node.group ? 50 : 20,
+}
+```
+
+下面的示例显示动态行高，为每行指定不同的行高。它使用 `getRowHeight(params)` 回调来实现这一点。
+
+{% gridExampleRunner title="行高简单" name="row-height-simple" /%}
+
+## 更改行高
+
+行高设置为每行设置一次。设置后，网格不会再向您询问行高。您可以在最初设置后使用 `api.resetRowHeights()`、`rowNode.setRowHeight(height)` 和 `api.onRowHeightChanged()` 的组合来更改行高。
+
+### api.resetRowHeights()
+
+调用此 API 让网格清除所有行高并从头开始重新计算它们 - 如果您提供了 `getRowHeight(params)` 回调，它将为每行再次调用。然后网格将重新调整大小并重新定位所有行。
+
+{% apiDocumentation source="grid-api/api.json" section="rendering" names=["resetRowHeights"] /%}
+
+### rowNode.setRowHeight(height) 和 api.onRowHeightChanged()
+
+您可以直接在行节点上调用 `rowNode.setRowHeight(height)` 来设置其高度。网格将调整行的大小，但不会重新定位行（即，如果您将行变短，它和下一行之间会出现一个空格 - 下一行不会向上移动）。当您设置了行高（可能在多行上）后，您需要调用 `api.onRowHeightChanged()` 来告诉网格重新定位行。您可以多次调用 `rowNode.setRowHeight(height)`，然后在最后调用一次 `api.onRowHeightChanged()`。
+
+调用 `rowNode.setRowHeight(height)` 时，您可以传入新高度，或 `null` 或 `undefined`。如果您传入高度，该高度将用于该行。如果您传入 `null` 或 `undefined`，网格将按常规方式计算行高，使用提供的 `rowHeight` 属性或 `getRowHeight(params)` 回调。
+
+{% apiDocumentation source="row-object/properties.json" section="height" names=["setRowHeight"] config={"overrideBottomMargin":"0rem"} /%}
+
+{% apiDocumentation source="grid-api/api.json" section="rendering" names=["onRowHeightChanged"] /%}
+
+### 示例：更改行高
+
+下面的示例以上面描述的不同方式更改行高。
+
+- **顶层组：** 通过调用 `api.resetRowHeights()` 更改组的行高。这让网格为每行再次调用 `gridOptions.getRowHeight(params)`。
+- **游泳叶行：** 这里使用与上述相同的技术。您需要展开一个带有游泳的组（例如美国），网格将再次计算所有行高。
+- **美国叶行：** 高度直接在行节点上设置，然后通过调用 `api.onRowHeightChanged()` 告诉网格重新定位所有行。
+
+请注意，此示例使用 AG Grid Enterprise，因为它使用了分组。设置行高是 AG Grid Community 的功能；我们只是在下面的示例中针对组和普通行进行演示。
+
+{% gridExampleRunner title="更改行高" name="row-height-change"  exampleHeight=590 /%}
+
+## 文本换行和多行文本显示
+
+默认情况下，单元格值中的换行符不会显示，溢出的文本将被截断。
+
+如果您希望文本在单元格内换行而不是截断，请将标志 `wrapText=true` 添加到列定义中。在后台，这会导致 CSS 属性 `white-space: normal` 应用于单元格，从而导致文本换行。
+
+如果您想更好地控制文本换行，或希望显示换行符，这可以通过在单元格上设置 CSS 属性 `white-space`（或 `white-space-collapse` 和 `text-wrap-mode`）来完成。
+
+下面的示例演示了配置换行和多行文本的几种可能方法：
+
+- **默认行为** 列显示默认网格行为，无换行和截断的单行文本。
+- **wrapText = true** 列演示了 `wrapText` 列定义属性。
+- **换行文本** 列应用 CSS `white-space: normal` 来模拟 `wrapText` 列定义属性。
+- **保留换行** 列应用 CSS `white-space-collapse: preserve-breaks`，它保留换行，但不换行。
+- **带换行的换行** 列应用 CSS `white-space: pre-line`，它保留换行并换行文本。
+
+{% gridExampleRunner title="行高复杂" name="row-height-complex" /%}
+
+{% note %}
+如果您提供自定义[单元格渲染器组件](./component-cell-renderer/)，您可以用自己的方式在自定义组件中实现文本换行。`wrapText` 属性旨在用于您不使用自定义单元格渲染器时。
+{% /note %}
+
+## 自动行高
+
+可以根据单元格的内容设置行高。要做到这一点，请在应该计算高度的每一列上设置 `autoHeight=true`。例如，如果一列显示多行描述文本，您可能只选择该列来确定行高。
+
+`autoHeight` 通常与 `wrapText` 一起使用。如果未设置 `wrapText`，且未使用自定义[单元格渲染器组件](./component-cell-renderer/)，则单元格将在其一行上显示所有内容。如果使用自动行高，这可能不是预期的。
+
+如果多列标记为 `autoHeight=true`，则使用最大列的高度。
+
+下面的示例显示自动高度。列 A 通过同时设置 `wrapText=true` 和 `autoHeight=true` 启用自动高度。列 B 仅设置了 `wrapText=true`，因此如果内容不适合，其内容将被截断。
+
+<!-- 此示例使用超时设置数据 - 运行器目前不支持这种类型的东西 -->
+
+{% gridExampleRunner title="自动行高" name="auto-row-height" /%}
+
+{% warning %}
+具有自动高度的列将始终被渲染，因为网格需要设置行的高度。设置 `autoHeight=true` 会为单元格添加大小监听器，并停止这些列的列虚拟化，这可能会对渲染性能产生负面影响。这就是为什么您应该仅为需要自动高度的列设置自动高度。例如，如果您有许多不需要可变高度的列，请不要将它们设置为自动高度。
+{% /warning %}
+
+### 延迟高度计算
+
+自动高度的工作原理是网格监听配置为自动高度的所有单元格的高度变化。
+因此，它只查看当前渲染到 DOM 中的行。
+随着网格垂直滚动并显示更多行，这些行的高度将即时计算。
+
+这意味着行高和行位置随着网格垂直滚动而变化。这导致以下行为：
+
+- 垂直滚动范围（您可以滚动的量）将动态适应行。如果通过用鼠标拖动滚动条滑动，滚动条不会跟随鼠标。它会落后或跳到前面，取决于行高计算是在增加还是减少垂直滚动范围。
+
+- 如果向上滚动并首次显示行（例如，用户跳到滚动位置底部然后开始缓慢向上滚动），行位置将会跳跃，因为顶部可见的行会调整大小，新高度会影响其下方所有行的位置。例如，如果该行调整大小后变高 10 像素，下方的行将被向下推 10 像素。如果向下滚动，则不会观察到这种情况，因为下方的行不在视图中。
+
+这些行为是延迟高度计算的必要结果。不可能避免这些效果。
+
+## 行调整大小
+
+在显示[行号](./row-numbers/)时，行调整大小可用作选项。
+
+## 固定行的行高
+
+在启用 `enableRowPin = true` 的情况下固定行时，固定行的行高可以如上所述更改。使用 `api.forEachPinnedRow` 获取固定行的行节点引用。
+
+当通过 `pinnedTopRowData` 或 `pinnedBottomRowData` 设置固定行数据时，行高的工作方式与普通行完全相同，只有一个区别：设置后无法动态更改高度。但是，这很容易解决，只需再次设置固定行数据，这会重置行高。再次设置数据对固定行没有问题，因为它不会影响滚动位置、过滤、排序或组展开/关闭位置，就像重置普通行的数据会影响的那样。

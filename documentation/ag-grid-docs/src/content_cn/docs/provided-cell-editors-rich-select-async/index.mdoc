@@ -1,0 +1,133 @@
+---
+title: "富选择单元格编辑器 - 异步值"
+enterprise: true
+---
+
+富选择单元格编辑器支持异步加载值，包括分页加载和服务器端过滤。
+
+## 异步值
+
+列表值可以异步提供给编辑器，如下所示：
+
+当 `values` 作为回调函数提供时，回调接收类型为 `RichCellEditorValuesCallbackParams` 的 `params`。
+
+{% interfaceDocumentation interfaceName="IRichCellEditorParams" overrideSrc="provided-cell-editors-rich-select/rich-select.json" names=["values"] config={ "description": "" } /%}
+
+{% gridExampleRunner title="富选择异步值" name="rich-select-async-values" /%}
+
+```js
+columnDefs: [
+    {
+        field: 'language',
+        cellEditor: 'agRichSelectCellEditor',
+        cellEditorParams: {
+            values: (_params) => fetch('/api/languages').then((res) => res.json()),
+        }
+    }
+]
+```
+
+## 分页异步值
+
+对于大数据集，`valuesPage` 避免一次加载所有项目，而是根据用户滚动和交互按需加载值。`valuesPageInitialStartRow` 可用于设置初始位置。`valuesPage` 回调接收类型为 `RichCellEditorValuesPageParams` 的 `params`，应返回符合 `RichCellEditorValuesPageResult` 接口的值。
+
+{% interfaceDocumentation interfaceName="IRichCellEditorParams" overrideSrc="provided-cell-editors-rich-select/rich-select.json" names=["valuesPage", "valuesPageInitialStartRow", "valuesPageSize", "valuesPageLoadThreshold"] config={ "description": "" } /%}
+
+{% gridExampleRunner title="富选择分页异步值" name="rich-select-paged-async-values" /%}
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agRichSelectCellEditor',
+        cellEditorParams: {
+            valuesPage: (params) => {
+                return fetch(`/api/languages?
+                    startRow=${params.startRow}
+                    &endRow=${params.endRow}`)
+                .then((res) => res.json());
+            },
+            valuesPageInitialStartRow: (value) => getRowForSelectedValue(value),
+            valuesPageSize: 100,
+            valuesPageLoadThreshold: 10
+        }
+    }
+]
+```
+
+## 异步过滤
+
+对于高级过滤场景，结合异步 `values` 回调、`allowTyping`、`filterList: true` 和 `filterListAsync` 启用异步过滤。
+`values` 回调参数类型仍为 `RichCellEditorValuesCallbackParams`。
+
+当 `filterListAsync` 设置为 `true` 时，单元格编辑器行为如下：
+
+-   使用当前搜索词调用 `values` 回调。
+-   将搜索请求延迟 300ms（可以使用 `searchDebounceDelay` 调整）以避免过多调用。
+-   网络请求进行时显示加载指示器。
+-   promise 解析后，下拉列表使用过滤结果更新。
+
+{% interfaceDocumentation interfaceName="IRichCellEditorParams" overrideSrc="provided-cell-editors-rich-select/rich-select.json" names=["filterListAsync", "searchDebounceDelay", "values"]  config={ "description": "" } /%}
+
+这在下面的示例中显示：
+
+{% gridExampleRunner title="富选择异步过滤" name="rich-select-full-async-values" /%}
+
+```js
+columnDefs: [
+    {
+        field: 'language',
+        cellEditor: 'agRichSelectCellEditor',
+        cellEditorParams: {
+            allowTyping: true,
+            filterList: true,
+            filterListAsync: true,
+            values: (params) => {
+                return fetch(`/api/languages?search=${encodeURIComponent(params.search)}`)
+                    .then((res) => res.json())
+                    .then((data) => data.items);
+            }
+        }
+    }
+]
+```
+
+## 分页异步过滤
+
+对于非常大的、服务器支持的数据集，将异步过滤与 `valuesPage` 结合使用，以便过滤结果也增量加载。
+`valuesPageInitialStartRow` 仅用于初始未过滤加载；一旦用户输入，过滤分页从第 `0` 行开始。
+
+在此模式下，每个请求包括：
+
+-   `search` 用于当前过滤文本。
+-   `startRow` 和 `endRow` 用于基于范围的分页。
+-   `cursor`（可选）用于基于游标的向前分页 API（第一次请求时为 `undefined`，然后从上一个响应重播）。
+
+{% interfaceDocumentation interfaceName="IRichCellEditorParams" overrideSrc="provided-cell-editors-rich-select/rich-select.json" names=["filterListAsync", "valuesPage", "valuesPageInitialStartRow", "valuesPageSize", "valuesPageLoadThreshold"] config={ "description": "" } /%}
+
+{% gridExampleRunner title="富选择分页异步过滤" name="rich-select-paged-async-filtering" /%}
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agRichSelectCellEditor',
+        cellEditorParams: {
+            allowTyping: true,
+            filterList: true,
+            filterListAsync: true,
+            valuesPageInitialStartRow: (value) => getRowForSelectedValue(value),
+            valuesPage: (params) => {
+                    return fetch(
+                        `/api/languages
+                            ?search=${encodeURIComponent(params.search)}
+                            &startRow=${params.startRow}
+                            &endRow=${params.endRow}`
+                    ).then((res) => res.json());
+            },
+        }
+    }
+]
+```
+
+## API
+
+{% interfaceDocumentation interfaceName="IRichCellEditorParams" overrideSrc="provided-cell-editors-rich-select/rich-select.json" /%}

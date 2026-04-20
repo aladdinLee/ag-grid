@@ -1,0 +1,35 @@
+---
+title: "行选择"
+description: "在 $framework 表格中配置行选择、复选框选择和组选择。单行选择、多行选择和点击多选。"
+---
+
+配置表格以允许用户通过点击行、聚焦行并按 {% kbd "␣ Space" /%} 或通过 API 来选择行。
+
+## 启用行选择
+
+行选择通过 `rowSelection` 表格属性配置。将 `rowSelection.mode` 设置为 `'multiRow'` 或 `'singleRow'` 将允许您通过点击、聚焦行并按 {% kbd "␣ Space" /%} 或通过选择 API 来选择行。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowSelection: {
+        mode: 'singleRow',
+    }
+}
+```
+
+以下示例演示了基本的行选择配置。使用选择控件选择默认的单行或多行配置。
+
+有关两种行选择模式的详细文档，请参阅：
+
+-   [单行选择](./row-selection-single-row)
+-   [多行选择](./row-selection-multi-row)
+
+{% gridExampleRunner title="启用行选择" name="enabling-row-selection" /%}
+
+## 行选择与企业功能
+
+行选择可以在使用行分组、树形数据和服务器端行模型时使用。请参阅文档的相关部分：
+
+-   [行组选择](./grouping-row-selection)
+-   [树形数据选择](./tree-data-selection)
+-   [服务器端行模型选择](./server-side-model-selection)

@@ -1,0 +1,95 @@
+---
+title: "集合筛选器 - API"
+enterprise: true
+---
+
+本节介绍如何使用 API 调用以编程方式控制集合筛选器。
+
+## 集合筛选器模型
+
+通过在网格 API 上获取和设置模型来获取和设置集合筛选器的状态。
+
+```js
+// 获取筛选器模型
+const model = api.getColumnFilterModel('country');
+
+// 设置筛选器模型并更新
+await api.setColumnFilterModel('country', { values: ['Spain', 'Ireland', 'South Africa'] });
+
+// 根据筛选器刷新行（不是自动的，以允许批处理多个筛选器）
+api.onFilterChanged();
+```
+
+筛选器模型包含一个字符串值数组，其中数组中的每个项目对应于要从集合中选择的元素。
+
+{% interfaceDocumentation interfaceName="SetFilterModel" /%}
+
+## 集合筛选器 API
+
+集合筛选器由两部分组成 - 集合筛选器 UI（UI 组件）和集合筛选器处理器（维护值并执行筛选逻辑）。
+
+请注意，集合筛选器将始终使用筛选器处理器，无论是否启用 `enableFilterHandlers`（它控制[自定义筛选器组件](./component-filter/)的筛选器处理器）。
+
+可以通过集合筛选器处理器更新集合筛选器值：
+
+```{% frameworkTransform=true %}
+// 获取筛选器处理器
+const countryFilterHandler = api.getColumnFilterHandler('country');
+```
+
+`SetFilterHandler` 接口定义了集合筛选器处理器的公共 API。
+
+{% interfaceDocumentation interfaceName="SetFilterHandler" /%}
+
+可以通过集合筛选器 UI 实例与迷你筛选器交互：
+
+```{% frameworkTransform=true %}
+// 获取筛选器 UI 实例
+api.getColumnFilterInstance('country').then(countryFilterComponent => {
+    // 使用集合筛选器 UI 实例
+});
+```
+
+`SetFilterUi` 接口定义了集合筛选器 UI 组件的公共 API。
+
+{% interfaceDocumentation interfaceName="SetFilterUi"  /%}
+
+在下面的示例中，您可以看到如何通过 API 修改 Athlete 列的筛选器。
+
+{% gridExampleRunner title="集合筛选器 API" name="set-filter-api"  exampleHeight=570 /%}
+
+### 启用区分大小写
+
+默认情况下，API 不区分大小写。您可以使用 `caseSensitive: true` 筛选器参数启用区分大小写：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'colour',
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                caseSensitive: true
+            }
+        }
+    ]
+}
+```
+
+{% note %}
+`caseSensitive` 选项还会影响[迷你筛选器](./filter-set-mini-filter/#enabling-case-sensitive-searches)搜索和[筛选列表](./filter-set-filter-list/#enabling-value-case-sensitivity)中显示的值。
+{% /note %}
+
+以下示例演示了 `caseSensitive: false`（默认值）和 `caseSensitive: true` 之间的行为差异：
+
+-   使用 `caseSensitive: false`（默认值）：
+    -   `setModel()` 将对可用值执行**不区分大小写**的匹配，以决定在筛选列表中启用什么。
+    -   `setFilterValues()` 将覆盖可用值，并强制筛选列表中显示的值的大小写与提供的值匹配。
+        -   将基于**不区分大小写**的匹配维护选定的值。
+-   使用 `caseSensitive: true`：
+    -   `setModel()` 将对可用值执行**区分大小写**的匹配，以决定在筛选列表中启用什么。
+    -   `setFilterValues()` 将覆盖可用值，并强制筛选列表中显示的值的大小写与提供的值匹配。
+        -   将基于**区分大小写**的匹配维护选定的值。
+-   在这两种情况下，`getModel()` 和 `getFilterValues()` 将返回与筛选列表中显示的值大小写匹配的值。这将打印到开发者控制台。
+
+{% gridExampleRunner title="集合筛选器 API - 区分大小写" name="set-filter-api-case-sensitive"  exampleHeight=570 /%}

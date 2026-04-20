@@ -1,0 +1,399 @@
+---
+title: "自定义图标"
+---
+
+本节详细介绍如何为网格提供自己的图标以及为应用程序需求设置网格图标样式
+
+## 交换提供的图标集
+
+网格提供几个图标集作为[主题部分](./theming-parts/)。您可以使用 `theme.withPart(iconSet)` 更改主题上的图标集。
+
+可用的图标集有：
+
+-   `iconSetQuartz` - 我们的默认图标集
+    -   `iconSetQuartz({strokeWidth: number})` 您可以将 iconSetQuartz 作为函数调用，以提供以像素为单位的自定义笔触宽度（默认值为 1.5）
+    -   `iconSetQuartzLight` 和 `iconSetQuartzBold` 预设了 Quartz 图标的较轻和较粗版本，笔触宽度分别为 1px 和 2px。
+-   `iconSetAlpine` - Alpine 主题使用的图标集
+-   `iconSetMaterial` - Material Design 图标集（这些图标设计为在 18、24、36 或 48px 时显示效果最佳）
+
+此示例显示了带有 Material 图标集的 Quartz 主题
+
+```js
+import { iconSetMaterial, themeQuartz } from 'ag-grid-community';
+
+const myTheme = themeQuartz
+    .withPart(iconSetMaterial)
+    // Material 图标设计为在 18、24、36 或 48px 时看起来最佳
+    .withParams({
+        iconSize: 18,
+    });
+```
+
+{% gridExampleRunner title="交换图标字体" name="icons-swapping-font" /%}
+
+## 设置提供图标的样式
+
+您可以使用 CSS 更改提供图标的颜色，并添加其他 CSS 样式，如边框和背景。图标具有格式为 `ag-icon-{iconName}` 的 CSS 类名。使用浏览器开发者工具找到适当的类。
+
+提供的图标继承当前文本颜色，因此使用 CSS `color` 属性更改其颜色：
+
+```css
+/* 将列菜单图标设置为红色 */
+.ag-icon-menu-alt {
+    color: red;
+}
+
+/* 为行组图标添加背景 */
+.ag-icon-tree-closed,
+.ag-icon-tree-open {
+    border-radius: 4px;
+    background-image: linear-gradient(to bottom, #66aec8, #aa74c6);
+}
+```
+
+{% gridExampleRunner title="替代图标字体" name="icons-color" /%}
+
+## 替换单个图标
+
+`iconOverrides` 部分可用于将单个图标更改为图像、带有图像蒙版的纯色或图标字体字符。它可以在同一主题中多次使用，以混合不同类型的图标。
+
+### 使用图像覆盖图标
+
+`iconOverrides` 可以使用以下参数将图标替换为图像：
+
+| 参数 | 描述                                                                                                                                                            |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`    | `image`                                                                                                                                                                |
+| `mask`    | 如果为 `true`，则图标形状取自图像，颜色取自网格 `foregroundColor` 参数。这允许一个图标在浅色和深色模式下都适用 |
+| `icons`   | [图标名称](#provided-icons)到图像的映射。值使用[图像参数语法](./theming-parameters/#image-values)接受图像 URL 或 svg 源代码。      |
+
+```js
+import { themeQuartz, iconOverrides } from 'ag-grid-community';
+
+// 创建图标覆盖部分
+const mySvgIcons = iconOverrides({
+    type: 'image',
+    mask: true,
+    icons: {
+      // 图标名称到图像的映射
+      'filter': { url: 'https://examle.com/my-filter-icon.svg' },
+      'group': { svg: '<svg> ... svg 源代码 ...</svg>' },
+    }
+});
+
+// 在主题中使用它
+const myTheme = themeQuartz.withPart(mySvgIcons);
+```
+
+### 使用图标字体字符替换图标
+
+`iconOverrides` 可以使用以下参数将图标替换为图标字体字形或表情符号：
+
+| 参数    | 描述                                                                                                                                                                           |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`       | `font`                                                                                                                                                                                |
+| `family`     | 可选，要使用的图标字体系列名称                                                                                                                                     |
+| `cssImports` | 可选，CSS 文件 URL 数组，可用于加载定义图标字体的 CSS 文件                                                                               |
+| `weight`     | 可选，例如 `bold`。某些图标字体（如 fontawesome）需要粗体字重。                                                                                                |
+| `color`      | 可选 CSS 颜色，例如 `red`。可以使用[颜色参数语法](./theming-parameters/#color-values)引用和混合其他颜色参数。                                   |
+| `icons`      | [图标名称](#icon-names)到文本数据的映射。如果您使用的是图标字体，每个图标的正确字符将由您的字体记录。但您可以使用任何文本或表情符号。 |
+
+```js
+import { themeQuartz, iconOverrides } from 'ag-grid-community';
+
+// 创建图标覆盖部分
+const fontAwesomeIcons = iconOverrides({
+    type: 'font',
+    family: 'Font Awesome 5 Free',
+    cssImports: ['https://use.fontawesome.com/releases/v5.6.3/css/all.css'],
+    weight: 'bold', // Font Awesome 需要粗体字重
+    icons: {
+        // 使用 Font Awesome 记录的字体代码，例如 '\u{f062}' == arrow-up
+        asc: '\u{f062}',
+        desc: '\u{f063}',
+    },
+})
+
+// 在主题中使用它
+const myTheme = themeQuartz.withPart(fontAwesomeIcons);
+```
+
+### 替换图标示例
+
+以下示例结合了覆盖图标的各种方式：
+
+-   排序和分组图标（绿色）被替换为 FontAwesome 的字符
+-   分组和聚合图标（红色）被替换为 Material Design Icons 字体的字符
+-   Columns 图标（🏛️）被替换为表情符号
+-   过滤器图标被替换为蓝色的 SVG 图像
+-   列菜单图标被替换为蒙版模式的 SVG 图像。虽然图像是蓝色的，但图标使用网格前景色，并将根据浅色或深色模式适当更改颜色。
+
+{% gridExampleRunner title="替代图标字体" name="icons-override" /%}
+
+## 使用 CSS 设置图标样式
+
+如果您更喜欢使用纯 CSS 来设置应用程序样式，您仍然可以更改图标。
+
+```css
+.ag-icon-group {
+    /* 设置新图像 */
+    background: url('https://www.ag-grid.com/example-assets/svg-icons/group.svg');
+    /* 隐藏提供的主题中基于图像蒙版的现有图标 */
+    color: transparent;
+}
+```
+
+{% gridExampleRunner title="交换图标字体" name="icons-css" /%}
+
+## 提供的图标
+
+下面您可以看到每个提供主题的所有可用图标的列表。每个图标旁边的名称是 CSS 名称，例如 `pin` 图标将具有 CSS 类 `ag-icon-pin`。
+
+{% iconsPanel /%}
+
+## 通过 gridOptions 设置图标（JavaScript）
+
+您可以在[网格选项](./grid-options/)上传递 `icons` 属性以应用于整个网格，或在[列定义](./column-properties/)上传递。如果两者都提供，则在列级别指定的图标将优先。
+
+`icons` 属性采用名称/值对的对象，其中名称是下面图标名称之一（请注意，这些与上面的 CSS 名称不同），值是以下之一：
+
+-   要插入代替图标通常 DOM 元素的 HTML 字符串
+-   返回 HTML 字符串或 DOM 节点的函数
+
+{% gridExampleRunner title="图标网格选项" name="icons-grid-options"  exampleHeight=660 /%}
+
+在以下列表中，在网格选项中使用的名称在左侧，右侧是默认值 CSS 图标名称，如下面的[提供的图标](#provided-icons)表中列出。
+
+## 图标名称
+
+这是图标从 javascript 名称到 CSS 名称的映射。使用网格选项覆盖图标时，使用左侧的名称。在 CSS 中或使用 `iconOverrides` 覆盖图标时，使用右侧的名称。
+
+```js
+// 展开时显示的表头列组（单击以折叠）
+columnGroupOpened: 'expanded'
+
+// 折叠时显示的表头列组（单击以展开）
+columnGroupClosed: 'contracted'
+
+// 列工具面板列组折叠（单击以展开）
+columnSelectClosed: 'tree-closed'
+
+// 列工具面板列组展开（单击以折叠）
+columnSelectOpen: 'tree-open'
+
+// 列工具面板表头展开/折叠全部按钮，当
+// 某些子项展开而其他子项折叠时显示
+columnSelectIndeterminate: 'tree-indeterminate'
+
+// 手风琴打开（过滤器工具面板组，图表组）
+accordionOpen: 'tree-open'
+
+// 手风琴关闭（过滤器工具面板组，图表组）
+accordionClosed: 'tree-closed'
+
+// 手风琴不确定 - 当某些子项展开而
+// 其他子项折叠时显示（过滤器工具面板组，图表组）
+accordionIndeterminate: 'tree-indeterminate'
+
+// 在拖动时显示在拖放图像组件图标上
+// 列到网格侧面以固定
+columnMovePin: 'pin'
+
+// 在拖动到
+// 页面中不是放置区域的部分时显示在拖放图像组件图标上
+columnMoveHide: 'eye-slash'
+
+// 在拖动
+// 列以重新排序时显示在拖放图像组件图标上
+columnMoveMove: 'arrows'
+
+// 当拖动列到网格右侧
+// 导致水平滚动时显示的动画图标
+columnMoveLeft: 'left'
+
+// 当拖动列到网格左侧
+// 导致水平滚动时显示的动画图标
+columnMoveRight: 'right'
+
+// 在拖动到行组放置区域上时
+// 显示在拖放图像组件图标上
+columnMoveGroup: 'group'
+
+// 在拖动到值放置区域上时
+// 显示在拖放图像组件图标上
+columnMoveValue: 'aggregation'
+
+// 在拖动到透视放置区域上时
+// 显示在拖放图像组件图标上
+columnMovePivot: 'pivot'
+
+// 在拖动到
+// 不支持它的放置区域上时显示在拖放图像组件图标上，例如
+// 字符串列在聚合放置区域上
+dropNotAllowed: 'not-allowed'
+
+// 当折叠时显示在行组上（单击以展开）
+groupContracted: 'tree-closed'
+
+// 当展开时显示在行组上（单击以折叠）
+groupExpanded: 'tree-open'
+
+// 集合过滤器树列表组折叠（单击以展开）
+setFilterGroupClosed: 'tree-closed'
+
+// 集合过滤器树列表组展开（单击以折叠）
+setFilterGroupOpen: 'tree-open'
+
+// 集合过滤器树列表展开/折叠全部按钮，当
+// 某些子项展开而
+// 其他子项折叠时显示
+setFilterGroupIndeterminate: 'tree-indeterminate'
+
+// 集合过滤器异步值加载
+setFilterLoading: 'loading'
+
+// 上下文菜单图表项
+chart: 'chart'
+
+// 对话框标题栏
+close: 'cross'
+
+// 在将列添加到放置区域列表后的列"药丸"上的 X（删除）
+cancel: 'cancel'
+
+// 在列菜单的"固定列"
+// 子菜单中指示当前活动的固定状态
+check: 'tick'
+
+// 分页控件中的"转到第一页"按钮
+first: 'first'
+
+// 分页控件中的"转到上一页"按钮
+previous: 'previous'
+
+// 分页控件中的"转到下一页"按钮
+next: 'next'
+
+// 分页控件中的"转到最后一页"按钮
+last: 'last'
+
+// 当图表链接到范围
+// 数据时显示在图表右上角（单击以取消链接）
+linked: 'linked'
+
+// 当图表未链接到
+// 范围数据时显示在图表右上角（单击以链接）
+unlinked: 'unlinked'
+
+// 加载单元格渲染器显示的旋转微调器
+groupLoading: 'loading'
+
+// 加载覆盖层显示的旋转微调器
+overlayLoading: 'loading'
+
+// 启动旧版列菜单的按钮
+menu: 'menu'
+
+// 启动新企业列菜单的按钮
+menuAlt: 'menu-alt'
+
+// 旧版选项卡式企业列菜单中的菜单选项卡图标
+legacyMenu: 'menu'
+
+// 打开过滤器按钮 - 表头、浮动过滤器、菜单
+filter: 'filter'
+
+// 应用过滤器 - 表头（旧版列菜单）、过滤器工具面板
+filterActive: 'filter'
+
+// 新过滤器工具面板中的过滤器添加按钮
+filterAdd: 'filterAdd'
+
+// 新过滤器工具面板中折叠过滤器卡的按钮
+filterCardCollapse: 'chevron-up'
+
+// 新过滤器工具面板中展开过滤器卡的按钮
+filterCardExpand: 'chevron-down'
+
+// 指示新过滤器工具面板中的过滤器卡有编辑
+filterCardEditing: 'edit'
+
+// 旧版选项卡式企业列菜单中的过滤器选项卡图标
+filterTab: 'filter'
+
+// 过滤器工具面板选项卡
+filtersToolPanel: 'filter'
+
+// 菜单中的列（列选择器/列选项卡）
+columns: 'columns'
+
+// 列工具面板选项卡
+columnsToolPanel: 'columns'
+
+// 图表常规大小窗口标题栏中的按钮（单击以最大化）
+maximize: 'maximize'
+
+// 图表最大化窗口标题栏中的按钮（单击以使其变为常规大小）
+minimize: 'minimize'
+
+// 列表头菜单中的"固定列"项
+menuPin: 'pin'
+
+// "值聚合"列菜单项（当分组处于活动状态时
+// 在数字列上显示）"
+menuValue: 'aggregation'
+
+// 列表头菜单中的"按 {column-name} 分组"项
+menuAddRowGroup: 'group'
+
+// 列表头菜单中的"取消按 {column-name} 分组"项
+menuRemoveRowGroup: 'group'
+
+// 上下文菜单复制项
+clipboardCopy: 'copy'
+
+// 上下文菜单剪切项
+clipboardCut: 'cut'
+
+// 上下文菜单粘贴项
+clipboardPaste: 'paste'
+
+// 标识透视放置区域
+pivotPanel: 'pivot'
+
+// 列工具面板中的"行组"放置区域
+rowGroupPanel: 'group'
+
+// 列工具面板值放置区域
+valuePanel: 'aggregation'
+
+// 用于拾取可拖动列的拖动手柄
+columnDrag: 'grip'
+
+// 用于拾取可拖动行的拖动手柄
+rowDrag: 'grip'
+
+// 上下文菜单导出项
+save: 'save'
+
+// csv 导出
+csvExport: 'csv'
+
+// excel 导出
+excelExport: 'excel'
+
+// 导出覆盖层显示的旋转微调器
+overlayExporting: 'loading',
+
+// 选择下拉列表上的图标（选择单元格编辑器、图表工具面板）
+selectOpen: 'small-down'
+
+// 富选择编辑器的打开图标
+richSelectOpen: 'small-down'
+
+// 富选择编辑器药丸的删除
+richSelectRemove: 'cancel'
+
+// 列表项异步值加载
+richSelectLoading: 'loading'
+```

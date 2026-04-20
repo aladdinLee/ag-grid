@@ -1,0 +1,94 @@
+---
+title: "用户创建的图表"
+enterprise: true
+---
+
+用户创建的图表旨在提供开箱即用的图表体验，类似于 Excel 等电子表格应用程序中的体验，但完全集成在您的应用程序中。
+
+用户可以在网格中选择单元格范围并从上下文菜单创建图表，如下所示：
+
+{% gif imagePath="resources/chart-showcase.gif" alt="Chart Showcase" /%}
+
+请注意，创建图表后，图表范围会出现在网格中。这些通过在网格中突出显示图表化的类别和系列数据，为用户提供有用的视觉反馈。
+
+在我们的[演示页面](/example)上尝试以下操作：
+
+-   通过在单元格范围内拖动鼠标，在网格中选择数值的[单元格范围](./cell-selection/)。
+-   调出[上下文菜单](./context-menu/)并从"Chart Range"子菜单中选择所需的图表类型。
+
+请注意，开发人员也可以通过编程方式创建范围图表，请参阅[应用程序创建的图表](./integrated-charts-application-created/)。
+
+## 启用用户创建的图表
+
+用户从网格中已包含的数据创建图表所需的一切就是启用以下网格选项：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    enableCharts: true
+}
+```
+
+要允许用户从[单元格选择](./cell-selection/)创建图表和/或在网格中显示[图表范围](./integrated-charts-range-chart/#creating-chart-ranges)，还应启用单元格选择，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    enableCharts: true,
+    cellSelection: true,
+}
+```
+
+## 用户创建的图表
+
+上面的视频突出显示了许多图表功能。有关每个功能的更多详细信息，请访问下面提供的链接：
+
+{% flex gap="size-10" direction="column" %}
+
+{% flex gap="size-6" mobileWrap=true %}
+{% flex direction="column" %}  
+[图表范围](./integrated-charts-range-chart/#creating-chart-ranges)：创建图表时，相应的图表范围会出现在网格中，并可以通过图表范围手柄进行调整。
+
+[类别和系列](./integrated-charts-range-chart/#category-and-series-ranges)：列可以配置为图表的类别或系列。如果未配置，网格将推断列包含类别还是系列数据。
+{% /flex %}
+
+{% imageCaption imagePath="resources/category-range-fill-handle.png" alt="Range Handle" minWidth="345px" /%}
+{% /flex %}
+
+{% flex gap="size-6" mobileWrap=true %}
+{% flex direction="column" %}  
+[图表菜单](./integrated-charts-menu/)：可以通过位于图表右上角的按钮打开图表菜单。图表菜单允许用户：
+
+-   通过图表工具面板编辑图表
+-   更改高级设置，如交互性
+-   链接/取消链接图表到网格
+-   下载图表
+
+{% /flex %}
+
+{% imageCaption  imagePath="resources/chart-menu.png" alt="Open Chart Menu" minWidth="232px" /%}
+{% /flex %}
+
+{% flex gap="size-6" mobileWrap=true %}
+{% flex direction="column" %}  
+[图表工具面板](./integrated-charts-chart-tool-panels/)：可以通过图表菜单中的编辑图表选项打开图表工具面板。图表工具面板允许用户：
+
+-   更改图表类型
+-   更改主题
+-   更改哪些列用作类别和系列
+-   格式化图表的不同方面
+
+{% /flex %}
+
+{% imageCaption imagePath="resources/chart-tool-panels.png" alt="Open Chart Tool Panel" minWidth="261px" /%}
+{% /flex %}
+
+{% /flex %}
+
+{% br /%}
+
+默认情况下，用户创建的图表显示在网格自己的弹出窗口中。窗口可以移动（通过鼠标拖动窗口的标题栏）和调整大小（通过鼠标拖动窗口的边框）。
+
+也可以在位置或应用程序对话框中显示用户创建的图表。有关更多详细信息，请参阅关于[提供图表容器](./integrated-charts-container/)的部分。
+
+{% note %}
+如果使用网格自己的弹出窗口，您可能希望使用网格选项 `popupParent`，以便弹出窗口不受网格边界的限制。通常，用户设置 `popupParent=document.body` 来实现这一点。
+{% /note %}

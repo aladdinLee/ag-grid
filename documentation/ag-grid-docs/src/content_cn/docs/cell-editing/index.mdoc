@@ -1,0 +1,89 @@
+---
+title: "单元格编辑"
+---
+
+## 启用编辑
+
+要在列上启用单元格编辑，请在列定义上使用 `editable` 属性。
+
+{% apiDocumentation source="column-properties/properties.json" section="editing" names=["editable"] /%}
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'athlete',
+            // 启用编辑
+            editable: true
+        }
+    ]
+}
+```
+
+默认情况下，表格使用[单元格数据类型](./cell-data-types/)根据每列的类型提供不同的编辑器。例如，字符串列将使用文本输入，数字列将使用数字输入。
+
+下面的示例通过在 `defaultColDef` 上设置 `editable=true` 来显示所有列上启用的编辑。
+
+{% gridExampleRunner title="简单单元格编辑" name="simple-editing" /%}
+
+## 条件编辑
+
+要动态确定哪些单元格可编辑，可以向列定义上的 `editable` 属性提供回调函数：
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'athlete',
+            // 有条件地为 2012 年的数据启用编辑
+            editable: (params) => params.data.year == 2012
+        }
+    ],
+}
+```
+
+在上面的代码片段中，**运动员**单元格将在**年份**为 `2012` 的行上可编辑。
+
+这在以下示例中演示，请注意：
+
+-   向**运动员**和**年龄**列添加了 `editable` 回调，以根据选定的**年份**控制哪些单元格可编辑。
+-   使用自定义 `editableColumn` [列类型](./column-definitions/#default-column-definitions)来避免**运动员**和**年龄**的回调重复。
+-   提供了按钮来更改 `editable` 回调函数使用的**年份**，以控制哪些单元格可编辑。
+-   使用与 `editable` 回调相同的逻辑添加了蓝色[单元格样式](./cell-styles/)来突出显示可编辑单元格。
+
+{% gridExampleRunner title="条件单元格编辑" name="conditional-editing" /%}
+
+{% if isFramework("vue") %}
+
+## 双向绑定
+
+默认情况下，`:rowData` 是**单向绑定**：数据流入表格，但在表格内所做的更改（例如通过单元格编辑）**不会**传播回父组件的 `rowData` 变量。
+
+要让行数据更改从表格流回父组件，请使用 `v-model` 而不是 `:rowData`。
+
+例如：
+
+```jsx
+<template>
+    <ag-grid-vue style="width: 500px; height: 500px;"
+                 @grid-ready="onGridReady"
+                 :columnDefs="columnDefs"
+                 v-model="rowData">
+    </ag-grid-vue>
+</template>
+```
+
+{% note %}
+`v-model` 仅在使用 `ClientSideRowModel` 且注册了 `AllCommunityModule` 或 `ClientSideRowModelApiModule` 模块时才可用。
+{% /note %}
+{% /if %}
+
+## 编辑事件
+
+单元格编辑会导致以下事件。
+
+{% apiDocumentation source="grid-events/events.json" section="editing" names=["cellValueChanged","cellEditingStarted","cellEditingStopped","rowEditingStarted","rowEditingStopped","cellEditRequest","rowValueChanged"] config={"overrideBottomMargin":"0rem", "hideMore":false} /%}
+
+## 行分组和单元格编辑
+
+有关行分组的单元格编辑，请参阅[行分组 - 编辑组](./grouping-edit/)

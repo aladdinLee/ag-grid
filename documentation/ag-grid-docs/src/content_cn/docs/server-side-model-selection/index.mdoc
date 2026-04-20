@@ -1,0 +1,117 @@
+---
+title: "SSRM 行选择"
+enterprise: true
+---
+
+服务端行模型支持选择行和组。
+按照[行选择](./row-selection)中的描述配置 `selection` 网格选项。
+下面详细介绍了一些 SSRM 特定的注意事项。
+
+{% note %}
+服务端行选择需要向网格提供[行 ID](./server-side-model-configuration/#providing-row-ids)。
+{% /note %}
+
+## 过滤器和选择
+
+当网格排序或过滤时，选定的行会被保留，并在滚动到视图中时显示为已选定。
+选择一行，应用列过滤器使选定的行在过滤器结果中，它将在过滤器结果中显示为已选定。
+如果选定的行与应用的过滤器不匹配，当删除过滤器时它仍将被选定。
+
+{% gridExampleRunner title="点击选择" name="click-selection" /%}
+
+## 选择所有行
+
+使用 SSRM 时，`rowSelection.selectAll` 的 `'filtered'` 或 `'currentPage'` 设置被视为无效。网格的行为就像 `rowSelection.selectAll = 'all'`，这是默认值。
+下面的示例演示了这一点。
+
+{% gridExampleRunner title="批量选择" name="select-all" /%}
+
+{% note %}
+使用服务端行模型的标题复选框选择时，您**不应**使用 API 函数 `getSelectedNodes()` 或 `getSelectedRows()`。有关建议的替代方法，请参阅下面的 [API 参考](./server-side-model-selection/#api-reference)部分。
+{% /note %}
+
+## 组选择
+
+{% note %}
+使用服务端行模型的组选择时，您**不应**使用 API 函数 `getSelectedNodes()` 或 `getSelectedRows()`。有关建议的替代方法，请参阅下面的 [API 参考](./server-side-model-selection/#api-reference)部分。
+{% /note %}
+
+### 事务
+
+通过事务添加新行时，新行将被视为符合其父行的选择。因此，如果父行已选定，则新行在创建时将被视为已选定。对于不确定的组，这将遵循最后一个非不确定状态。请注意以下几点：
+
+-   单击 `Add new Aggressive` 按钮时，新行未选定
+-   选择 `Aggressive` 组后，`Add new Aggressive` 按钮创建的新行将被选定。
+-   切换 `Aggressive` 组的某个子行后，新行遵循组之前的选择状态。
+
+{% gridExampleRunner title="事务示例" name="group-selects-children-transactions" /%}
+
+## API 参考
+
+使用[行选择](./row-selection-api-reference/#grid-selection-api)时，服务端行模型存在以下 API 函数。如果所有选定的行都已由网格加载，这些函数可用于获取当前选定的行和节点。
+当使用 `rowSelection.groupSelects` 为 `'descendants'` 或 `'filteredDescendants'` 时，或需要任何全选功能时，不能使用这些函数。
+
+{% apiDocumentation source="grid-api/api.json" section="selection" names=["getSelectedNodes", "getSelectedRows"] /%}
+
+当使用可能未加载所有选定行的选择时，建议改用 `api.getServerSideSelectionState` 和 `api.setServerSideSelectionState`，因为这些函数可用于识别选定的行而无需加载这些行。
+
+{% apiDocumentation source="grid-api/api.json" section="serverSideRowModel" names=["getServerSideSelectionState", "setServerSideSelectionState"] /%}
+
+### 选择 API
+
+下面的代码片段演示如何将所有节点设置为已选定，除了 ID 为 `group-country-year-United States` 的行和 ID 为 `group-country-year-United States2004` 的行。
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+api.setServerSideSelectionState({
+    selectAll: true,
+    toggledNodes: ['group-country-year-United States', 'group-country-year-United States2004'],
+});
+```
+
+在下面的示例中，请注意以下几点；
+
+-   上面的代码片段已包含在 `firstDataRendered` 回调中，用于设置初始选择状态。
+-   `Save Selection` 按钮已配置为存储 `api.getServerSideSelectionState()` 的结果，单击时还会将保存的状态记录到控制台。
+-   `Load Selection` 按钮随后可以使用 `api.setServerSideSelectionState(state)` 重新应用之前保存的选择规则。
+
+{% gridExampleRunner title="全选 API" name="api-select-all"  /%}
+
+### 组选择 API
+
+下面的代码片段演示如何将所有节点设置为已选定，除了 "United States" 组的情况，其唯一选定的子行是 ID 为 `group-country-year-United States2004` 的行。
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+params.api.setServerSideSelectionState({
+    // 此根级别配置可用于确定全局全选
+    selectAllChildren: true,
+    // 所有不符合同全选值的顶级组节点都将在此处有一个条目
+    // 包括不确定节点
+    toggledNodes: [{
+        // 由于这是一个带有 toggledNodes 的组节点，此节点将被标记为不确定
+        nodeId: 'group-country-year-United States',
+        // selectAllChildren 可用于确定此组的子行是否全部选定
+        selectAllChildren: false,
+        toggledNodes: [{
+            // 此组节点没有 toggledNodes，因此它将尊重自己的 `selectAllChildren` 属性及其后代。
+            nodeId: 'group-country-year-United States2004',
+            selectAllChildren: true,
+        }],
+    }],
+});
+```
+
+{% note %}
+这里使用的状态符合 `IServerSideGroupSelectionState`，而不是 `IServerSideSelectionState`。无效状态将被忽略。
+{% /note %}
+
+在下面的示例中，请注意以下几点；
+
+-   上面的代码片段已包含在 `firstDataRendered` 回调中，用于设置初始选择状态。
+-   `Save Selection` 按钮已配置为存储 `api.getServerSideSelectionState()` 的结果，单击时还会将保存的状态记录到控制台。
+-   `Load Selection` 按钮随后可以使用 `api.setServerSideSelectionState(state)` 重新应用之前保存的选择规则。
+
+{% gridExampleRunner title="组选择 API" name="api-group-selects-children" /%}
+
+## 树形数据
+
+使用树形数据时也支持行选择。请参阅 [SSRM 树形数据](./server-side-model-tree-data/#selection-with-tree-data)页面上的文档。

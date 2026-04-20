@@ -1,0 +1,45 @@
+---
+title: "Excel 导出 - 超链接"
+enterprise: true
+---
+
+本节介绍如何在导出的 Excel 文件的单元格中插入超链接。
+
+## 导出公式
+
+您可以通过输出包含您提供的 URL 值的[超链接函数](https://support.microsoft.com/en-us/office/hyperlink-function-333c7ce6-c5ae-4164-9c47-7de9b76f577f)的 Excel 公式，在导出的 Excel 文件的单元格中插入 `hyperlinks`。下面的代码为 URL 列中的所有值在 Excel 导出文件中插入超链接。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'company' },
+        {
+            field: 'url',
+            cellClass: 'hyperlinks' // 引用 excel 样式
+        }
+    ],
+    defaultExcelExportParams: {
+        autoConvertFormulas: true,
+        processCellCallback: params => {
+            const field = params.column.getColDef().field;
+            return field === 'url' ? `=HYPERLINK("${params.value}")` : params.value;
+        }
+    },
+    excelStyles: [
+        {
+            id: 'hyperlinks',
+            font: {
+                underline: 'Single',
+                color: '#358ccb'
+            }
+        }
+    ]
+}
+```
+
+请注意以下内容：
+
+-   下面网格的 URL 列具有 URL 值。
+-   在导出的 Excel 文件中，URL 列具有这些 URL 值的活动链接。
+
+{% gridExampleRunner title="Excel 导出 - 超链接" name="excel-export-hyperlinks" exampleHeight=530 /%}

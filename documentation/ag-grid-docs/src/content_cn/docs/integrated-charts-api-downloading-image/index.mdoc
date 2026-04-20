@@ -1,0 +1,34 @@
+---
+title: "图表图像导出"
+enterprise: true
+---
+
+本节展示如何通过图表工具栏和网格 API 导出图表。
+
+## 通过图表工具栏导出图表
+
+用户可以使用"下载图表"[图表菜单](./integrated-charts-menu/)项在浏览器中下载渲染的图表。
+
+{% flex justifyContent="center" %}
+{% imageCaption imagePath="resources/chart-toolbar-download.png" alt="Side Bar" centered=true constrained=true maxWidth="52rem" /%}
+{% /flex %}
+
+请注意，下载的图表图像将为 `PNG` 格式。
+
+## 通过网格 API 导出图表
+
+使用网格 API 下载图表图像有两种方式，如下所示：
+
+{% apiDocumentation source="grid-api/api.json" section="charts" names=["downloadChart", "getChartImageDataURL"] /%}
+
+您可以使用 `downloadChart(params)` API 在浏览器中下载图表图像。
+
+或者，对于编程用例，`getChartImageDataURL(params)` API 将图表图像作为字符串（base64 编码）返回；这非常适合持久化到后端或静态打开/呈现图表图像。
+
+下面的示例演示如何以多种格式检索从图表渲染的图像。
+
+-   单击 **Download Chart Image (PNG)** 通过 `getChartImageDataURL()` 下载 PNG 格式图像
+-   单击 **Download Chart Image (JPG 800x500)** 通过 `downloadChart()` 下载自定义大小图像
+-   单击 **Open Chart Image (JPG)** 通过 `getChartImageDataURL()` 在新窗口中打开 JPEG 格式图像
+
+{% gridExampleRunner title="下载图表图像" name="downloading-chart-image"  exampleHeight=800 /%}

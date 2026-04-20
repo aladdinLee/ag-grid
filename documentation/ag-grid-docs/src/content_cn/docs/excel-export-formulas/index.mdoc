@@ -1,0 +1,60 @@
+---
+title: "Excel 导出 - 公式"
+enterprise: true
+---
+
+Excel 导出允许您在导出的文件中包含 Excel 公式。您可以使用公式转换任何列值获取器逻辑，以便列值在 Excel 中正确计算。
+
+{% note %}
+如果您使用[公式](./formulas/)功能，公式表达式会自动导出到 Excel，您不需要使用本页说明的方法。以下方法不利用网格的内部解析器，而是依赖 Excel 进行公式求值。
+{% /note %}
+
+## 导出公式
+
+有两种方法可以将公式作为导出的 Excel 文件的一部分包含在内。
+
+1. 在列的 [Excel 样式](./excel-export-styles/)中设置 `dataType='Formula'`。
+1. 在 Excel 导出参数中设置 `autoConvertFormulas=true`，以便在所有列中使用。
+
+## 公式数据类型
+
+当使用 `dataType='Formula'` 导出单元格时，单元格内容将自动转换为 Excel 公式。您有责任确保网格单元格中的值是有效的 Excel 公式。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'firstName', headerName: 'First Name' },
+        { field: 'lastName', headerName: 'Last Name' },
+        {
+            headerName: 'Full Name',
+            cellClass: 'fullName',
+            valueGetter: params => {
+                return `${params.data.firstName} ${params.data.lastName}`;
+            }
+        },
+    ],
+     defaultExcelExportParams: {
+        processCellCallback: params => {
+            const rowIndex = params.accumulatedRowIndex;
+            const valueGetter = params.column.getColDef().valueGetter;
+            return !!valueGetter ? `=CONCATENATE(A${rowIndex}, " ", B${rowIndex})` : params.value;
+        }
+     },
+     excelStyles: [
+        {
+            id: 'fullName',
+            dataType: 'Formula'
+        }
+    ],
+}
+```
+
+请注意以下内容：
+
+-   `Full Name` 列使用 `valueGetter` 来组合 `First Name` 和 `Last Name`。
+-   `processCellCallback` 创建一个公式，该公式具有与 `valueGetter` 类似的功能。
+-   导出的 Excel 工作表将使用公式计算 `Full Name` 列，该公式使用 `First Name` 和 `Last Name` 列作为输入。
+
+{% gridExampleRunner title="Excel 导出 - 公式数据类型" name="excel-export-formula-data-type" /%}
+
+## 自动转换公式

@@ -1,0 +1,346 @@
+---
+title: "列组"
+---
+
+可以使用列组在表格标题中对列进行分组。列组可以显示为打开/关闭以显示/隐藏子列。
+
+通过提供列定义的层次结构来配置列组。如果列定义包含 `children` 属性，则表格将其视为列组。
+
+{% gridExampleRunner title="基本分组" name="basic-grouping"  exampleHeight=550 /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            headerName: '姓名和国家',
+            children: [
+                { field: 'athlete' },
+                { field: 'country' }
+            ]
+        },
+        {
+            headerName: '体育成绩',
+            children: [
+                { columnGroupShow: 'closed', field: 'total' },
+                { columnGroupShow: 'open', field: 'gold' },
+                { columnGroupShow: 'open', field: 'silver' },
+                { columnGroupShow: 'open', field: 'bronze' },
+            ],
+        }
+    ]
+}
+```
+
+在组的子项上设置 `columnGroupShow` 属性以设置展开和折叠策略，如下所示：
+
+-   **`'open'`：** 子项仅在组打开时显示。
+-   **`'closed'`：** 子项仅在组关闭时显示。
+-   **`null`、`undefined`：** 子项始终显示。
+
+有关所有可用属性，请参阅[组列属性](./column-properties/#reference-columnGroups)。
+
+## 组默认值
+
+使用 `defaultColGroupDef` 在所有列组上设置属性。
+
+{% gridExampleRunner title="默认属性" name="defaults"  exampleHeight=550 /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    defaultColGroupDef: {
+        headerName: '所有组的共享属性'
+    }
+}
+```
+
+## 多级别
+
+下面的示例演示具有许多列组标题级别的表格。请注意以下几点：
+
+-   使用 API 打开和关闭组。为此，您需要在定义期间为组提供 ID，或通过 API 查找组 ID（因为如果您不提供 ID，则会生成 ID）。
+-   在 E 和 F 组上设置了 `colGroupDef.openByDefault` 属性，导致这些组默认显示为打开。
+-   使用 `defaultColGroupDef` 和 `defaultColDef` 将类应用于某些标题。使用此技术，您可以将样式应用于任何标题部分。
+
+{% gridExampleRunner title="高级分组" name="advanced-grouping"  exampleHeight=680 /%}
+
+## 组和列固定
+
+固定列会破坏组。因此，如果您有一个包含 10 列的组，其中 4 列在固定区域内，则将创建两个组，一个包含 4 列（固定），一个包含 6 列（不固定）。
+
+## 组和列移动
+
+如果您移动列以使组中的列不再相邻，则组将再次被破坏并在表格中显示为一个或多个组。
+
+有时您希望组的列始终粘在一起。要实现这一点，请设置列组属性 `marryChildren=true`。下面的示例演示了以下内容：
+
+-   '运动员详情'和'体育成绩'都有 `marryChildren=true`。
+-   如果您移动这些组内的列，您将无法将列移出组。例如，如果您拖动'运动员'，则无法将其拖出'运动员详情'组。
+-   如果您移动非组列，例如年龄，则无法将其放置在组的中间，因此无法将组分开。
+-   可以将列放置在组之间（例如，您可以将'年龄'放置在'运动员详情'和'体育成绩'之间）。
+
+{% gridExampleRunner title="绑定子项" name="marry-children"  exampleHeight=560 /%}
+
+## 调整组大小
+
+如果您抓住组调整大小条，它会均匀分配新的额外宽度来调整组中每个子项的大小。如果您抓住子项调整大小条，则只会调整那一列。
+
+{% imageCaption imagePath="resources/header-resize.png" alt="标题调整大小" centered=true constrained=true width="30rem" /%}
+
+## 自动标题高度
+
+列组的标题行可以根据组标题单元格的内容自动设置高度。这在使用 `wrapHeaderText` 列组属性时最有用。
+
+要启用此功能，请在要调整高度的列组定义上设置 `autoHeaderHeight=true`。如果启用了多个列组的此属性，则标题行将调整为这些列组标题单元格的最大值，以避免内容溢出。
+
+下面的示例演示将 `autoHeaderHeight` 属性与 `wrapHeaderText` 属性结合使用，以便完全显示长列组名称。
+
+-   注意长列组标题名称换行到另一行
+-   通过拖动列组标题或子列标题上的调整大小条向左调整列组大小。观察组标题行将扩展，以便标题单元格内容仍然完全可见，因为它在多行上换行。
+
+{% gridExampleRunner title="自动标题高度" name="auto-height" /%}
+
+## 为组着色
+
+表格不会自动为您为组着色。但是，您可以通过在列定义中使用 `headerClass` 或 `headerStyle` 属性来实现这一点。这些属性可以应用于单个列和列组。
+
+```{% frameworkTransform=true suppressFrameworkContext=true %}
+const gridOptions = {
+    columnDefs: [
+        // 提供给 'headerClass' 的 CSS 类名将应用于标题组
+        { headerName: '运动员详情', headerClass: 'my-css-class', children: [] },
+        { headerName: '奖牌详情', headerStyle: { backgroundColor: 'green' }, children: [] }
+    ]
+}
+```
+
+## 文本对齐
+
+分组标题中的标签使用 `display: flex` 定位。要使组标题右对齐，请在表格的样式表之后在应用程序中添加以下规则集：
+
+```css
+.ag-header-group-cell-label {
+    flex-direction: row-reverse;
+}
+```
+
+## 粘性标签
+
+当列组太宽时，**标题标签**在水平滚动表格时始终可见。要禁止此行为，请设置列组属性 `suppressStickyLabel=true`。下面的示例演示了以下内容：
+
+-   '运动员详情'和'体育成绩'都有 `suppressStickyLabel=true`。
+-   如果您水平滚动表格，当列部分滚动出视图时，标题标签将不会保持可见。
+
+{% gridExampleRunner title="粘性标签" name="suppress-sticky-label"  exampleHeight=560 /%}
+
+## 组更改
+
+与添加和删除列类似，您也可以添加和删除列组。如果传入的列定义具有列组，则列将分组到新配置。
+
+下面的示例显示向列添加和删除组。请注意以下几点：
+
+-   选择 **无组** 以显示所有列而不进行任何分组。
+-   选择 **参与者组** 以仅显示所有参与者列在一个组中。
+-   选择 **奖牌组** 以仅显示所有奖牌列在一个组中。
+-   选择 **参与者和奖牌组** 以在组中显示参与者和奖牌列。
+-   随着组的添加和删除，请注意单个列的状态被保留。要观察这一点，尝试移动、调整大小、排序、过滤等，然后添加和删除组，所有更改的状态将被保留。
+
+{% gridExampleRunner title="组更改" name="group-changes" /%}
+
+上面的示例显示添加和删除组。也可以从组中添加和删除列。这在下面的示例中演示。请注意以下几点：
+
+-   示例有两个组：**运动员详情**和**体育成绩**
+-   示例有两组列，**普通列**和**额外列**。
+-   当您从 **普通列** 移动到 **额外列** 时，列表中添加了三个新列。两个属于 **运动员详情** 组，另一个不属于任何组。
+
+{% gridExampleRunner title="组更改 2" name="group-changes-2" /%}
+
+## 列高度
+
+默认情况下，表格将调整标题单元格大小以跨越标题容器的整个高度，如下面的示例所示。
+
+请注意以下几点：
+
+-   **年龄**列标题单元格不在列组单元格下，但跨越标题容器的整个高度。
+
+{% gridExampleRunner title="跨越标题高度" name="span-header-height"  exampleHeight=300 /%}
+
+使用 **列属性** `suppressSpanHeaderHeight`，表格将使用空列组标题单元格平衡具有不同级别数的列标题，如下面的示例所示。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            headerName: '运动员详情',
+            children: [
+                { field: 'athlete' },
+                { field: 'country' },
+            ],
+        },
+        {
+            field: 'age',
+            width: 90,
+            suppressSpanHeaderHeight: true,
+        }
+    ]
+}
+```
+
+请注意以下几点：
+
+-   **年龄**列上方有一个空列组标题单元格（显示红色边框）。
+
+{% gridExampleRunner title="填充标题" name="padded-header"  exampleHeight=300 /%}
+
+## 隐藏填充标题行
+
+使用列组时，表格会向列添加填充以确保列树平衡。当具有更深树的列被隐藏时，这可能导致标题行完全由填充组成。将 `hidePaddedHeaderRows` 表格选项设置为 `true` 以隐藏仅由填充组成的行。
+
+{% gridExampleRunner title="隐藏填充标题行" name="hide-padded-header-rows" /%}
+
+上面的示例演示了一个带有隐藏列组的表格，当父组折叠时，表格标题比必要的要高。
+
+## 工具提示
+
+可以使用 `ColGroupDef` 的 `headerTooltip` 属性向列组标题添加工具提示。
+
+下面的示例演示在表格列组中使用 `headerTooltip` 属性。
+
+{% gridExampleRunner title="标题工具提示" name="group-header-tooltip" /%}
+
+## 内部标题组组件
+
+使用标题组组件时，`agColumnHeaderGroup` 组件将显示标题组名称，
+紧邻展开/折叠按钮。
+
+可以通过在 `headerGroupComponentParams` 属性上设置 `innerHeaderGroupComponent` 和 `innerHeaderGroupComponentParams` 属性来使用[自定义组件](./components/)覆盖此文本值。当您只需要实现一个组件来自定义 **列组名称** 而不必重新实现其他标题组功能（如展开/折叠）时，这很有用。
+
+{% if isFramework("javascript", "angular", "react") %}
+
+```js
+colDef = {
+    ...
+    headerGroupComponentParams : {
+        innerHeaderGroupComponent: MyInnerHeaderGroupComponent,
+        innerHeaderGroupComponentParams: {
+            currencySymbol: '£' // 英镑符号将被放入 params
+        }
+    }
+}
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+```js
+colDef = {
+    ...
+    headerGroupComponentParams : {
+        innerHeaderGroupComponent: 'MyInnerHeaderGroupComponent',
+        innerHeaderGroupComponentParams: {
+            currencySymbol: '£' // 英镑符号将被放入 params
+        }
+    }
+}
+```
+
+{% /if %}
+
+{% gridExampleRunner title="自定义内部标题组组件" name="inner-header-group-component" /%}
+
+{% if isFramework("javascript", "angular") %}
+实现此接口以提供自定义内部标题组件。
+{% /if %}
+{% if isFramework("javascript") %}
+
+### IInnerHeaderGroupComponent
+
+{% interfaceDocumentation interfaceName="IInnerHeaderGroupComponent" config={"asCode":true } /%}
+{% /if %}
+{% if isFramework("angular") %}
+
+### IInnerHeaderGroupAngularComp
+
+{% interfaceDocumentation interfaceName="IInnerHeaderGroupAngularComp" config={"asCode":true } /%}
+{% /if %}
+{% if isFramework("javascript", "angular") %}
+
+### IHeaderGroupParams
+
+{% interfaceDocumentation interfaceName="IHeaderGroupParams" exclude=["template"] config={ "description": "" } /%}
+{% /if %}
+{% if isFramework("react") %}
+
+```ts
+const CustomInnerHeaderGroupComponent = (props: CustomInnerHeaderGroupProps) => {
+    return <div>{props.displayName}</div>;
+};
+```
+
+以下 props 传递给自定义组件（`CustomInnerHeaderGroupProps` 接口）。
+
+### CustomInnerHeaderGroupProps
+
+{% interfaceDocumentation interfaceName="CustomInnerHeaderGroupProps" config={ "description": "" } /%}
+{% /if %}
+{% if isFramework("vue") %}
+任何有效的 Vue 组件都可以是自定义内部标题组组件，但是它必须实现 `IHeaderGroup` 接口：
+
+### IHeaderGroup
+
+{% interfaceDocumentation interfaceName="IHeaderGroup" config={"asCode":true } /%}
+{% /if %}
+
+## 选择组件
+
+默认情况下，表格使用提供的标题组组件。要使用自定义组组件，请在列定义上设置 `headerGroupComponent`。
+
+{% partial file="./_column-def-javascript.mdoc" /%}
+{% partial file="./_column-def-vue.mdoc" /%}
+
+有关注册组件的概述，请参阅[注册组件](./components/)。
+
+## 自定义组组件
+
+下面的示例显示自定义列组组件。
+
+{% gridExampleRunner title="标题组" name="header-group-component" /%}
+
+与列标题一样，表格将始终处理调整大小和列移动。自定义组件负责以下内容：
+
+-   **组打开/关闭：** 如果组可以展开（一个或多个列的可见性取决于组的打开/关闭状态），则自定义组件应处理与用户的交互以打开和关闭组。
+
+{% partial file="./_group-component-interface-javascript.mdoc" /%}
+{% partial file="./_group-component-interface-angular.mdoc" /%}
+{% partial file="./_group-component-interface-react.mdoc" /%}
+{% partial file="./_group-component-interface-vue.mdoc" /%}
+
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="IHeaderGroupParams" /%}
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="CustomHeaderGroupProps" /%}
+{% /if %}
+
+{% partial file="./_open-close-javascript.mdoc" /%}
+{% partial file="./_open-close-angular.mdoc" /%}
+{% partial file="./_open-close-react.mdoc" /%}
+{% partial file="./_open-close-vue.mdoc" /%}
+
+### 动态工具提示
+
+使用自定义标题组件时，可能需要更好地控制如何添加 `工具提示`，而不是简单地使用 `headerTooltip` 配置。为此，我们提供 `setTooltip` 方法。
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="IHeaderGroupParams" names=["setTooltip"] /%}
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="IHeaderGroupParams" names=["setTooltip"] /%}
+{% /if %}
+
+下面的示例演示在自定义组组件中使用动态工具提示。
+
+-   注意只有文本未完全显示的组标题才会显示工具提示。
+
+{% gridExampleRunner title="动态组标题工具提示" name="dynamic-tooltips" /%}

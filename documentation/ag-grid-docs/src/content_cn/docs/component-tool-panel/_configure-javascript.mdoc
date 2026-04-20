@@ -1,0 +1,24 @@
+{% if isFramework("javascript") %}
+
+```js
+const gridOptions: {
+    sideBar: {
+        toolPanels: [
+            {
+                id: 'customStats',
+                labelDefault: 'Custom Stats',
+                labelKey: 'customStats',
+                iconKey: 'custom-stats',
+                toolPanel: CustomStatsToolPanel,
+                toolPanelParams: {
+                    // 可以在此处传递任何自定义参数
+                },
+            }
+        ]
+    }
+
+    // 其他网格属性
+}
+```
+
+{% /if %}

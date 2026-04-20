@@ -1,0 +1,60 @@
+---
+title: "Excel 导出 - 样式"
+enterprise: true
+---
+
+Excel 导出提供了一种特殊的机制来向导出的电子表格添加样式，该机制独立于应用于网格的样式。
+
+## 定义样式
+
+使用样式导出到 Excel 的主要原因是使外观和感觉与您的 AG Grid 应用程序尽可能保持一致。为了简化配置，Excel 导出重用列定义中的 [cellClassRules](./cell-styles/#cell-class-rules)、[cellClass](./cell-styles/#cell-class) 和 [headerClass](./column-properties/#reference-header-headerClass)。任何适用于单元格的结果类都应作为 Excel 样式提供给 [gridOptions](./grid-options/) 中的 `excelStyles`: [ExcelStyle\[\]](./excel-export-api/#excelstyle) 属性。
+
+## 解析 Excel 样式
+
+[cellClass](./cell-styles/#cell-class) 中定义的所有类以及评估 [cellClassRules](./cell-styles/#cell-class-rules) 产生的所有类都应用于每个单元格，而 [headerClass](./column-properties/#reference-header-headerClass) 产生的类将在导出到 Excel 时应用于每个表头单元格。通常，当网格进行正常渲染时，这些样式映射到 CSS 类。在 Excel 导出中，样式映射到您提供的 Excel 样式。如果找到多个 Excel 样式，则结果将合并（类似于浏览器在应用多个类时合并 CSS 类的方式）。
+
+## Excel 样式定义示例
+
+下面的示例演示了如何在 Excel 中合并样式。所有小于 23 的人都将具有绿色背景和浅绿色字体（`#e0ffc1`），也因为 redFont 在 cellClass 中设置，它将始终应用。
+
+{% note %}
+ExcelStyle id `cell` 应用于**不是**表头的每个单元格，如果您需要将样式应用于所有单元格，这很有用。
+{% /note %}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            // 相同的 cellClassRules 和 cellClass 可用于 CSS 和 Excel
+            cellClassRules: {
+                greenBackground: params => params.value < 23,
+            },
+            cellClass: 'redFont'
+        }
+    ],
+    excelStyles: [
+        // 基础样式，红色字体。
+        {
+            id: "redFont",
+            font: {
+                color: '#ff0000',
+            },
+        },
+        // cellClassStyle：背景为绿色，字体颜色为浅绿色，
+        // 注意，由于此 excel 样式在 redFont 之后定义
+        // 它将覆盖通过 cellClass:'red' 获得的红色字体颜色
+        {
+            id: "greenBackground",
+            alignment: {
+                horizontal: 'Right', vertical: 'Bottom'
+            },
+            font: { color: "#e0ffc1"},
+            interior: {
+                color: "#008000", pattern: 'Solid'
+            }
+        },
+        {
+            id: "cell",
+            alignment: {
+                vertical: "Center"
+            }

@@ -1,0 +1,237 @@
+---
+title: "SSRM 主从"
+enterprise: true
+---
+
+本节展示如何使用主/从视图配置服务端行模型。
+
+在网格中嵌套网格的能力通常称为主/从。
+这里顶级网格称为"主网格"，嵌套网格称为"从网格"。
+
+服务端行模型和客户端行模型的主/从配置方式相同。
+有关主/从配置的全面了解，请参阅：[客户端主/从](./master-detail/)。
+
+由于配置已在[客户端主/从](./master-detail/)中讨论，
+本页重点关注与此服务端版本特别相关的领域。
+
+## 启用主/从
+
+要启用主/从，您应该设置以下网格选项：
+
+-   **masterDetail：** 设置为 `true` 以通知网格您希望允许展开行以显示从网格。
+-   **detailGridOptions：** 为从网格设置的网格选项。从网格是 AG Grid 的全功能实例，因此可以在其上设置任何配置，就像在任何其他网格上设置一样。
+-   **getDetailRowData：** 您实现的函数，用于为网格提供在从网格中显示的行。
+
+这些网格选项如下所示：
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    // 主网格列
+    columnDefs: [],
+
+    // 使用服务端行模型
+    rowModelType: 'serverSide',
+
+    // 启用主从
+    masterDetail: true,
+
+    detailCellRendererParams: {
+        detailGridOptions: {
+            // 从网格列
+            columnDefs: [],
+        },
+        getDetailRowData: params => {
+            // 向从网格提供数据
+            params.successCallback(params.data);
+        }
+    },
+}
+```
+
+{% note %}
+请注意，嵌套从网格可以配置为使用任何行模型。
+{% /note %}
+
+## 示例：无限滚动与主/从
+
+此示例显示了使用服务端行模型的简单主/从。从此示例中请注意以下几点：
+
+-   **masterDetail** - 在主网格选项中设置为 `true`。
+-   **detailCellRendererParams** - 指定要使用的 `detailGridOptions`，`getDetailRowData` 提取从行的数据。
+-   **cellRenderer: 'agGroupCellRenderer'** - 用于在主行上提供展开/折叠图标。
+
+{% gridExampleRunner title="无限滚动与主/从" name="infinite-scrolling"  exampleHeight=590 /%}
+
+## 将行分组与主从结合
+
+可以将[服务端分组](./server-side-model-grouping/)与主从结合。
+
+以下代码片段显示通过设置 `rowGroup = true` 在 'country' 列上进行行分组：
+
+```{% frameworkTransform=true suppressFrameworkContext=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroup: true },
+
+        // 更多列定义
+    ]
+}
+```
+
+## 示例：行分组与主从
+
+下面显示行分组与主/从结合。从示例中您可以注意到以下几点：
+
+-   **rowGroup** - 在 'country' 列定义上设置为 `true`。
+-   **masterDetail** - 设置为 `true` 以启用主/从。
+-   **detailCellRendererParams** - 指定要使用的 `detailGridOptions`，`getDetailRowData` 提取从行的数据。
+-   **autoGroupColumnDef** - 用于指定主行中的哪一列应包含在组层次结构中。
+
+{% gridExampleRunner title="行分组与主从" name="row-grouping"  exampleHeight=590 /%}
+
+### 展开主行
+
+通常，父行（组）可以展开，子行不能展开（除非它们本身是父行）。这意味着通常只有父行有展开/折叠图标。
+
+对于主/从，主级别也需要展开和折叠图标。执行主/从时，还需要展开和折叠图标来展开子行，其中这些行也是主行。
+
+而不是使用上面示例中显示的主行的 `autoGroupColumnDef`，只需在应显示展开/折叠图标的列上指定组单元格渲染器。
+
+这在下面的代码片段中显示：
+
+```{% frameworkTransform=true suppressFrameworkContext=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroup: true },
+        { field: 'accountId', maxWidth: 200, cellRenderer: 'agGroupCellRenderer' },
+
+        // 更多列定义
+    ]
+}
+```
+
+您可以使用 `expandAll()` 展开所有主行及其关联的从网格。要确保视口中尚未加载的主行也被展开，请将 `ssrmExpandAllAffectsAllRows` 设置为 true，就像使用 SSRM 行分组一样。有关更多信息，请参阅 [SSRM 全部展开/全部折叠](./server-side-model-grouping/#expand-all--collapse-all)。
+
+{% note %}
+请注意，`ssrmExpandAllAffectsAllRows` 不会自动传播到嵌套从网格。即使在主网格上设置为 `true`，它也仅控制主级别的展开。要展开嵌套从网格中的所有行（例如，在主从网格层次结构中），您必须在每个从网格的 `detailGridOptions` 上显式设置 `ssrmExpandAllAffectsAllRows: true`。
+{% /note %}
+
+## 将树形数据与主从结合
+
+可以在服务端行模型中将[树形数据](./server-side-model-tree-data/)与主从结合。
+这允许显示层次结构（树结构）数据，其中每个主行可以展开以显示从网格。
+
+要启用此功能，请在网格选项中同时设置 `treeData: true` 和 `masterDetail: true`。您还需要为树形数据提供所需的回调：
+
+-   **isServerSideGroup(dataItem)：** 如果行是组（有子行），则返回 `true`。
+-   **getServerSideGroupKey(dataItem)：** 返回组节点的键（例如，ID）。
+
+从网格使用 `detailCellRendererParams` 配置，就像在其他主从场景中一样。
+
+示例配置：
+
+```js
+const gridOptions = {
+    columnDefs: [
+        { field: 'employeeName', cellRenderer: 'agGroupCellRenderer' },
+        { field: 'jobTitle' },
+        { field: 'employmentType' }
+    ],
+    rowModelType: 'serverSide',
+    treeData: true,
+    masterDetail: true,
+    isServerSideGroup: dataItem => !!dataItem.children,
+    getServerSideGroupKey: dataItem => dataItem.employeeId,
+    detailCellRendererParams: {
+        detailGridOptions: {
+            columnDefs: [
+                { field: 'project' },
+                { field: 'duration' }
+            ]
+        },
+        getDetailRowData: params => {
+            params.successCallback(params.data.projects || []);
+        }
+    }
+};
+```
+
+## 示例：树形数据与主从
+
+{% gridExampleRunner title="树形数据与主从" name="tree-data-master-detail" exampleHeight=590 /%}
+
+## 从行高度
+
+可以通过以下方式之一配置从行的高度：
+
+1. 使用 `detailRowHeight` 网格选项属性为每个从行设置固定高度。
+1. 使用 `getRowHeight()` 网格选项回调为每行单独显式设置高度。此回调需要计算每个从行的像素高度。
+1. 使用 `detailRowAutoHeight=true` 属性让网格自动调整从行/网格的大小以适应其行。
+
+以下代码片段比较了这些方法：
+
+选项 1 - 固定从行高度，为所有从行设置高度
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    detailRowHeight: 500,
+}
+```
+
+选项 2 - 动态从行高度，动态设置所有行的高度
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    getRowHeight: params => {
+        const isDetailRow = params.node.detail;
+
+        // 请注意，此回调为所有行调用，而不仅仅是从行
+        if (isDetailRow) {
+            // 动态计算从行高度
+            return params.data.children.length * 50;
+        }
+        // 对于所有非从行，返回 25，默认行高度
+        return 25;
+    }
+}
+```
+
+选项 3 - 使用 autoHeight
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    detailCellRendererParams: {
+        autoHeight: true,
+    }
+}
+```
+
+{% note %}
+清除缓存和动态行高度对于服务端行模型不能一起工作。
+如果使用动态行高度，请确保未设置 `maxBlocksInCache`。
+{% /note %}
+
+### 使用回调 getRowHeight() 的示例
+
+以下示例根据从行数量显式设置从行高度。请注意以下几点：
+
+-   **getRowHeight()** - 实现以根据记录数量调整从行大小。
+-   **node.detail** - 用于识别"从"行节点。
+
+{% gridExampleRunner title="动态从行高度" name="dynamic-detail-row-height"  exampleHeight=590 /%}
+
+有关更多详细信息，请参阅[主从动态高度](./master-detail-height/#dynamic-height)。
+
+### 使用属性 autoHeight 的示例
+
+以下示例让网格自动调整所有从部分的大小以适应其行。这是通过设置 `masterGridOptions.detailRowAutoHeight = true` 完成的。
+
+{% gridExampleRunner title="自动从行高度" name="auto-detail-row-height"  exampleHeight=590 /%}
+
+有关更多详细信息，请参阅[主从自动高度](./master-detail-height/#auto-height)。
+
+## 延迟加载从行
+
+在上面的示例中，从网格的数据随主行一起返回。但是，也可以延迟加载从行的数据，请参阅：[提供行](./master-detail-grids/#providing-rows)。
+
+但是请注意，一旦主行关闭，或者从行通过滚动离开视口，从行将被清除。在这两种情况下，都需要再次获取数据。

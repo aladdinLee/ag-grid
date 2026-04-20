@@ -1,0 +1,147 @@
+---
+title: "客户端数据 - 事务更新"
+---
+
+事务更新允许以高效的方式添加、删除或更新网格中的大量行。使用事务更新对大型数据集进行快速更改。
+
+## 事务更新 API
+
+事务对象包含应添加、删除和更新哪些行的详细信息。网格 API `applyTransaction(transaction)` 接受此事务对象并将其应用于网格的数据。
+
+{% apiDocumentation source="grid-api/api.json" section="data" names=["applyTransaction"] /%}
+
+`applyTransaction(transaction)` 的结果也是一个事务，但是它是添加、删除或更新的[行节点](./row-object/)列表。两种类型的事务看起来相似，但区别在于它们包含的数据类型。
+
+-   **行数据事务**：包含行数据，即您提供给网格的数据。
+-   **行节点事务**：包含行节点，即包装行数据项的网格创建的对象。
+
+对于行数据事务中的每个数据项，通常在行节点事务中有一个包装该数据项的行节点。唯一的例外是边缘情况，例如您尝试删除或更新不存在的数据项。
+
+## 示例：使用事务更新
+
+该示例以不同方式应用事务并将调用结果打印到控制台。可以注意以下内容：
+
+-   **Add Items**：添加三个项目。
+-   **Add Items addIndex=2**：在索引 2 处添加项目。
+-   **Update Top 2**：更新列表中前 2 行的价格。
+-   **Remove Selected**：从列表中删除所有选定的行。
+-   **Get Row Data**：将网格中的所有行数据打印到控制台。
+-   **Clear Data**：将网格中的数据设置为空列表。
+
+{% gridExampleRunner title="使用事务更新" name="updating-with-transaction" /%}
+
+## 识别要更新和删除的行
+
+当传递要更新或删除的数据时，网格会问：
+
+_"您传递的这个数据项到底指的是哪一行？"_ 
+
+您可以采取两种方法：1) 提供行 ID，或 2) 使用对象引用。
+
+-   ### 提供行 ID（更快）
+
+    如果您使用网格回调 `getRowId()` 提供[行 ID](./row-ids/)，则网格使用键将事务中提供的数据与网格中的数据进行匹配。
+
+    对于更新行，网格找到具有相同键的行，然后将数据替换为
+    新提供的数据。
+
+    对于删除行，网格找到具有相同键的行并将其删除。因此，
+    `remove` 数组中提供的记录只需要有一个键存在。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    getRowId: (params) => params.data.employeeId
+}
+```
+
+```js
+const myTransaction = {
+    add: [
+        // 添加一行，应该还没有 ID = 4 的行
+        {employeeId: '4', name: 'Billy', age: 55}
+    ],
+    update: [
+        // 更新一行，网格查找 ID = 2 的行进行更新
+        {employeeId: '2', name: 'Bob', age: 23}
+    ],
+    remove: [
+        // 删除一行，只需要 ID，其他属性（name、age）没有任何作用
+        {employeeId: '5'}
+    ]
+}
+```
+
+-   ### 使用对象引用（较慢）
+
+    如果您不为行提供[行 ID](./row-ids/)，则网格使用对象引用比较行。换句话说，当您提供带有更新或删除项目的事务时，网格使用 `===` 运算符对您之前提供的数据进行数组查找以找到这些行。
+
+    使用对象引用时，请注意以下内容：
+
+    1. 应使用行数据项的相同实例。使用同一对象的另一个实例会阻止网格进行比较。
+
+    2. 使用对象引用进行识别对于大型数据集来说很慢，因为网格无法基于对象引用对行进行索引。
+
+虽然使用对象引用较慢，但这只有在您处理大型数据集（数千行）时才会成为问题。
+
+## 示例：使用事务和分组更新
+
+使用事务和分组时，当您添加、删除和更新行时，组保持完整。下面的示例演示了以下内容：
+
+-   **Add For Sale**：向 'For Sale' 组添加新项目。
+-   **Add In Workshop**：向 'In Workshop' 组添加新项目。
+-   **Remove Selected**：删除所有选定的项目。
+-   **Move to For Sale**：将选定的项目移动到 'For Sale' 组。
+-   **Move to In Workshop**：将选定的项目移动到 'In Workshop' 组。
+-   **Move to Sold**：将选定的项目移动到 'Sold' 组。
+-   移动项目时，网格以最少的 DOM 更新将行动画到新位置。
+-   **Get Row Data**：将所有行数据打印到控制台。
+
+{% gridExampleRunner title="使用事务和分组更新" name="updating-with-transaction-and-groups" /%}
+
+## 分组数据中的本地化更改
+
+当您将事务应用于分组数据时，网格仅将分组、过滤和排序重新应用于受影响的数据。
+
+例如，假设您有网格，其行分为 10 个组，并在一列上应用了排序。如果应用事务来更新一行，则该行所在的组以及顶级组将重新排序（因为聚合可能会影响顶级值）。所有其他 9 个组不需要重新应用排序。
+
+在网格中决定需要操作哪些组称为更改路径选择。在网格应用事务中的所有添加、删除和更新后，它会计算出哪些组受到影响，并仅对这些组执行所需的操作。受影响的组包括每个数据已更改的组，以及更改的组的所有父组，一直到顶级。
+
+下面的示例演示了更改路径选择。最好在打开开发者控制台的情况下查看该示例，以便可以观察日志消息。请注意以下内容：
+
+-   'Distro' 列使用自定义比较器排序。比较器记录调用次数。
+
+-   Value 列使用自定义聚合器聚合。聚合器记录调用次数。
+
+-   当示例首次加载时，所有数据都设置到网格中，这导致 171 次聚合操作（每个组一次），大约 24,000 次比较（用于对每个组中的所有行进行排序，排序次数略有不同，具体取决于此示例中随机的数据值）和 10,000 次过滤器传递（每行一次）。完成操作所需的毫秒数也会打印（此值取决于您的硬件）。
+
+-   选择一行并单击 **Update**、**Delete** 或 **Duplicate**（重复导致添加操作）。请注意，在控制台中，聚合、比较和过滤器的数量大大减少。执行的总时间也大大减少。
+
+{% gridExampleRunner title="小更改大数据" name="small-changes-big-data" /%}
+
+{% note %}
+请注意，上面的示例未打开[表头复选框选择](./row-selection-multi-row/#selecting-all-rows)。
+如果打开，它会稍微减慢网格速度，因为它需要在每次更新之间检查每一行（对于选择状态）。如果您需要一个管理快速更改的超快网格，请考虑避免此功能。
+{% /note %}
+
+## 抑制模型更新
+
+要执行更新事务并防止网格自动重新处理分组、过滤器、聚合和排序，请启用 `suppressModelUpdateAfterUpdateTransaction` 网格选项。这有助于防止数据在用户处于行的编辑状态时移动。
+
+请注意，此属性仅在应用仅包含更新的事务时使用。如果事务
+包含任何添加或删除，则始终应用排序、过滤和分组。
+
+要触发客户端行模型刷新，请使用网格 API `refreshClientSideRowModel(startingStage)`。由于阶段是顺序的，客户端行模型在提供的阶段和之后的所有阶段刷新。这些阶段的顺序是：group、filter、pivot、aggregate、filter aggregates、sort 和 map。
+
+{% apiDocumentation source="grid-api/api.json" section="data" names=["refreshClientSideRowModel"] /%}
+
+{% gridExampleRunner title="抑制更新模型" name="suppress-update-model" /%}
+
+在上面的示例中 `suppressModelUpdateAfterUpdateTransaction=true`。
+请注意以下内容：
+
+1. 当使用 **Apply Transaction** 按钮更新数据时，网格不会重新执行排序或过滤。
+2. 更新数据后，点击 **Update Model** 会触发网格使用 `refreshClientSideRowModel('filter')` 进行排序和过滤。
+
+## 增量排序
+
+在使用事务修改网格数据模型时，修改行时的默认行为是让网格将修改的行以及每个兄弟节点排序到一个新的有序列表中。

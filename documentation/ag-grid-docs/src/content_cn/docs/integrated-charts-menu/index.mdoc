@@ -1,0 +1,39 @@
+---
+title: "图表菜单"
+enterprise: true
+---
+
+图表菜单出现在图表的右上角。图表菜单提供编辑图表的选项，以及取消图表与网格的链接和下载当前图表等操作。
+
+{% gridExampleRunner title="图表菜单" name="menu" /%}
+
+## 默认图表菜单项
+
+默认情况下，图表菜单中显示以下项目：
+
+-   **编辑图表**（`'chartEdit'`）- 显示[图表工具面板](./integrated-charts-chart-tool-panels/)，允许用户更改选定的图表类型并自定义数据和图表格式。
+-   **高级设置**（`'chartAdvancedSettings'`）- 显示包含图表交互性设置的模式。请注意，这仅在使用 AG Charts Enterprise 时显示。
+-   **链接到网格**（`'chartLink'`）/ **从网格取消链接**（`'chartUnlink'`）- 图表默认链接到网格中的数据，因此如果数据更改，图表也会更新。但是，有时需要取消图表与网格数据的链接。例如，用户可能希望在网格中应用后续排序和过滤器时防止图表更新。请注意，当图表取消链接时，图表范围会从网格中消失。
+-   **下载图表**（`'chartDownload'`）- 将图表下载为 `PNG` 文件。请注意，图表使用浏览器中的 Canvas 绘制，因此用户也可以右键单击图表并像网页上的任何其他图像一样保存。图表也可以[使用 Grid API 下载](./integrated-charts-api-downloading-image)。
+
+## 自定义图表菜单项
+
+可以通过网格选项 `chartMenuItems` 自定义图表菜单列表。这可以是菜单项列表，也可以是传递默认菜单项列表的回调。
+
+菜单项列表应该是一个列表，其中每个项目要么是 a) `DefaultChartMenuItem` 字符串，要么是 b) `MenuItemDef`。使用 `DefaultChartMenuItem` 从内置菜单项（上面列出）中选择，使用 `MenuItemDef` 作为您自己的菜单项。
+
+{% apiDocumentation source="grid-options/properties.json" section="charts" names=["chartMenuItems"] /%}
+
+以下示例演示隐藏编辑图表和高级设置菜单项，并添加使用 `chartId` 关闭图表的自定义菜单项：
+
+{% gridExampleRunner title="自定义图表菜单项" name="menu-customisation" /%}
+
+## 隐藏图表菜单
+
+可以通过从 `getChartToolbarItems()` 网格回调返回空数组来隐藏图表菜单：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    getChartToolbarItems: () => [] // 隐藏图表菜单
+}
+```

@@ -1,0 +1,82 @@
+---
+title: "配置"
+---
+
+列使用列定义进行配置，通过列状态进行操作，并使用 ID 或列对象进行引用。
+
+## 定义列
+
+网格中的每列都使用[列定义](./column-definitions/)定义，这是一个由[列选项](./column-properties/)组成的 JavaScript 键值对象。
+可以将这些对象的数组传递给 `columnDefs` [网格选项](./grid-options/#reference-columns-columnDefs)，网格将创建匹配的列。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'athlete' },
+        { field: 'sport' },
+        { field: 'age' }
+    ]
+}
+```
+
+列也可以在[列组](./column-groups/)下配置，它们在共享表头下显示列。可以通过向列定义添加嵌套级别来配置这些。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'athlete' },
+        {
+            headerName: 'Stats',
+            children: [
+                { field: 'sport' },
+                { field: 'age' }
+            ]
+        }
+    ]
+}
+```
+
+## 引用列
+
+当提供了足够的 ID 时，可以通过 `columnDefs` 网格选项更新列，或者通过 API 使用列对象进行操作。
+
+### 列 ID
+
+网格中的每列都将被赋予一个唯一的 ID 来标识它。可以通过 `colId` 显式提供 ID。如果省略 `colId`，网格将尝试使用 `field` 属性。如果这两者都未提供，网格将生成数字列 ID。
+
+建议为将在应用程序其他地方引用的任何列提供显式 `colId`。
+
+在下面的示例中，列 ID 被记录到开发者控制台。请注意以下内容：
+
+-   列 1 使用 `field`。
+-   列 2 和 3 使用 `colId`。
+-   列 4 和列 5 既没有 `colId` 也没有 `field`，因此网格生成列 ID。
+
+{% gridExampleRunner title="列 ID" name="column-ids" exampleHeight=300 /%}
+
+{% warning %}
+列 ID 应该在整个网格中唯一。如果提供的 `colId` 或 `field` 不唯一，网格将在必要时附加 `_n`（`n` 是允许唯一性的第一个正数）。不建议依赖使用此行为生成的 ID。
+{% /warning %}
+
+### 列对象
+
+网格中显示的每列都由一个[列对象](./column-interface/#column)表示，该对象具有用于与特定列交互的属性、方法和事件，例如 `column.isVisible()`。
+
+可以通过网格 API 方法访问列，并作为某些[网格事件](./grid-events/#reference-columns)的参数提供。
+
+[列引用](./column-object/)显示列对象上可用的函数列表。
+
+还可以通过附加[事件监听器](./column-object/#reference-events-addEventListener)来监听[列事件](./column-events/)。
+
+点击 `Log All Columns` 和 `Log All Column IDs` 按钮将把数据记录到开发者控制台。
+
+{% gridExampleRunner title="列对象" name="column-object" exampleHeight=321 /%}
+
+## 更新列
+
+可以通过更新列状态或更新列定义来控制列。
+
+[列状态](./column-state/)应在恢复用户网格时使用，例如保存和恢复列宽。
+
+[更新列定义](./column-updating-definitions/#changing-column-definition)以修改用户无法控制的属性，因此列状态不支持这些属性。
+虽然列定义可用于更改有状态的属性，但这可能会导致额外的副作用。

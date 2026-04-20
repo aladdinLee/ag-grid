@@ -1,0 +1,75 @@
+---
+title: "BigInt 筛选器"
+---
+
+BigInt 筛选器允许您筛选 `bigint` 数据而不会丢失精度。
+
+{% gridExampleRunner title="BigInt 筛选器" name="bigint-filter" /%}
+
+## 启用 BigInt 筛选器
+
+BigInt 筛选器是[默认情况下禁用集合筛选器](./filter-set/#suppress-set-filter-by-default)时 `cellDataType: 'bigint'` 列使用的默认筛选器。也可以按如下所示显式配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'totalBigInt',
+            cellDataType: 'bigint',
+            // BigInt 筛选器是社区版本中 bigInt 列的默认筛选器
+            filter: true,
+        },
+        {
+            field: 'ledgerId',
+            // 显式配置列以使用 BigInt 筛选器
+            filter: 'agBigIntColumnFilter',
+        },
+    ],
+};
+```
+
+## BigInt 筛选器参数
+
+BigInt 筛选器通过列定义的 `filterParams` 属性（`IBigIntFilterParams` 接口）进行配置：
+
+{% interfaceDocumentation interfaceName="IBigIntFilterParams" config={"description":"", "sortAlphabetically":true} /%}
+
+## 输入解析和验证
+
+BigInt 筛选器仅接受十进制整数语法：
+
+-   `500` 和 `500n` 都被接受并解析为 `500n`。
+-   十六进制、二进制、小数和科学记数法被拒绝。
+-   无效输入通过标准验证处理，不会导致网格崩溃。
+
+## BigInt 筛选器模型
+
+筛选器模型描述了应用的 BigInt 筛选器的当前状态：
+
+{% interfaceDocumentation interfaceName="BigIntFilterModel" config={"description":""} /%}
+
+## BigInt 筛选器选项
+
+BigInt 筛选器显示与数字筛选器相同的[筛选选项](./filter-conditions/#filter-options)列表：
+
+| 选项名称              | 选项键                | 默认包含 |
+| ------------------------ | -------------------- | ------------------- |
+| Equals                   | `equals`             | Yes                 |
+| Does not equal           | `notEqual`           | Yes                 |
+| Greater than             | `greaterThan`        | Yes                 |
+| Greater than or equal to | `greaterThanOrEqual` | Yes                 |
+| Less than                | `lessThan`           | Yes                 |
+| Less than or equal to    | `lessThanOrEqual`    | Yes                 |
+| Between                  | `inRange`            | Yes                 |
+| Blank                    | `blank`              | Yes                 |
+| Not blank                | `notBlank`           | Yes                 |
+| Choose one               | `empty`              | No                  |
+
+BigInt 筛选器的默认选项是 `equals`。
+
+## 应用 BigInt 筛选器
+
+应用 BigInt 筛选器在以下部分中有更详细的说明：
+
+-   [应用、清除、重置和取消按钮](./filter-applying/#apply-clear-reset-and-cancel-buttons)
+-   [应用 UI 模型](./filter-applying/#applying-the-ui-model)

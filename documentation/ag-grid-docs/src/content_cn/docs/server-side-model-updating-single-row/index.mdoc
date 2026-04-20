@@ -1,0 +1,57 @@
+---
+title: "SSRM - 单行更新"
+enterprise: true
+---
+
+本节演示在使用服务端行模型 (SSRM) 时如何直接更新行。
+
+## 更新行 API
+
+您可以使用行节点的 `updateData` 或 `setData` 函数更新单行。
+
+{% apiDocumentation source="row-object/properties.json" section="data" names=["updateData", "setData"] /%}
+
+{% note %}
+设置行数据不会更改行节点 ID，因此如果您使用 `getRowId()`
+并且数据更改导致 ID 不同，`rowNode` 不会更新其 ID。
+{% /note %}
+
+## 更新行示例
+
+下面的示例演示了一个基本示例，使用 API 的 `forEachNode` 函数遍历所有已加载的节点，并更新其版本。
+
+-   **Set Data：** 使用 `setData` 设置行数据，网格刷新行，注意使用 `enableCellChangeFlash` 时单元格不会闪烁。
+
+-   **Update Data：** 使用 `updateData` 更新行数据，网格刷新行，注意使用 `enableCellChangeFlash` 时单元格会闪烁。
+
+{% gridExampleRunner title="更新所有行" name="updating-all-rows"  exampleHeight=615 /%}
+
+## 特定行更新
+
+以下代码片段概述了遍历所有已加载行节点然后使用 `rowNode.updateData(data)` 更新目标行的一般方法：
+
+```{% frameworkTransform=true %}
+api.forEachNode(rowNode => {
+    if (idsToUpdate.indexOf(rowNode.data.id) >= 0) {
+        // 任意更新一些数据
+        const updated = rowNode.data;
+        updated.gold += 1;
+
+        // 直接在 rowNode 中更新数据
+        rowNode.updateData(updated);
+    }
+});
+```
+
+下面的示例演示了此代码片段的实际应用；
+
+{% gridExampleRunner title="更新特定行" name="updating-specific-rows"  exampleHeight=615 /%}
+
+## 选定行更新
+
+下面的示例演示如何更新用户已选择的所有行，请注意以下几点：
+
+-   **Update Selected Rows** 按钮将直接在选定的行节点上更新行版本。
+-   使用 `api.getSelectedNodes()` api 获取选定的节点，然后逐个更新。
+
+{% gridExampleRunner title="更新选定行" name="updating-selected-row"  exampleHeight=615 /%}

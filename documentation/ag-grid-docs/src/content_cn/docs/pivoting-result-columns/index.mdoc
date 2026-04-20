@@ -1,0 +1,75 @@
+---
+title: "透视结果列"
+enterprise: true
+---
+
+网格生成透视结果列以显示每个透视值唯一排列的聚合值。
+
+{% gridExampleRunner title="透视结果列摘要示例" name="pivot-result-summary"  /%}
+
+## 列定义
+
+透视结果列从创建它们的值列继承[列定义](./column-definitions)。还可以使用 `processPivotResultColDef` 网格选项进一步扩展此定义，以专门自定义透视结果列。
+
+{% apiDocumentation source="grid-options/properties.json" section="rowPivoting" names=["processPivotResultColDef"] /%}
+
+在下面的示例中，`Gold` 列应用了 `cellStyle: { backgroundColor: '#f2e287' }`，然后由透视结果列继承，导致所有 `sum(Gold)` 列具有金色背景。请注意，`Silver` 列没有此背景，因此 `sum(Silver)` 列也没有。
+
+然后还使用网格选项 `processPivotResultColDef`，将所有透视结果列的文本颜色设置为 `#2f73ff`。
+
+{% gridExampleRunner title="列定义示例" name="column-definitions-example"  /%}
+
+这使用以下配置在透视结果列上继承和修改列定义：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        // ...其他列定义
+        { field: 'gold', aggFunc: 'sum', cellStyle: { backgroundColor: '#f2e287' } },
+        { field: 'silver', aggFunc: 'sum', cellStyle: {} },
+    ],
+    pivotMode: true,
+    processPivotResultColDef: (colDef) => {
+        colDef.cellStyle.color = '#2f73ff'; // 参数直接修改，不返回
+    },
+}
+```
+
+## 过滤
+
+启用透视模式时，可以通过在值列上设置 `filter` 属性来[过滤](./filtering-overview/)透视结果列。
+
+{% gridExampleRunner title="过滤透视结果列" name="secondary-columns-filter" /%}
+
+由于透视值都是聚合，过滤掉行不会重新聚合父级、组和总计行。有关更多信息，请参见[过滤聚合值](./aggregation-filtering/#filtering-for-aggregated-values)。
+
+{% note %}
+透视结果列继承生成它们的值列的属性。但是，设置 `filter: true` 将在透视结果列的情况下默认为[数字过滤器](./filter-number/)。[集合过滤器](./filter-set/)不能用于过滤透视结果列。
+{% /note %}
+
+## 最佳实践
+
+### 限制列生成
+
+透视时，数据、聚合或透视列的更改可能导致生成的列数呈指数级扩展。
+这可能导致性能问题，例如渲染延迟，而且生成的视图通常对用户来说是不可管理的。
+
+为了防止这种情况发生，您可以设置 `pivotMaxGeneratedColumns` 选项。当网格生成的透视列数超过此值时，它会停止列生成，清除视图，并触发 `onPivotMaxColumnsExceeded` 事件以允许您的应用程序干预。
+
+{% gridExampleRunner title="极端透视处理" name="extreme-pivot" exampleHeight=600 /%}
+
+在上面的示例中，按 `Athlete` 列透视将触发 `pivotMaxColumnsExceeded` 事件，该事件在浏览器控制台中记录错误。
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    pivotMode: true,
+    pivotMaxGeneratedColumns: 1000,
+    onPivotMaxColumnsExceeded: () => {
+        console.error(
+            'The limit of 1000 generated columns has been exceeded. Either remove pivot or aggregations from some columns or increase the limit.'
+        );
+    },
+}
+```

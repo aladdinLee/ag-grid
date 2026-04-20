@@ -1,0 +1,83 @@
+---
+title: "选择单元格编辑器"
+---
+
+使用 HTML `select` 的简单编辑器，允许用户从提供的值列表中选择单元格值。
+
+## 启用选择单元格编辑器
+
+编辑下面网格中的任何单元格以查看选择单元格编辑器。
+
+{% gridExampleRunner title="选择编辑器" name="select-editor" /%}
+
+使用 `agSelectCellEditor` 启用，并使用 `ISelectCellEditorParams` 配置。
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agSelectCellEditor',
+        cellEditorParams: {
+            values: ['English', 'Spanish', 'French', 'Portuguese', '(other)'],
+        }
+        // ...其他属性
+    }
+]
+```
+
+## 自定义
+
+### 列表间隙
+
+可以自定义打开时编辑器输入和弹出窗口之间的空间。编辑下面的任何单元格以查看弹出窗口以与输入的偏移量显示。
+
+{% gridExampleRunner title="选择编辑器列表间隙" name="select-editor-list-gap" /%}
+
+可以通过如下设置 `valueListGap` 参数来自定义：
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agSelectCellEditor',
+        cellEditorParams: {
+            values: ['English', 'Spanish', 'French', 'Portuguese', '(other)'],
+            valueListGap: 10
+        }
+        // ...其他属性
+    }
+]
+```
+
+### 列表大小
+
+可以自定义打开时列表弹出窗口的大小。在下面的网格中，右列中的编辑器弹出窗口以指定大小显示，而左列中的编辑器弹出窗口以默认大小显示。
+
+{% gridExampleRunner title="选择编辑器最大高度和最大宽度" name="select-editor-max-height-and-width" /%}
+
+可以通过如下设置 `valueListMaxHeight` 和 `valueListMaxWidth` 参数来自定义：
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agSelectCellEditor',
+        cellEditorParams: {
+            values: ['AliceBlue', 'AntiqueWhite', 'Aqua', /* .... 很多颜色 */ ],
+            valueListMaxHeight: 120,
+            valueListMaxWidth: 120
+        }
+        // ...其他属性
+    }
+]
+```
+
+## API 参考
+
+{% interfaceDocumentation interfaceName="ISelectCellEditorParams" names=["values", "valueListGap", "valueListMaxHeight", "valueListMaxWidth"] /%}
+
+{% note %}
+我们发现标准 HTML Select 没有足够丰富的 API 来与网格正常配合。
+当双击单元格开始编辑时，希望 Select a) 显示和 b) 打开准备选择。没有 API 可以打开浏览器的 Select。因此，编辑需要两个交互：1) 双击开始编辑和 2) 单击打开 Select。
+
+我们还观察到在使用键盘导航控制编辑时有不同的结果，例如使用 `Enter` 开始编辑。一些浏览器会打开 Select，其他则不会。这取决于浏览器实现，并且由于没有打开 Select 的 API，网格无能为力。
+
+如果您对所需的额外单击不满意，我们建议您不要依赖浏览器的标准 Select（即避免 `agSelectCellEditor`），而是使用[富选择单元格编辑器](./provided-cell-editors-rich-select/)或使用[单元格编辑器组件](./cell-editors/)创建自己的编辑器。
+{% /note %}

@@ -1,0 +1,207 @@
+---
+title: "使用 Node.js 的服务端操作"
+enterprise: true
+---
+
+了解如何使用 Node.js 执行服务端操作，并提供一个使用 MySQL 数据库的完整参考实现。
+
+本指南旨在作为学习如何使用[服务端行模型](./server-side-model/)的起点，因为它提供了一个简单的网格实现，使用有限的功能集和网格配置。
+
+示例奥林匹克奖牌应用程序是使用连接到 MySQL 数据库的 Node.js 服务器开发的，将演示如何在处理大数据集时甚至在执行分组、过滤和排序操作时根据需要延迟加载数据。
+
+{% warning %}
+本指南中涵盖的参考实现仅用于演示目的。如果您在生产中使用它，它不提供任何保证或支持。
+{% /warning %}
+
+源代码可以在这里找到：<https://github.com/ag-grid/ag-grid-server-side-nodejs-example>。
+
+## 概述
+
+在这个奥林匹克奖牌应用程序中，服务器端点将使用由运行 [Express.js](https://expressjs.com/) 的 [Node.js](https://nodejs.org/) 组成的 Web 服务器托管，该服务器连接到单个 [MySQL](https://www.mysql.com/) 数据源。
+
+本指南中使用的技术概述如下图所示：
+
+{% imageCaption imagePath="resources/app-arch.png" alt="App Arch" constrained=true enableDarkModeFilter=true /%}
+
+我们现在将继续安装和运行应用程序，然后再介绍实现细节。
+
+## 下载和安装
+
+使用以下命令克隆示例项目：
+
+```bash
+git clone https://github.com/ag-grid/ag-grid-server-side-nodejs-example.git
+```
+
+导航到项目目录：
+
+```bash
+cd ag-grid-server-side-nodejs-example
+```
+
+使用以下命令安装项目依赖并构建项目：
+
+```bash
+yarn install
+```
+
+## 数据库设置
+
+按照 [MySQL 下载](https://www.mysql.com/downloads/)文档下载并安装数据库。
+
+创建一个名为 `'sample_data'` 的数据库。然后通过 MySQL 命令行运行以下脚本创建表 `olympic_winners` 并用数据填充它：
+
+```bash
+mysql -u root -p -D sample_data < ./data/olympic_winners.sql
+```
+
+就是这样！我们现在准备运行和探索应用程序。
+
+## 运行应用程序
+
+要从命令行运行应用程序，请执行以下命令：
+
+```bash
+yarn start
+```
+
+然后将浏览器指向 <http://localhost:4000/>
+
+## 客户端配置
+
+为了使此示例应用程序尽可能简单，网格配置保持在最低限度。我们网格所需的 `gridOptions` 如下所示：
+
+```js
+// client/index.js
+
+const gridOptions = {
+    rowModelType: 'serverSide',
+
+    columnDefs: [
+        { field: 'athlete' },
+        { field: 'country', rowGroup: true, hide: true },
+        { field: 'sport', rowGroup: true, hide: true },
+        { field: 'year', filter: 'number' },
+        { field: 'gold', aggFunc: 'sum' },
+        { field: 'silver', aggFunc: 'sum' },
+        { field: 'bronze', aggFunc: 'sum' },
+    ],
+}
+```
+
+在上面的代码片段中，网格配置为通过设置 `gridOptions.rowModelType = 'serverSide'` 使用服务端行模型。
+
+默认启用排序。'year' 列还添加了一个简单的数字过滤器。请注意，当加载新数据时，应用的过滤器会保留。
+
+为了演示[行分组](./server-side-model-grouping/)，'country' 和 'sport' 列已配置 `rowGroup = true`。最后，为了确保奖牌值在组层次结构上聚合，值列已设置聚合函数：`aggFunc='sum'`。
+
+## 服务端数据源
+
+为了为服务端行模型获取数据，我们必须实现 `IServerSideDatasource`，它包含一个方法 `getRows(params)`，该方法接受来自网格的请求参数。
+
+成功的响应然后通过 `params.successCallback(rows, lastRow)` 传回网格，如下所示：
+
+```js
+// client/index.js
+
+const datasource = {
+    getRows(params) {
+        console.log(JSON.stringify(params.request, null, 1));
+
+        fetch('./olympicWinners/', {
+            method: 'post',
+            body: JSON.stringify(params.request),
+            headers: { 'Content-Type': 'application/json; charset=utf-8' }
+        })
+        .then(httpResponse => httpResponse.json())
+        .then(response => {
+            params.successCallback(response.rows, response.lastRow);
+        })
+        .catch(error => {
+            console.error(error);
+            params.failCallback();
+        })
+    }
+};
+
+// 向网格注册数据源
+api.setGridOption('serverSideDatasource', datasource);
+```
+
+## 服务器端点
+
+托管我们接受 JSON 请求的服务器端点 `/olympicWinners` 是在 `express` 和 `body-parser` npm 包的帮助下完成的。
+
+```js
+// server/server.js
+
+import webpack from 'webpack';
+import webpackMiddleware from 'webpack-dev-middleware';
+import webpackConfig from '../webpack.config.js';
+import express from 'express';
+import bodyParser from 'body-parser';
+
+import OlympicWinnersService from './olympicWinnersService';
+
+const app = express();
+app.use(webpackMiddleware(webpack(webpackConfig)));
+
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+
+app.post('/olympicWinners', function (req, res) {
+OlympicWinnersService.getData(req.body, (rows, lastRow) => {
+    res.json({ rows: rows, lastRow: lastRow });
+    });
+});
+
+app.listen(4000, () => {
+    console.log('Started on localhost:4000');
+});
+```
+
+请求被委托给包含所有服务端应用程序逻辑的 `OlympicWinnersService`。`getData()` 方法使用 `mysql` npm 包和 `buildSql()` 返回的 SQL 查询 MySQL 数据库。
+
+```js
+// server/olympicWinnersService.js
+
+import mysql from 'mysql';
+
+class OlympicWinnersService {
+    getData(request, resultsCallback) {
+        const SQL = this.buildSql(request);
+
+        connection.query(SQL, (error, results) => {
+            const rowCount = this.getRowCount(request, results);
+            const resultsForPage = this.cutResultsToPageSize(request, results);
+            resultsCallback(resultsForPage, rowCount);
+        });
+    }
+
+    buildSql(request) {
+        const selectSql = this.createSelectSql(request);
+        const fromSql = ' FROM sample_data.olympic_winners ';
+        const whereSql = this.createWhereSql(request);
+        const limitSql = this.createLimitSql(request);
+        const orderBySql = this.createOrderBySql(request);
+        const groupBySql = this.createGroupBySql(request);
+
+        return selectSql + fromSql + whereSql + groupBySql + orderBySql + limitSql;
+    }
+
+    // 辅助方法...
+}
+```
+
+`buildSql()` 方法使用许多辅助方法来构建组合 SQL 中使用的 SQL 片段并返回。本指南中省略了这些辅助方法的实现细节，但可以在项目存储库中查看。
+
+## 结论
+
+在本指南中，我们提供了一个参考实现，用于将服务端行模型与连接到 MySQL 数据库的 Node.js 服务器集成。这包括所有必要的配置和安装说明。
+
+给出了高级概述以说明此方法解决的问题，然后提供了如何实现以下服务端操作的详细信息：
+
+-   排序
+-   过滤
+-   分组
+-   聚合

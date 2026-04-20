@@ -1,0 +1,46 @@
+---
+title: "行拖动"
+---
+
+行拖动用于通过用鼠标拖动行来重新排列行。要启用行拖动，在一列（通常是第一列）上设置列属性 `rowDrag`。
+
+{% gridExampleRunner title="行拖动简单托管" name="simple-managed" /%}
+
+上面的示例显示[托管行拖动](./row-dragging-managed)，通过在列上设置 `rowDrag` 并在网格选项上设置 `rowDragManaged` 启用。
+
+## 启用行拖动
+
+{% apiDocumentation source="column-properties/properties.json" section="row dragging" names=["rowDrag"] /%}
+
+要在所有行上启用行拖动，在一列（通常是第一列）上设置列属性 `rowDrag = true` 并配置托管或非托管行拖动。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        // 使所有行可拖动
+        { field: 'athlete', rowDrag: true },
+    ],
+}
+```
+
+还可以通过提供回调函数来动态控制哪些行可拖动，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        // 只允许非组行被拖动
+        { field: 'athlete', rowDrag: params => !params.node.group },
+    ],
+}
+```
+
+网格中的行拖动有两种工作方式：托管和非托管：
+
+- **[托管行拖动](./row-dragging-managed)**：这是最简单的，网格将在您拖动行时重新排列行。
+- **[非托管行拖动](./row-dragging-unmanaged)**：这更复杂，更强大。网格不会在您拖动时重新排列行。相反，应用程序负责响应网格触发的事件，行由应用程序重新排列。
+
+另请参见：
+
+- [树数据行拖动](./tree-data-row-dragging)，用于[树数据](./tree-data/)的托管和非托管行拖动。
+- [网格之间的行拖动](./row-dragging-to-grid/)，在两个网格之间拖动行。
+- [拖动到外部放置区](./row-dragging-to-external-dropzone/)，将行从网格拖动到外部放置区。

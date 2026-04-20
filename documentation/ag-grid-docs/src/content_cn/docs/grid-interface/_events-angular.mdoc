@@ -1,0 +1,12 @@
+{% if isFramework("angular") %}
+要监听事件，请将事件处理程序传递给 `ag-grid-angular` 组件的相关 `Output` 属性。
+
+```html
+onCellClicked(event: CellClickedEvent) {
+  console.log("单元格被点击")
+}
+
+<ag-grid-angular (cellClicked)="onCellClicked($event)">
+```
+
+{% /if %}

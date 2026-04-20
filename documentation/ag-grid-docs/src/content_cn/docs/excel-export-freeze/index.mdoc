@@ -1,0 +1,57 @@
+---
+title: "Excel 导出 - 冻结内容"
+enterprise: true
+---
+
+Excel 导出允许您冻结部分导出的内容。
+
+默认情况下，导出到 Excel 的所有行和列都是可滚动的。但是，您可以轻松控制要冻结的内容，使其始终可见。
+
+## 冻结表头
+
+您可以通过将 `freezeRows` 属性设置为 `headers` 来冻结 Excel 导出中的所有列表头和组列表头。
+
+请注意以下内容：
+
+-   导出的工作表将冻结所有列表头。
+
+{% gridExampleRunner title="Excel 导出 - 冻结表头" name="excel-export-freeze-headers" /%}
+
+## 冻结固定行
+
+[分组列](./column-groups/)可以作为分组列导出到 Excel。但是，要正确配置此功能，需要注意以下几点：
+
+您可以通过将 `freezeRows` 属性设置为 `headersAndPinnedRows` 来冻结 Excel 导出中固定到网格顶部的所有行。
+
+请注意以下内容：
+
+-   导出的工作表将冻结所有表头和网格的固定顶部行。
+
+{% gridExampleRunner title="Excel 导出 - 冻结固定行" name="excel-export-freeze-pinned-rows" /%}
+
+## 冻结固定列
+
+您可以通过将 `freezeColumns` 属性设置为 `pinned` 来冻结 Excel 导出中的所有固定列。
+
+请注意以下内容：
+
+-   导出的工作表将冻结固定在网格开始（左侧）的所有列。
+
+{% note %}
+如果您使用 [RTL - 从右到左](./rtl/)，固定到 `right` 的列将被冻结。
+{% /note %}
+
+{% gridExampleRunner title="Excel 导出 - 冻结固定列" name="excel-export-freeze-pinned-columns" /%}
+
+## 冻结回调
+
+对于需要冻结的内容不仅仅是表头和固定列的情况，`freezeColumns` 和 `freezeRows` 属性都接受回调函数。这些回调函数将为网格内容的每一列和每一行调用，只要返回 `true`，内容就会被冻结，一旦返回 `false`，函数将不再被调用，内容将变为可滚动。
+
+请注意以下内容：
+
+-   前 20 行被导出为冻结。
+-   直到 `sport` 的所有列都被导出为冻结。
+
+{% note %}
+行的回调函数仅为网格行调用，这意味着使用此功能时，所有表头都会自动冻结。
+{% /note %}

@@ -1,0 +1,56 @@
+---
+title: "富选择单元格编辑器"
+enterprise: true
+---
+
+在网格内的下拉菜单中使用浏览器 `select` 弹出窗口的替代方案。富选择单元格编辑器允许用户通过搜索或过滤列表从提供的值列表中输入单元格值。
+
+## 启用富选择单元格编辑器
+
+编辑下面网格中的任何单元格以查看富选择单元格编辑器。
+
+{% gridExampleRunner title="富选择编辑器" name="rich-select-editor" exampleHeight=400 /%}
+
+使用 `agRichSelectCellEditor` 启用，并使用 `IRichCellEditorParams` 配置。
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agRichSelectCellEditor',
+        cellEditorParams: {
+            values: ['English', 'Spanish', 'French', 'Portuguese', '(other)'],
+        }
+        // ...其他属性
+    }
+]
+```
+
+与浏览器 `select` 相比的优势如下：
+
+-   使用 DOM 行虚拟化，因此可以显示非常大的列表。
+-   与网格完美集成，避免标准选择中出现的故障。
+-   使用 HTML 渲染值：您可以提供单元格渲染器来自定义每个值的外观。
+
+## 自定义
+
+富选择编辑器可以自定义以获得所需的结果。有关详细信息，请参阅[自定义](./provided-cell-editors-rich-select-customisation/)页面：
+
+-   [单元格渲染器](./provided-cell-editors-rich-select-customisation/#cell-renderer) - 在编辑器中使用单元格渲染器
+-   [格式化值](./provided-cell-editors-rich-select-customisation/#format-values) - 格式化列表中的值
+-   [搜索值](./provided-cell-editors-rich-select-customisation/#search-values) - 不同类型的搜索匹配
+-   [允许输入](./provided-cell-editors-rich-select-customisation/#allow-typing) - 允许文本输入以匹配列表项
+-   [多选](./provided-cell-editors-rich-select-customisation/#multi-selection) - 允许选择多个值
+-   [复杂对象](./provided-cell-editors-rich-select-customisation/#complex-objects) - 配置对复杂对象项目的支持
+
+## 异步值
+
+富选择编辑器可以配置为异步加载值。对于大数据集，编辑器支持分页异步值以及在服务器上异步过滤值。有关详细信息，请参阅[异步值](./provided-cell-editors-rich-select-async/)页面：
+
+-   [异步值](./provided-cell-editors-rich-select-async/) - 异步加载所有值
+-   [分页异步值](./provided-cell-editors-rich-select-async/#paged-async-values) - 随用户滚动加载页面
+-   [异步过滤](./provided-cell-editors-rich-select-async/#async-filtering) - 异步返回过滤值
+-   [分页异步过滤](./provided-cell-editors-rich-select-async/#paged-async-filtering) - 将分页加载与过滤结合
+
+## API
+
+请参阅 [IRichCellEditorParams](./provided-cell-editors-rich-select-customisation/#api) 接口上可用的所有属性。

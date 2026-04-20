@@ -1,0 +1,80 @@
+---
+title: "Excel 导出 - 自定义内容"
+enterprise: true
+---
+
+## 自定义单元格和行组值
+
+默认情况下，导出到 Excel 的值将通过[导出使用值格式化器](./value-formatters/#formatting-for-export)功能进行格式化。
+
+可以通过以下函数参数专门为 Excel 导出自定义网格单元格和行组值，这些参数用于调用 `exportDataAsExcel` API 方法或在 `defaultExcelExportParams` 中。
+
+```{% frameworkTransform=true %}
+gridApi.exportDataAsExcel({
+    processCellCallback(params) {
+        const value = params.value
+        return value === undefined ? '' : `_${value}_`
+    },
+    processRowGroupCallback(params) {
+        return `row group: ${params.node.key}`
+    }
+})
+```
+
+{% interfaceDocumentation interfaceName="ExcelExportParams" names=["processRowGroupCallback", "processCellCallback"] config={"description":"请参阅下面的 `ExcelExportParams` 接口上的函数以自定义导出的网格单元格和行组值。"} /%}
+
+以下示例显示了 Excel 自定义，其中导出的文档具有以下内容：
+
+-   所有行组都有前缀 `row group: `
+-   所有单元格值都用 `_` 包围，除非它们是 `undefined`，在这种情况下它们为空
+
+{% note %}
+在[隐藏打开的父项](./grouping-multiple-group-columns/#hiding-expanded-parent-rows)（`groupHideOpenParents=true`）时使用行分组，导出到 Excel 不会将组行导出为 Excel 中的可折叠组。相反，所有导出的行都在同一级别，无法在 Excel 中展开/折叠。
+{% /note %}
+
+{% gridExampleRunner title="Excel 导出 - 自定义行组" name="excel-export-customising-row-groups" /%}
+
+## 自定义列表头和组表头值
+
+可以通过以下函数参数自定义导出到 Excel 的列表头和组表头，这些参数用于调用 `exportDataAsExcel` API 方法或在 `defaultExcelExportParams` 中。
+
+```{% frameworkTransform=true %}
+gridApi.exportDataAsExcel({
+    processGroupHeaderCallback(params) {
+        return `group header: ${params.api.getDisplayNameForColumnGroup(params.columnGroup, null)}`
+    },
+    processHeaderCallback(params) {
+        return `header: ${params.api.getDisplayNameForColumn(params.column, null)}`
+    }
+});
+```
+
+{% interfaceDocumentation interfaceName="ExcelExportParams" names=["processGroupHeaderCallback", "processHeaderCallback"] config={"description":"请参阅下面的 `ExcelExportParams` 接口上的函数以自定义导出的列组表头和表头。"} /%}
+
+以下示例显示了 Excel 自定义，其中导出的文档具有以下内容：
+
+-   组表头带有前缀 `group header: `
+-   表头带有前缀 `header: `
+
+{% gridExampleRunner title="Excel 导出 - 自定义列组表头" name="excel-export-customising-column-group-headers" /%}
+
+## 自定义元数据
+
+使用 `customMetadata` 将自定义文档属性写入导出的文件。这些值作为元数据添加到 Excel 文件并序列化为字符串。
+
+这对于附加内部标识符、工作流提示或下游系统使用的元数据很有用。
+
+自定义元数据的用例可能包括：
+
+-   内部工作流标记（例如，添加 `ExportID` 或 `GeneratedBy` 以便在自动化脚本中跟踪）。
+-   与文档管理系统集成（例如，嵌入 `ContractType` 或 `ExpirationDate` 以便在 SharePoint 或类似工具中索引）。
+-   与第三方分析工具集成（例如，传递 `CampaignID` 以便 BI 仪表板自动化）。
+
+```{% frameworkTransform=true %}
+gridApi.exportDataAsExcel({
+    customMetadata: {
+        ExportID: 'EXP-2026-001',
+        ExpirationDate: '2025-01-01T12:00:00Z',
+        Disclaimer: 'Preliminary data; subject to audit',
+    },
+});

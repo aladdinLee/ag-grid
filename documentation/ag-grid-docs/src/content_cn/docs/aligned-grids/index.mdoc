@@ -1,0 +1,162 @@
+---
+title: "对齐表格"
+---
+
+对齐两个或更多表格意味着列将在所有表格中保持对齐。换句话说，对一个表格的列更改（列宽、列顺序、列可见性等）会反映在另一个表格中。如果您有两个表格，一个在另一个上面，使得它们的列垂直对齐，并且您想保持列对齐，这很有用。
+
+## 配置
+
+通过表格选项 `alignedGrids` 配置。
+
+{% apiDocumentation source="grid-options/properties.json" section="miscellaneous" names=["alignedGrids"] /%}
+
+{% if isFramework("react") %}
+要链接两个表格，请向 `alignedGrids` 提供相应表格引用的数组。
+
+```jsx
+const gridOne = useRef<AgGridReact>(null);
+const gridTwo = useRef<AgGridReact>(null);
+
+return (
+  <>
+      <AgGridReact ref={gridOne} alignedGrids={[gridTwo]} />
+      <AgGridReact ref={gridTwo} alignedGrids={[gridOne]} />
+  </>
+);
+```
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+要链接两个表格，请向 `alignedGrids` 提供返回相应表格 API 的回调。
+
+```js
+gridOptionsFirst = {
+    alignedGrids: () => [secondApi]
+    ...
+};
+
+gridOptionsSecond = {
+    alignedGrids: () => [firstApi]
+    ...
+}
+firstApi = createGrid(gridDiv1, gridOptionsFirst);
+secondApi = createGrid(gridDiv2, gridOptionsSecond);
+```
+
+{% /if %}
+
+{% if isFramework("angular") %}
+通过向 `alignedGrids` 属性提供其他表格的 `GridApi` 来在组件中对齐表格。
+
+```js
+const firstApi: GridApi;
+
+gridOptionsSecond = {
+    alignedGrids: () => [this.firstApi],
+}
+```
+
+通过向 `alignedGrids` 提供对其他 `AgGridAngular` 组件的模板引用来在组件中对齐表格。
+
+```js
+@ViewChild('firstGrid') firstGrid!: AgGridAngular;
+
+gridOptionsSecond = {
+    // 通过回调配置，因为 ViewChild 仅在 ngAfterViewInit 后设置
+    alignedGrids: () => [this.firstGrid],
+}
+```
+
+或者，可以通过组件模板中的模板变量对齐表格。
+
+```js
+// 使用模板变量链接
+<ag-grid-angular #firstGrid [alignedGrids]="[secondGrid]" ...>
+<ag-grid-angular #secondGrid [alignedGrids]="[firstGrid]" ...>
+
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+通过向 `alignedGrids` 属性提供其他表格的 `GridApi` 来在组件中对齐表格。
+
+```js
+gridOptionsSecond = {
+    alignedGrids: () => [this.firstApi],
+}
+```
+
+通过向 `alignedGrids` 提供对其他 `AgGridVue` 组件的引用来在组件中对齐表格。
+
+```js
+// 使用模板引用注释
+<ag-grid-vue ref="firstGrid"
+
+gridOptionsSecond = {
+    // 注册第一个表格以接收来自第二个表格的事件
+    alignedGrids: () => [this.$refs.firstGrid],
+}
+```
+
+或者，可以通过组件模板中的 refs 对齐表格。
+
+```js
+// 使用模板变量链接
+<ag-grid-vue
+  ref="firstGrid" :alignedGrids="[this.$refs.secondGrid]" ...>
+<ag-grid-vue
+  ref="secondGrid" :alignedGrids="[this.$refs.firstGrid]" ...>
+
+```
+
+{% /if %}
+
+## 示例：对齐表格
+
+下面显示两个表格，彼此对齐（因此对一个表格的任何列更改都会反映在另一个表格中）。应注意以下几点：
+
+-   当任一表格水平滚动时，另一个表格跟随。
+-   在任一表格上显示/隐藏列（通过复选框）将在另一个表格上显示/隐藏该列，尽管 API 仅在一个表格上调用。
+-   当在任一表格上调整列大小时，另一个表格跟随。
+-   当在任一表格上打开列组时，另一个表格跟随。
+
+{% gridExampleRunner title="对齐表格" name="aligned-grids" /%}
+
+## 事件
+
+作为表格对齐关系的一部分触发的事件如下：
+
+-   水平滚动
+-   列隐藏/显示
+-   列移动
+-   列组打开/关闭
+-   列调整大小
+-   列固定
+
+## 透视
+
+透视功能不适用于对齐表格。这是因为透视数据会更改列，这会使对齐的表格不兼容，因为它们不再共享相同的列集。
+
+## 示例：对齐表格作为页脚
+
+那么为什么要像这样对齐表格呢？这对于对齐具有不同数据但相似列的表格非常有用。也许您想包含一个带有"摘要"数据的页脚表格。也许您有两组数据，但其中一组的聚合方式与另一组不同。
+
+这个示例更有用一些。在底部表格中，我们显示摘要行。还要注意以下几点：
+
+-   顶部表格没有水平滚动条，通过表格选项禁止。
+-   底部表格没有标题，通过表格选项禁止。
+-   `autoSizeStrategy` 仅传递给顶部表格，底部表格从顶部表格接收新的列宽。
+
+{% gridExampleRunner title="对齐表格作为页脚" name="aligned-floating-footer" /%}
+
+## 示例：对齐列组
+
+可能由于固定或列的顺序，您的列组被拆分。下面的表格只有两个被拆分的组，显示为许多拆分组。列对齐在这里也起作用，因为对拆分组的更改将打开/关闭两个表格中该组的所有实例。
+
+{% gridExampleRunner title="对齐列组" name="aligned-column-groups" /%}
+
+## 事件传播
+
+当一个表格触发事件时，它将由所有注册的对齐表格处理。但是，如果表格正在处理此类事件，它将不会向其他对齐表格触发事件。例如，考虑表格 A、B 和 C，其中 B 与 A 对齐，C 与 B 对齐（即 A -> B -> C）。如果 A 调整列大小，它将向 B 触发事件，但 B 不会向 C 触发事件。如果 C 也依赖于 A，则需要直接设置。这可以防止表格之间的循环依赖导致无限触发事件，如果两个表格彼此对齐。

@@ -1,0 +1,296 @@
+---
+title: "高级筛选"
+enterprise: true
+---
+
+高级筛选允许在单个类型前导输入中跨列输入复杂的筛选条件，以及在分层可视化构建器中输入。
+
+## 启用高级筛选
+
+通过设置属性 `enableAdvancedFilter = true` 来启用高级筛选。默认情况下，高级筛选显示在列标题和网格行之间，如果启用了[浮动筛选器](./floating-filters/)，它们将显示在此位置。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    enableAdvancedFilter: true,
+}
+```
+
+以下示例演示了高级筛选：
+
+-   在高级筛选输入框中开始输入 `athlete`。随着您的输入，建议的列名列表将被筛选。
+-   通过按 {% kbd "↵ Enter" /%} 或 {% kbd "⇥ Tab" /%}，或使用鼠标单击条目来选择 `Athlete` 条目。
+-   以类似方式选择 `contains` 条目。
+-   在引号后，输入 `michael`，后跟结束引号（`"`）。
+-   按 {% kbd "↵ Enter" /%} 或单击 `Apply` 按钮执行筛选。
+-   行现在被筛选为仅包含名称中包含 `michael` 的**运动员**。
+-   尝试每一列，看看如何处理不同的[单元格数据类型](./cell-data-types/)。
+-   可以通过使用 `AND` 和 `OR` 以及括号 - `(` 和 `)` 来构建复杂的筛选表达式。
+
+{% gridExampleRunner title="高级筛选" name="advanced-filter" /%}
+
+{% note %}
+高级筛选和列筛选不能同时处于活动状态。启用高级筛选将禁用列筛选。
+{% /note %}
+
+## 高级筛选构建器
+
+除了在高级筛选输入框中输入外，还可以通过使用高级筛选构建器来设置高级筛选。这显示了筛选器的分层视图，并允许使用下拉菜单和输入设置不同的筛选部分。它还允许添加、删除和重新排序筛选条件。
+
+可以通过单击高级筛选输入框旁边的 `Builder` 按钮来启动高级筛选构建器。
+
+以下示例演示了高级筛选构建器：
+
+-   单击任何下拉药丸以更改连接运算符、列和筛选选项。
+-   单击值药丸以更改筛选值。
+-   使用拖动手柄移动筛选条件或组。
+-   使用添加和删除按钮创建新条件或删除现有条件。
+-   如果筛选器有效（并且与已应用的筛选器不匹配），请单击 `Apply` 按钮应用筛选器。
+
+{% gridExampleRunner title="高级筛选构建器" name="advanced-filter-builder" /%}
+
+## 配置列
+
+对于要在高级筛选中显示的列，它需要具有 `filter: true`（或设置为非空和非 false 值）。
+
+显示的筛选选项类型基于列的[单元格数据类型](./cell-data-types/)。
+
+可以为每列设置的不同属性在以下部分中说明，并在以下示例中演示：
+
+-   **Age** 列在筛选器中不可用，因为 `filter = false`。
+-   **Sport** 列默认情况下在筛选器中不可用，因为隐藏列被排除。
+-   单击 **Include Hidden Columns** 后，**Sport** 列在筛选器中可用。
+-   **Group** 列不出现在筛选器中，但其基础列 - **Country** - 始终出现。
+-   **Athlete** 列定义了筛选参数，因此它仅显示 `contains` 选项并且区分大小写。
+-   **Medals (-)** 列组中的 **Gold**、**Silver** 和 **Bronze** 列定义了 `headerValueGetter` 并使用 `location` 属性在筛选器中具有不同的名称（带有 `(-)` 后缀）。
+
+{% gridExampleRunner title="配置列" name="configuring-columns" /%}
+
+### 包括隐藏列
+
+默认情况下，隐藏列不会出现在高级筛选中。要使隐藏列出现，请设置 `includeHiddenColumnsInAdvancedFilter = true`。
+
+{% apiDocumentation source="grid-options/properties.json" section="filter" names=["includeHiddenColumnsInAdvancedFilter"] /%}
+
+### 行分组
+
+当[行分组](./grouping/)时，组列不会出现在高级筛选中。基础列将始终出现，即使隐藏也是如此。
+
+### 列名称
+
+启用筛选的所有列名称必须是唯一的，高级筛选才能正常工作。
+
+如果列默认情况下具有相同的名称（例如，它们出现在不同的列组中），则可以使用[标题值获取器](./value-getters/#header-value-getters)并通过检查 `location === 'advancedFilter'` 来配置它们在高级筛选中出现的名称。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'gold',
+            headerValueGetter: params => params.location === 'advancedFilter' ? 'Gold 1' : 'Gold',
+        },
+        {
+            field: 'gold',
+            headerValueGetter: params => params.location === 'advancedFilter' ? 'Gold 2' : 'Gold',
+        },
+    ],
+}
+```
+
+### 筛选参数
+
+某些属性可以通过使用 `colDef.filterParams` 来设置。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'athlete',
+            filterParams: {
+                // 执行区分大小写的搜索
+                caseSensitive: true,
+                // 仅将选项限制为 `contains`
+                filterOptions: ['contains'],
+            }
+        }
+    ]
+}
+```
+
+对于所有[单元格数据类型](./cell-data-types/)，可以通过 `filterOptions` 设置可用的筛选选项。
+
+可用选项如下：
+
+| 选项名称      | 选项键                | 单元格数据类型                                                                            |
+| ---------------- | -------------------- | ----------------------------------------------------------------------------------------- |
+| contains         | `contains`           | `text`, `object`                                                                          |
+| does not contain | `notContains`        | `text`, `object`                                                                          |
+| equals           | `equals`             | `text`, `object`                                                                          |
+| =                | `equals`             | `number`, `date`, `dateString`, `dateTime`, `dateTimeString`                              |
+| not equal        | `notEqual`           | `text`, `object`                                                                          |
+| !=               | `notEqual`           | `number`, `date`, `dateString`, `dateTime`, `dateTimeString`                              |
+| begins with      | `startsWith`         | `text`, `object`                                                                          |
+| ends with        | `endsWith`           | `text`, `object`                                                                          |
+| is blank         | `blank`              | `text`, `number`, `boolean`, `date`, `dateString`, `dateTime`, `dateTimeString`, `object` |
+| is not blank     | `notBlank`           | `text`, `number`, `boolean`, `date`, `dateString`, `dateTime`, `dateTimeString`, `object` |
+| >                | `greaterThan`        | `number`, `date`, `dateString`, `dateTime`, `dateTimeString`                              |
+| >=               | `greaterThanOrEqual` | `number`, `date`, `dateString`, `dateTime`, `dateTimeString`                              |
+| <                | `lessThan`           | `number`, `date`, `dateString`, `dateTime`, `dateTimeString`                              |
+| <=               | `lessThanOrEqual`    | `number`, `date`, `dateString`, `dateTime`, `dateTimeString`                              |
+| is true          | `true`               | `boolean`                                                                                 |
+| is false         | `false`              | `boolean`                                                                                 |
+
+对于 `text` 和 `object` 单元格数据类型，可以设置 `caseSensitive = true` 以启用区分大小写。
+
+对于 `number`、`date`、`dateString`、`dateTime` 和 `dateTimeString` 单元格数据类型，可以设置以下属性以包括相关选项的空值：
+
+-   `includeBlanksInEquals = true`
+-   `includeBlanksInLessThan = true`
+-   `includeBlanksInGreaterThan = true`
+
+这些设置仅在使用客户端行模型时适用。在使用服务器端行模型时，您需要在服务器端筛选逻辑中实现对这些的支持。
+
+## 筛选模型 / API
+
+高级筛选模型描述了高级筛选的当前状态。这由 `AdvancedFilterModel` 表示，对于单个条件，它是 `ColumnAdvancedFilterModel`，对于多个条件，它是 `JoinAdvancedFilterModel`：
+
+{% interfaceDocumentation interfaceName="JoinAdvancedFilterModel" config={"description":""} /%}
+
+例如，高级筛选 `([Age] > 23 OR [Sport] ends with "ing") AND [Country] contains "united"` 将由以下模型表示：
+
+```js
+const advancedFilterModel = {
+    filterType: 'join',
+    type: 'AND',
+    conditions: [
+      {
+        filterType: 'join',
+        type: 'OR',
+        conditions: [
+          {
+            filterType: 'number',
+            colId: 'age',
+            type: 'greaterThan',
+            filter: 23,
+          },
+          {
+            filterType: 'text',
+            colId: 'sport',
+            type: 'endsWith',
+            filter: 'ing',
+          }
+        ]
+      },
+      {
+        filterType: 'text',
+        colId: 'country',
+        type: 'contains',
+        filter: 'united',
+      }
+    ]
+};
+```
+
+可以通过 API 方法 `getAdvancedFilterModel` 检索高级筛选模型，并通过 API 方法 `setAdvancedFilterModel` 设置。
+
+{% apiDocumentation source="grid-api/api.json" section="filter" names=["getAdvancedFilterModel", "setAdvancedFilterModel"] /%}
+
+{% note %}
+高级筛选模型可以作为[网格状态](./grid-state/)的一部分保存和恢复。
+{% /note %}
+
+高级筛选模型和 API 方法在以下示例中演示：
+
+-   单击 `Save Advanced Filter Model` 将保存当前的高级筛选。
+-   单击 `Restore Advanced Filter Model` 将恢复以前保存的高级筛选。
+-   单击 `Set Custom Advanced Filter Model` 将设置 `[Gold] >= 1`。
+-   单击 `Clear Advanced Filter` 将清除当前的高级筛选。
+
+{% gridExampleRunner title="高级筛选模型 / API" name="advanced-filter-model-api" /%}
+
+## 配置高级筛选
+
+可以自定义高级筛选中显示的按钮，允许使用其他筛选按钮，如 Reset、Cancel 和 Clear。
+
+可以使用 `IAdvancedFilterParams` 接口配置高级筛选：
+
+{% interfaceDocumentation interfaceName="IAdvancedFilterParams" config={"description":"", "sortAlphabetically":true} /%}
+
+可以通过网格选项 `advancedFilterParams` 设置参数：
+
+{% apiDocumentation source="grid-options/properties.json" section="filter" names=["advancedFilterParams"] /%}
+
+以下示例演示了配置高级筛选：
+
+-   `Builder` 按钮已被移除，现在必须通过 API 打开高级筛选构建器。
+-   `buttons` 已配置为添加 Clear 和 Reset 按钮。
+
+{% gridExampleRunner title="配置高级筛选" name="configuring-advanced-filter" /%}
+
+## 高级筛选父级
+
+默认情况下，高级筛选显示在列标题下方，浮动筛选器通常出现的位置。
+
+可以改为在网格外部显示高级筛选（例如在其上方）。这可以通过设置网格选项 `advancedFilterParent` 并为其提供包含筛选器的 DOM 元素来完成。
+
+{% apiDocumentation source="grid-options/properties.json" section="filter" names=["advancedFilterParent"] /%}
+
+[弹出父级](./context-menu/#popup-parent)也必须设置为包含高级筛选父级和网格的元素。
+
+以下示例演示了在网格外部显示高级筛选：
+
+-   使用网格正上方的元素设置高级筛选父级。
+-   弹出父级设置为文档正文。
+
+{% gridExampleRunner title="外部父级" name="external-parent" /%}
+
+## 配置高级筛选构建器
+
+可以使用 `IAdvancedFilterBuilderParams` 接口配置高级筛选构建器：
+
+{% interfaceDocumentation interfaceName="IAdvancedFilterBuilderParams" config={"description":"", "sortAlphabetically":true} /%}
+
+可以通过网格选项 `advancedFilterBuilderParams` 设置参数：
+
+{% apiDocumentation source="grid-options/properties.json" section="filter" names=["advancedFilterBuilderParams"] /%}
+
+除了使用高级筛选中的按钮外，还可以通过 `showAdvancedFilterBuilder` 网格 API 方法启动高级筛选构建器，并通过 `hideAdvancedFilterBuilder` 隐藏它：
+
+{% apiDocumentation source="grid-api/api.json" section="filter" names=["showAdvancedFilterBuilder", "hideAdvancedFilterBuilder"] /%}
+
+当显示或隐藏高级筛选构建器时，将触发 `advancedFilterBuilderVisibleChanged` 事件：
+
+{% apiDocumentation source="grid-events/events.json" section="filter" names=["advancedFilterBuilderVisibleChanged"] /%}
+
+以下示例演示了配置高级筛选构建器：
+
+-   `Advanced Filter Builder` 按钮通过 API 方法 `showAdvancedFilterBuilder` 显示高级筛选构建器。
+-   `advancedFilterBuilderVisibleChanged` 事件用于切换 `Advanced Filter Builder` 按钮的禁用状态。
+-   在 `advancedFilterBuilderParams` 中设置了 `showMoveButtons` 参数，该参数显示允许筛选行上下移动的按钮（包括通过键盘导航）。
+
+{% gridExampleRunner title="配置高级筛选构建器" name="configuring-advanced-filter-builder" /%}
+
+## 单元格数据类型处理
+
+高级筛选支持所有[单元格数据类型](./cell-data-types)。每种类型的行为如下所述。
+
+-   **Text** - 输入中的值在应用任何[值格式化器](./value-formatters/)之前与单元格值进行比较（类似于[文本筛选器](./filter-text/)）。要更改比较的值，可以使用[筛选值获取器](./filter-text/#text-filter-values)。
+-   **Number** - 输入中的值与单元格值进行比较（类似于[数字筛选器](./filter-number/)）。
+-   **BigInt** - 输入中的值被解析为 `bigint`（仅限十进制整数语法，可选的尾随 `n`）并与单元格值进行比较（类似于[BigInt 筛选器](./filter-bigint/)）。
+-   **Boolean** - 布尔值不显示任何值，因为使用的是筛选选项。
+-   **Date** 和 **Date Time** - 输入中的值通过[值解析器](./value-parsers/#value-parser)转换为 `Date`。
+-   **Date String** 和 **Date Time String** - 输入中的值使用[值解析器](./value-parsers/#value-parser)和[日期解析器](./cell-data-types/#date-as-string)转换为 `Date`。这与单元格值进行比较，单元格值也使用日期解析器转换。
+-   **Object** - 输入中的值与[筛选值获取器](./column-properties/#reference-filtering-filterValueGetter)返回的值进行比较（如果提供了）。否则，单元格值使用[值格式化器](./value-formatters/)转换。
+
+## 聚合 / 透视
+
+在使用[聚合](./aggregation/)时，高级筛选仅适用于叶级行。`groupAggFiltering` 属性将被忽略。
+
+当[透视](./pivoting/)时，透视结果列不会出现在高级筛选中。但是，主列（包括基础组和透视列）将显示在高级筛选中。
+
+## 服务器端行模型
+
+除了客户端行模型外，高级筛选还可以与[服务器端行模型](./row-models/)一起使用。有关更多信息，请参阅 [SSRM 高级筛选示例](./server-side-model-filtering/#advanced-filter)。
+
+## 本地化
+
+如果为高级筛选提供自定义[本地化](./localisation/)值，请注意，如果筛选选项值包含空格，则一个选项值不能以另一个选项值开头。

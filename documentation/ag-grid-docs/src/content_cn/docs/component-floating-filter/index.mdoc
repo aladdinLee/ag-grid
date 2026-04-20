@@ -1,0 +1,50 @@
+---
+title: "浮动筛选器组件"
+---
+
+{% if isFramework("javascript", "angular", "vue") %}
+浮动筛选器组件允许您向 AG Grid 添加自己的浮动筛选器类型。您可以创建自定义浮动筛选器组件，以与网格提供的筛选器之一或自定义筛选器一起工作。
+{% /if %}
+
+{% if isFramework("react") %}
+{% videoSection id="MdO6vZN2Gxo" title="React Floating Filters" showHeader=true %}
+浮动筛选器组件允许您向 AG Grid 添加自己的浮动筛选器类型。您可以创建自定义浮动筛选器组件，以与网格提供的筛选器之一或自定义筛选器一起工作。
+{% /videoSection %}
+{% /if %}
+
+## 示例：自定义浮动筛选器
+
+在下面的示例中，您可以看到 Gold、Silver、Bronze 和 Total 列具有自定义浮动筛选器 `NumberFloatingFilter`。此筛选器将标准浮动筛选器替换为输入框，用户可以更改该输入框以根据大于筛选器调整每列要筛选的奖牌数量。
+
+{% gridExampleRunner title="Custom Floating Filter" name="custom-floating-filter" /%}
+
+## 实现浮动筛选器组件
+
+要配置自定义浮动筛选器，首先启用网格选项 `enableFilterHandlers`。
+
+{% note %}
+如果不启用网格选项 `enableFilterHandlers`，仍然可以使用自定义浮动筛选器，但不建议这样做。请参阅[旧版浮动筛选器组件](./component-floating-filter-legacy/)。
+{% /note %}
+
+{% partial file="./_component-interface-javascript.mdoc" /%}
+{% partial file="./_component-interface-angular.mdoc" /%}
+{% partial file="./_component-interface-react.mdoc" /%}
+{% partial file="./_component-interface-vue.mdoc" /%}
+
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="FloatingFilterDisplayParams" /%}
+{% /if %}
+
+## 示例：自定义筛选器和自定义浮动筛选器
+
+此示例通过在 Gold、Silver、Bronze 和 Total 列中提供自己的自定义筛选器 `NumberFilter` 来扩展示例。
+
+{% gridExampleRunner title="Custom Filter and Floating Filter" name="custom-filter-and-floating-filter" /%}
+
+## 示例：自定义筛选器和只读浮动筛选器
+
+如果您想提供自定义筛选器但不想提供等效的自定义浮动筛选器，您可以在筛选器处理程序上实现 `getModelAsString()`，您将免费获得一个只读浮动筛选器。
+
+此示例使用以前的自定义筛选器但实现 `getModelAsString()`。请注意，没有自定义浮动筛选器，但使用 `NumberFilter` 的每列（Gold、Silver、Bronze 和 Total）都有一个只读浮动筛选器，当您从主筛选器更改值时会更新。
+
+{% gridExampleRunner title="Custom Filter Only" name="custom-filter" /%}

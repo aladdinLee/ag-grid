@@ -1,0 +1,159 @@
+---
+title: "富选择单元格编辑器 - 自定义"
+enterprise: true
+---
+
+富选择单元格编辑器支持单元格渲染器、值格式化、搜索和输入行为、多选和复杂对象值。
+
+## 单元格渲染器
+
+编辑器中使用的单元格渲染器可以自定义，如下所示：
+
+{% gridExampleRunner title="带有单元格渲染器的富选择" name="rich-select-cell-renderer" /%}
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agRichSelectCellEditor',
+        cellRenderer: ColourCellRenderer,
+        cellEditorParams: {
+            values: ['AliceBlue', 'AntiqueWhite', 'Aqua', /* .... 许多颜色 */ ],
+            cellRenderer: ColourCellRenderer,
+            valueListMaxHeight: 220
+        }
+        // ...其他属性
+    }
+]
+```
+
+{% partial file="./_component-interface-angular.mdoc" /%}
+{% partial file="./_component-interface-javascript.mdoc" /%}
+{% partial file="./_component-interface-react.mdoc" /%}
+{% partial file="./_component-interface-vue.mdoc" /%}
+
+{% interfaceDocumentation interfaceName="IRichCellEditorRendererParams" config={ "description": "" } /%}
+
+## 搜索值
+
+编辑器列表中可以进行不同类型的搜索，如下所示：
+
+{% interfaceDocumentation interfaceName="IRichCellEditorParams" overrideSrc="provided-cell-editors-rich-select/rich-select.json" names=["searchType"] config={ "description": "" } /%}
+
+{% gridExampleRunner title="富选择编辑器" name="rich-select-search-values" /%}
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agRichSelectCellEditor',
+        cellEditorParams: {
+            values: ['AliceBlue', 'AntiqueWhite', 'Aqua', /* .... 许多颜色 */ ],
+            searchType: 'match',
+        }
+        // ...其他属性
+    }
+]
+```
+
+## 允许输入
+
+编辑器输入可以配置为允许文本输入，用于匹配编辑器列表项的不同部分，如下所示：
+
+{% interfaceDocumentation interfaceName="IRichCellEditorParams" overrideSrc="provided-cell-editors-rich-select/rich-select.json" names=["allowTyping"] config={ "description": "" } /%}
+
+{% gridExampleRunner title="富选择编辑器" name="rich-select-allow-typing" /%}
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agRichSelectCellEditor',
+        cellRenderer: ColourCellRenderer,
+        cellEditorParams: {
+            values: ['AliceBlue', 'AntiqueWhite', 'Aqua', /* .... 许多颜色 */ ],
+            allowTyping: true,
+            filterList: true,
+            highlightMatch: true,
+        }
+        // ...其他属性
+    }
+]
+```
+
+## 格式化值
+
+编辑器列表中的项可以格式化，如下所示：
+
+{% interfaceDocumentation interfaceName="IRichCellEditorParams" overrideSrc="provided-cell-editors-rich-select/rich-select.json" names=["formatValue"] config={ "description": "" } /%}
+
+{% gridExampleRunner title="富选择格式化值" name="rich-select-format-values" /%}
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agRichSelectCellEditor',
+        cellEditorParams: {
+            values: ['English', 'Spanish', 'French', 'Portuguese', '(other)'],
+            formatValue: value => value.toUpperCase()
+        }
+        // ...其他属性
+    }
+]
+```
+
+## 多选
+
+编辑器可以配置为允许选择多个值，如下所示：
+
+{% interfaceDocumentation interfaceName="IRichCellEditorParams" overrideSrc="provided-cell-editors-rich-select/rich-select.json" names=["multiSelect","suppressMultiSelectPillRenderer"] config={ "description": "" } /%}
+
+{% gridExampleRunner title="富选择编辑器" name="rich-select-multi-select" /%}
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agRichSelectCellEditor',
+        cellEditorParams: {
+            values: ['AliceBlue', 'AntiqueWhite', 'Aqua', /* .... 许多颜色 */ ],
+            multiSelect: true,
+        }
+        // ...其他属性
+    }
+]
+```
+
+## 复杂对象
+
+使用复杂对象时，需要 `formatValue` 回调函数将该复杂对象转换为富选择编辑器可以渲染的字符串。
+如果正在编辑的 `Grid Column` 不使用复杂值，或者如果富选择编辑器值对象的格式（不同的属性）与 `Grid Column` 使用的对象不同，则需要 `parseValue` 回调函数将编辑器格式转换为网格列的格式。
+
+{% interfaceDocumentation interfaceName="IRichCellEditorParams" overrideSrc="provided-cell-editors-rich-select/rich-select.json" names=["formatValue","parseValue"] config={ "description": "" } /%}
+
+{% note %}
+使用 `Cell Renderers` 时，仍应提供 `formatValue` 回调，以便可以使用依赖于字符串值的功能，如 `allowTyping`。
+{% /note %}
+
+{% gridExampleRunner title="富选择编辑器" name="rich-select-complex-objects" exampleHeight=300 /%}
+
+```js
+const colors = [
+  { name: "Pink", code: "#FFC0CB" },
+  // ...其他值
+];
+
+columnDefs: [
+    {
+        cellEditor: 'agRichSelectCellEditor',
+        valueFormatter: (p) => `${p.value.name} (${p.value.code})`,
+        valueParser: (p) => p.newValue,
+        cellDataType: 'object',
+        cellEditorParams: {
+            values: colors,
+            formatValue: (v) => v.name,
+        }
+        // ...其他属性
+    }
+]
+```
+
+## API
+
+{% interfaceDocumentation interfaceName="IRichCellEditorParams" overrideSrc="provided-cell-editors-rich-select/rich-select.json" /%}

@@ -1,0 +1,60 @@
+{% if isFramework("javascript") %}
+单元格渲染器可以是：
+
+-   返回 HTML 字符串或 DOM 对象的函数
+-   实现 [`ICellRendererComp`](#api-reference) 接口的类
+
+如果您没有刷新或清理要求（即您不需要实现 refresh 或 destroy 函数），请使用单元格组件的函数变体。
+
+```ts
+interface ICellRendererComp {
+    // 可选 - 渲染参数。
+    init?(props: ICellRendererParams): void;
+
+    // 必需 - 返回组件的 DOM 元素，这是网格放入单元格的内容
+    getGui(): HTMLElement;
+
+    // 可选 - 渲染完成后由网格调用一次 - 如果您的渲染器需要做任何清理，
+    // 请在此处进行
+    destroy?(): void;
+
+    // 必需 - 让单元格刷新。如果刷新成功则返回 true，否则返回 false。
+    // 如果您返回 false，网格将从 DOM 中移除该组件，并在其位置创建
+    // 一个新组件并使用新值。
+    refresh(params: ICellRendererParams): boolean;
+}
+```
+
+提供基于类的组件时，它使用包含要渲染的值等内容的 `props` 进行初始化。可以在下面的 [API 参考](#api-reference)中找到 props 的完整描述。
+
+```ts
+class CustomButtonComponent {
+    // ...
+    init(props) {
+        // 创建单元格
+        this.eGui = document.createElement('div');
+        this.eGui.innerHTML = props.value;
+    }
+    // ...
+}
+```
+
+提供基于函数的组件时，它接收相同的 `props` 作为参数，就像上面提供给 `init` 方法一样。
+以下是一些作为简单函数提供的单元格组件的简单示例：
+
+```js
+// 将值转换为大写
+colDef.cellRenderer = params => `${params.value.toUpperCase()}`;
+
+// 在值上放置工具提示
+colDef.cellRenderer = params => `<span title="the tooltip">${params.value}</span>`;
+
+// 创建 DOM 对象
+colDef.cellRenderer = params => {
+    const eDiv = document.createElement('div');
+    eDiv.innerHTML = '<span class="my-css-class"><button class="btn-simple">Push Me</button></span>';
+    return eDiv;
+}
+```
+
+{% /if %}

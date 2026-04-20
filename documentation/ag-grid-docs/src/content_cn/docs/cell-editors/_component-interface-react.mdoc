@@ -1,0 +1,42 @@
+{% if isFramework("react") %}
+自定义单元格编辑器组件是受控组件，它们作为 props 的一部分接收值，并通过 `onValueChange` 回调将值更新传回表格。值在编辑停止之前不会设置。
+{% /if %}
+
+{% if isFramework("react") %}
+提供的 props 遵循 `CustomCellEditorProps` 接口，该接口在下面的 [API 参考](#customcelleditorprops)中列出。
+{% /if %}
+
+{% if isFramework("react") %}
+
+```jsx
+export default ({ value, onValueChange }) => {
+    return (
+        <input
+            type="text"
+            value={value || ''}
+            onChange={({ target: { value }}) => onValueChange(value === '' ? null : value)}
+        />
+    );
+}
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+{% note %}
+在以前版本的表格中，自定义组件是以命令式方式声明的。有关如何迁移到当前格式的详细信息，请参阅[迁移以使用 reactiveCustomComponents](./upgrading-to-ag-grid-31-1/#migrating-custom-components-to-use-reactivecustomcomponents-option)。
+{% /note %}
+{% /if %}
+
+{% if isFramework("react") %}
+以下回调可以传递给 `useGridCellEditor` 钩子（`CustomCellEditorCallbacks` 接口）。所有回调都是可选的。只有在提供回调时才需要使用该钩子。
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="CustomCellEditorCallbacks" config={ "description": "" } /%}
+{% /if %}
+
+{% if isFramework("react") %}
+下面示例中的自定义数字编辑器演示了 `useGridCellEditor` 钩子：
+{% gridExampleRunner title="useGridCellEditor 示例" name="component-editor"  exampleHeight=370 /%}
+{% /if %}

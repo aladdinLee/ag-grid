@@ -1,0 +1,88 @@
+---
+title: "图表事件"
+enterprise: true
+---
+
+在图表生命周期的不同点会引发多个事件。
+
+## ChartCreated
+
+每当首次创建图表时都会引发 `ChartCreated` 事件。
+
+{% interfaceDocumentation interfaceName="ChartCreatedEvent" /%}
+
+## ChartRangeSelectionChanged
+
+每当用于渲染图表的数据范围发生更改时都会引发此事件，例如通过使用范围选择手柄或在配置侧边栏的数据选项卡中进行更改。此事件包含一个 `cellRange` 对象，该对象为您提供有关范围的信息，允许您重新创建图表。
+
+{% interfaceDocumentation interfaceName="ChartRangeSelectionChangedEvent" /%}
+
+## ChartOptionsChanged
+
+面板中所做的任何更改都会引发 `ChartOptionsChanged` 事件：
+
+{% interfaceDocumentation interfaceName="ChartOptionsChangedEvent" /%}
+
+这里 `chartThemeName` 将设置为当前选定主题的名称，该主题将是[提供的主题](./integrated-charts-customisation/#provided-themes)之一，或者如果使用则是[自定义主题](./integrated-charts-customisation/#custom-chart-themes)。
+
+## ChartDestroyed
+
+当图表被销毁时引发此事件。
+
+{% interfaceDocumentation interfaceName="ChartDestroyed" /%}
+
+## 示例：图表事件
+
+以下示例通过在触发事件时写入控制台来演示描述的事件何时发生。尝试以下操作：
+
+-   从选择创建图表，例如，在"Month"和"Sunshine"列中选择几个单元格，然后右键单击以"Chart Range"作为"Line"图表。请注意，"Created chart with ID id-xxxxxxxxxxxxx"消息已记录到控制台。
+
+-   缩小或扩展几个单元格的选择范围，以查看"Changed range selection of chart with ID id-xxxxxxxxxxxx"已记录。
+
+-   单击图表对话框内的[图表工具面板按钮](./integrated-charts-chart-tool-panels)以显示图表设置并切换到柱状图。请注意，"Changed options of chart with ID id-xxxxxxxxxxxxx"消息已记录到控制台。
+
+-   关闭图表对话框以查看"Destroyed chart with ID id-xxxxxxxxxxx"消息已记录。
+
+{% gridExampleRunner title="事件" name="events" /%}
+
+## 事件驱动的图表更新
+
+以下示例在引发 `ChartRangeSelectionChanged` 事件时更新图表。请注意，可以使用以下 Grid API 方法更新图表：
+
+{% apiDocumentation source="grid-api/api.json" section="charts" names=["updateChart"] /%}
+
+尝试更改网格中的图表单元格范围，并注意副标题已使用图表范围信息更新。
+
+{% gridExampleRunner title="事件驱动的图表更新" name="event-driven-chart-updates"  exampleHeight=710 /%}
+
+## 独立图表事件
+
+可以通过 `chartThemeOverrides` 网格选项使用基于主题的配置订阅 [AG Charts 事件](https://www.ag-grid.com/charts/react/events/)：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+  chartThemeOverrides: {
+    common: {
+      legend: {
+        listeners: {
+          legendItemClick: (e) => console.log('legendItemClick', e)
+        }
+      },
+      listeners: {
+        seriesNodeClick: (e) => console.log('seriesNodeClick', e)
+      }
+    }
+  }
+}
+```
+
+{% note %}
+请注意，`chartThemeOverrides` 网格选项映射到 [AG Charts 主题覆盖](https://www.ag-grid.com/charts/themes-api/#reference-AgChartTheme-overrides)。
+{% /note %}
+
+下面的示例演示独立图表事件订阅：
+
+-   单击系列中的条形，并观察 `seriesNodeClick` 监听器发出控制台消息。
+-   单击图例项，并观察 `legendItemClick` 监听器发出控制台消息。
+
+{% gridExampleRunner title="订阅独立图表事件" name="standalone-events" exampleHeight=710 /%}

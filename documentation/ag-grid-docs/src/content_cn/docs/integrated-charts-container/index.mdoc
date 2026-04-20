@@ -1,0 +1,32 @@
+---
+title: "图表容器"
+enterprise: true
+---
+
+本节展示如何为默认网格提供的弹出窗口指定替代图表容器。
+
+在网格提供的弹出窗口中显示生成的图表将满足大多数需求。但是，您可能希望在不同的位置显示图表。例如，您的应用程序可能已经有弹出窗口，并且您希望使用相同的库以保持一致性。
+
+## 指定图表容器
+
+要为弹出窗口提供替代容器，请使用网格回调 `createChartContainer(chartRef)`。
+
+{% apiDocumentation source="grid-options/properties.json" section="charts" names=["createChartContainer"] /%}
+
+每次用户选择通过网格 UI 创建图表时都会调用该回调。回调提供了一个 `ChartRef` 实现：
+
+{% interfaceDocumentation interfaceName="ChartRef" /%}
+
+下面的示例演示 `createChartContainer(chartRef)` 回调。该示例不使用替代弹出窗口，而是将图表放入网格下方的 DOM 中。这种简单的方法是有意的，以最小化示例的复杂性，并专注于回调和网格的交互。
+
+{% note %}
+当提供元素来显示图表时，重要的是始终将 `popupParent` 设置为 `document.body`。这将允许图表菜单中的浮动元素正确定位。
+{% /note %}
+
+从下面的示例中，可以注意到以下几点：
+
+-   选择一系列数字（奖牌列）并从上下文菜单创建图表。
+-   图表显示在网格下方而不是弹出窗口中。这是因为实现了 `createChartContainer(chartRef)`。
+-   每个图表旁边都显示一个"销毁"按钮。销毁按钮背后的逻辑调用 `destroyChart()` 来销毁图表实例。
+
+{% gridExampleRunner title="提供的容器" name="provided-container"  exampleHeight=750 /%}

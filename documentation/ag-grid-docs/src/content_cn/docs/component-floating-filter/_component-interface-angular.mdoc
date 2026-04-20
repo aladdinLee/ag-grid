@@ -1,0 +1,27 @@
+{% if isFramework("angular") %}
+自定义浮动筛选器组件的接口如下：
+
+```ts
+interface IFloatingFilterDisplayAngularComp {
+    // 必需方法
+
+    // agInit(params) 方法在浮动筛选器上调用一次。
+    // 有关参数的详细信息，请参见下文。
+    agInit(params: FloatingFilterDisplayParams): void;
+
+    // 当列定义或模型更新时调用。
+    refresh(params: FloatingFilterDisplayParams): void;
+
+    // 可选方法
+
+    // 每次显示弹出窗口时都会调用，在 getGui 返回的 GUI 附加到 DOM 之后。
+    // 这对于任何需要在执行之前附加的逻辑很有用，例如将焦点放在特定的 DOM 元素上。
+    afterGuiAttached(params?: IAfterGuiAttachedParams): void;
+}
+```
+
+### 自定义浮动筛选器参数
+
+`agInit(params)` / `refresh(params)` 方法接受一个包含下面列出的项目的参数对象。如果通过 `colDef.floatingFilterComponentParams` 属性提供了自定义参数，
+这些参数将额外添加到参数对象中，如果存在名称冲突，将覆盖同名项目。
+{% /if %}

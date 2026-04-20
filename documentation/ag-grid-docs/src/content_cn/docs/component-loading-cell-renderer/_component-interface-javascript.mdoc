@@ -1,0 +1,21 @@
+{% if isFramework("javascript") %}
+加载单元格渲染器组件的接口如下：
+{% /if %}
+
+{% if isFramework("javascript") %}
+
+```ts
+interface ILoadingCellRendererComp {
+    // init(params) 方法在加载单元格渲染器上调用一次。有关参数的详细信息，请参见下文。
+    init(params: ILoadingCellRendererParams): void;
+
+    // 返回此加载单元格渲染器的 DOM 元素
+    getGui(): HTMLElement;
+}
+```
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+加载单元格渲染器参数的接口如下：
+{% /if %}

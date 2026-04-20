@@ -1,0 +1,201 @@
+---
+title: "SSRM 透视"
+enterprise: true
+---
+
+在本节中，我们添加服务端透视以创建一个示例，该示例能够使用服务端行模型 (SSRM) "切片和切丁"数据。
+
+## 启用透视
+
+要在列上透视，应在列定义上设置 `pivot=true`。此外，网格需要处于透视模式，这是通过网格选项 `pivotMode=true` 设置的。
+
+在下面的代码片段中，在 'year' 列上定义了透视，并启用了透视模式：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    // 启用透视模式
+    pivotMode: true,
+    columnDefs: [
+        { field: 'country', rowGroup: true },
+        // 启用透视
+        { field: 'year', pivot: true },
+        { field: 'total' },
+    ],
+}
+```
+
+有关更多配置详细信息，请参阅[透视](./pivoting/)部分。
+
+## 在服务器上透视
+
+使用服务端行模型时，实际透视在服务器上执行。
+当网格需要更多行时，它通过[服务端数据源](./server-side-model-datasource/)上的 `getRows(params)` 发出请求，其中包含行分组详细信息的元数据。
+
+请求中与透视相关的属性如下所示：
+
+{% interfaceDocumentation interfaceName="IServerSideGetRowsRequest" names=["pivotMode", "pivotCols"] config={"description": ""}/%}
+
+请注意上面的代码片段中，`pivotCols` 包含网格正在透视的所有列，`pivotMode` 用于确定网格中当前是否启用了透视。
+
+## 提供透视结果列
+
+透视结果列是作为透视功能的一部分创建的列。您必须将这些提供给网格，以便网格为活动的透视功能显示正确的列。
+
+例如，在 `year` 字段上透视时，您必须向网格提供与数据中存在的每个不同年份对应的列，例如 `2000`、`2002`、`2004` 等。
+
+### 提供透视结果字段（简单）
+
+提供透视结果列的最简单方法是将包含透视数据的字段提供给 `getRows` 成功回调中的 `pivotResultFields` 属性。这些字段用于生成透视结果列和适当的列组。默认情况下，网格期望字段由下划线（`'_'`）分隔，但是，可以通过 `serverSidePivotResultFieldSeparator` 网格选项更改此设置，如下所示：
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroup: true },
+        { field: 'year', pivot: true }, // 在 'year' 上透视
+        { field: 'gold', aggFunc: 'sum' },
+        { field: 'silver', aggFunc: 'sum' },
+        { field: 'bronze', aggFunc: 'sum' },
+    ],
+    rowModelType: 'serverSide',
+    pivotMode: true,
+    // 指定字段分隔符，例如 '2000_gold' 应该是 '_'，这也是默认值
+    serverSidePivotResultFieldSeparator: '_',
+}
+```
+
+请注意，`serverSidePivotResultFieldSeparator` 不是必需的，因为默认值为 `'_'`。
+
+以下代码片段显示如何通过 `success` 回调向网格提供 `pivotResultFields`：
+
+```js
+const createDatasource = server => {
+    return {
+        // 当需要更多行时由网格调用
+        getRows: params => {
+
+            // 从服务器获取请求数据
+            const response = server.getData(params.request);
+
+            if (response.success) {
+                // 将请求块的行提供给网格
+                params.success({
+                    rowData: response.rows,
+                    pivotResultFields: response.pivotFields, // ['2000_gold', '2000_silver',...]
+                });
+            } else {
+                // 通知网格请求失败
+                params.fail();
+            }
+        }
+    };
+}
+```
+
+下面的示例演示了这一点，请注意以下几点：
+
+-   透视字段从服务器返回，然后通过 `getRows` 成功回调通过 `pivotResultFields` 属性传递给网格。这些作为演示记录到控制台。
+-   网格按 `_` 拆分 `pivotResultFields` 并创建透视结果列和列组，其中生成的列使用提供的字段从行访问数据。
+
+{% gridExampleRunner title="提供透视结果字段" name="supplying_pivot_result_fields"  exampleHeight=605 /%}
+
+{% note %}
+使用托管列时，可以使用[透视回调](./pivoting-result-columns/#column-definitions)自定义透视结果列定义。
+{% /note %}
+
+### 创建透视结果列（高级）
+
+也可以创建自己的透视结果列并将其提供给网格。这提供了完全的灵活性，但在涉及列组时可能会变得复杂。
+
+透视结果列的定义与提供给网格选项的列相同：您使用以下网格 API 方法提供[列定义](./column-definitions/)列表，传递列和/或列组列表：
+
+{% apiDocumentation source="grid-api/api.json" section="rowPivoting" names=["setPivotResultColumns"] /%}
+
+对于传递的列或组的数量没有限制或约束。但是，重要的是您为列设置的字段（或值获取器）要匹配。
+
+以下是如何创建透视结果列并通过 `setPivotResultColumns` 将其提供给网格：
+
+```js
+const createDatasource = server => {
+    return {
+        // 当需要更多行时由网格调用
+        getRows: params => {
+
+            // 从服务器获取请求数据
+            const response = server.getData(params.request);
+
+            // 向网格添加透视结果列
+            addPivotResultCols(response, params.api)
+
+            if (response.success) {
+                // 将请求块的行提供给网格
+                params.success({
+                    rowData: response.rows,
+                });
+            } else {
+                // 通知网格请求失败
+                params.fail();
+            }
+        }
+    };
+}
+
+function addPivotResultCols(response, api) {
+    // 创建 colDefs
+    var pivotColDefs = response.pivotFields.map(function (field) {
+        var headerName = field.split('_')[0]
+        return { headerName: headerName, field: field }
+    })
+
+    // 向网格提供透视结果列
+    api.setPivotResultColumns(pivotColDefs)
+}
+```
+
+在上面的代码中，`addPivotColDefs` 为了简单起见不创建列组。但是，下面的示例显示了创建列组的更复杂实现。请注意以下几点：
+
+-   列定义从 `pivotFields` 创建，从服务器返回。
+-   然后通过 `api.setPivotResultColumns()` 将这些列定义提供给网格。
+
+{% gridExampleRunner title="创建透视结果列" name="creating_pivot_result_columns"  exampleHeight=605 /%}
+
+{% note %}
+透视结果列按提供给 `api.setPivotResultColumns(pivotColDefs)` 的顺序显示。您可以在将 `pivotColDefs` 数组传递给网格之前对其进行排序来控制列的顺序。
+{% /note %}
+
+## 示例：透视列组
+
+下面的示例演示了具有多个行组的服务端透视，其中 'year' 透视列组下有多个值列（'gold'、'silver'、'bronze'）。请注意以下几点：
+
+-   通过网格选项 `pivotMode=true` 启用透视模式。
+-   通过列定义上定义的 `pivot=true` 在 **Year** 列上放置透视。
+-   行按 **Country** 和 **Sport** 分组，在其列定义上定义了 `rowGroup=true`。
+-   **Gold**、**Silver** 和 **Bronze** 值列在其列定义上定义了 `aggFunc='sum'`。
+-   请求中的 `pivotCols` 和 `pivotMode` 属性由服务器用于执行透视。
+-   从成功回调提供的 `pivotResultFields` 生成新的列组定义。
+-   打开浏览器的开发者控制台以查看提供给数据源的请求。
+
+{% gridExampleRunner title="透视列组" name="pivot-column-groups"  exampleHeight=610 /%}
+
+## 示例：切片和切丁
+
+下面的示例使用在浏览器内运行的模拟数据存储。模拟服务器的目的是演示网格与服务器之间的交互。对于您的应用程序，您的服务器需要理解来自客户端的请求，并构建 SQL（或等效的 SQL，如果使用 no-SQL 数据存储）以针对数据存储运行相关查询。
+
+该示例演示了以下内容：
+
+-   列 `Athlete, Age, Country, Year` 和 `Sport` 都有 `enableRowGroup=true`，这意味着可以对它们进行分组。要分组，请将列拖到行组面板部分。默认情况下，示例按 `Country` 分组，然后按 `Year` 分组，因为这些列有 `rowGroup=true`。
+
+-   列 `Gold, Silver` 和 `Bronze` 都有 `enableValue=true`，这意味着可以对它们进行聚合。要聚合，请将列拖到 `Values` 部分。分组时，`Values` 部分中的所有列都将被聚合。
+
+-   您可以将网格转换为 **Pivot Mode**。为此，请单击透视模式复选框。当网格处于透视模式时，网格的行为类似于 Excel 网格。此额外信息作为请求的一部分传递给您的服务器，您的服务器负责以正确的结构返回数据。
+
+-   列 `Age, Country, Year` 和 `Sport` 都有 `enablePivot=true`，这意味着当 **Pivot Mode** 活动时可以对它们进行透视。要透视，请将列拖到 **Pivot** 部分。
+
+-   请注意，透视时，无法一直钻取到叶级别。
+
+-   除了分组、聚合和透视外，该示例还演示了过滤。列 **Country** 和 **Year** 具有网格提供的过滤器。列 **Age** 具有示例提供的自定义过滤器。您可以使用任何您想要的过滤器，只要您的服务器知道如何处理它。
+
+{% gridExampleRunner title="切片和切丁" name="slice-and-dice"  exampleHeight=775 /%}
+
+## 批量数据请求
+
+您可以使用列工具面板暂存多个数据请求。这允许在单个更新中应用多个配置更改，避免不必要的中间重新计算或服务器请求。有关详细示例，请参阅 [SSRM 行分组 — 批量数据请求](./server-side-model-grouping/#batching-data-requests)。

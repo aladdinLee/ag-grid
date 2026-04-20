@@ -1,0 +1,61 @@
+{% if isFramework("react") %}
+
+## 混合使用 JavaScript 和 React
+
+提供自定义组件时，您可以选择以下方式：
+
+1. 将 AG Grid 组件作为 React 组件提供。
+1. 将 AG Grid 组件作为 JavaScript 提供（仅限 JavaScript 类组件，不支持 JavaScript 函数组件）。
+
+以下代码片段展示了如何同时使用 JavaScript 和 React 组件：
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+```jsx
+//...其他导入
+import JavascriptComponent from './JavascriptComponent.js';
+import ReactComponent from './ReactComponent';
+
+const GridExample = () => {
+  // JS 和 React 组件，仅当按名称查找时才需要注册
+  const components = useMemo(() => ({
+      'javascriptComponent': JavascriptComponent,
+      'reactComponent': ReactComponent
+  }), []);
+
+  const columnDefs = useMemo( () => [
+      {
+          headerName: "JS Cell",
+          field: "value",
+          cellRenderer: 'javascriptComponent', // JS 组件按名称
+      },
+      {
+          headerName: "JS Cell",
+          field: "value",
+          cellRenderer: JavascriptComponent, // JS 组件按直接引用
+      },
+      {
+          headerName: "React Cell",
+          field: "value",
+          cellRenderer: 'reactComponent', // React 组件按名称
+      },
+      {
+          headerName: "React Cell",
+          field: "value",
+          cellRenderer: ReactComponent, // React 组件按直接引用
+      }
+  ], []);
+
+    return (
+        <AgGridReact
+            components={components}
+            columnDefs={columnDefs}
+            ...其他属性
+        />
+    );
+};
+```
+
+{% /if %}

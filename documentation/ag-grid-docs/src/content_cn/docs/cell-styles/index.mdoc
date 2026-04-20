@@ -1,0 +1,207 @@
+---
+title: "单元格样式"
+---
+
+单元格可以根据其所属的列或其包含的数据进行样式设置。
+
+您可以混合使用以下任何机制：
+
+-   **单元格样式：** 在单元格上设置 CSS 属性以直接更改其外观。
+-   **单元格类：** 将 CSS 类附加到单元格，以便应用程序的样式表可以对其进行样式设置。
+-   **单元格类规则：** 提供应用 CSS 类的规则。
+
+以下各节介绍了这些方法中的每一种。
+
+{% note %}
+如果您想更改_所有_单元格的默认外观以自定义表格以匹配应用程序的设计，请查看[主题文档](./theming/)。
+{% /note %}
+
+## 单元格样式
+
+用于直接向单元格提供 CSS 样式（不使用类）。可以是 CSS 样式对象，或返回 CSS 样式对象的函数。
+
+{% apiDocumentation source="column-properties/properties.json" section="styling" names=["cellStyle"] /%}
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        // 每行相同样式
+        {
+            headerName: '静态样式',
+            field: 'static',
+            cellStyle: {color: 'red', 'background-color': 'green'}
+        },
+        // 每行不同样式
+        {
+            headerName: '动态样式',
+            field: 'dynamic',
+            cellStyle: params => {
+                if (params.value === '警察') {
+                    // 将警察单元格标记为红色
+                    return {color: 'red', backgroundColor: 'green'};
+                }
+                return null;
+            }
+        },
+    ]
+}
+```
+
+## 单元格类
+
+为此列中的单元格提供类。可以是字符串（一个类）、字符串数组（类数组）或函数（返回字符串或字符串数组）。
+
+{% apiDocumentation source="column-properties/properties.json" section="styling" names=["cellClass"] /%}
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        // 每行返回相同的类
+        {
+            headerName: '静态类',
+            field: 'static',
+            cellClass: 'my-class'
+        },
+        // 每行返回相同的类数组
+        {
+            headerName: '静态类数组',
+            field: 'staticArray',
+            cellClass: ['my-class1','my-class2'],
+        },
+        // 基于函数返回类
+        {
+            headerName: '函数返回字符串',
+            field: 'function',
+            cellClass: params => {
+                return params.value === 'something' ? 'my-class-1' : 'my-class-2';
+            },
+        },
+        // 基于函数返回类数组
+        {
+            name: '函数返回数组',
+            field: 'functionArray',
+            cellClass: params => ['my-class-1','my-class-2'],
+        }
+    ]
+}
+```
+
+## 单元格类规则
+
+您可以通过 `colDef.cellClassRules` 定义规则来应用某些 CSS 类。
+这些规则作为 JavaScript 映射提供，其中键是类名，值是表达式，如果评估为 true，则使用该类。表达式可以是 JavaScript 函数，或被表格视为函数简写的字符串。
+
+{% apiDocumentation source="column-properties/properties.json" section="styling" names=["cellClassRules"] /%}
+
+以下代码片段是在年份列上使用函数的 cellClassRules：
+
+```{% frameworkTransform=true suppressFrameworkContext=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'year',
+            cellClassRules: {
+                // 将绿色应用于 2008
+                'rag-green-outer': params => params.value === 2008,
+                // 将蓝色应用于 2004
+                'rag-blue-outer': params => params.value === 2004,
+                // 将红色应用于 2000
+                'rag-red-outer': params => params.value === 2000,
+            }
+        }
+    ]
+}
+```
+
+## 单元格样式属性
+
+所有 cellClass、cellStyle 和 cellClassRules 函数都接受 `CellClassParams`。
+
+{% interfaceDocumentation interfaceName="CellClassParams" /%}
+
+作为替代，您也可以使用表达式提供函数的简写。
+示例中的年龄列使用表达式。表格通过将字符串作为 JavaScript 表达式执行来评估表达式。
+表达式具有以下可用属性（映射等效 params 对象的属性）：
+
+-   `x`：映射 value
+-   `ctx`：映射 context
+-   `node`：映射 node
+-   `data`：映射 data
+-   `colDef`：映射 colDef
+-   `rowIndex`：映射 rowIndex
+-   `api`：映射表格 api
+
+换句话说，`x` 和 `ctx` 映射 value 和 context，所有其他属性映射同名参数。
+
+以下代码片段是在年龄列上使用表达式的 cellClassRules：
+
+```{% frameworkTransform=true suppressFrameworkContext=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'age',
+            cellClassRules: {
+                'rag-green': 'x < 20',
+                'rag-blue': 'x >= 20 && x < 25',
+                'rag-red': 'x >= 25',
+            }
+        }
+    ]
+}
+```
+
+{% note %}
+基于字符串的表达式被解析并评估为 JavaScript。使用这种形式的表达式可能需要配置您的[内容安全策略](./security/#content-security-policy-csp)。
+
+对于大多数用例，推荐使用函数，除非有特定需要基于字符串的表达式。
+{% /note %}
+
+## 样式刷新
+
+如果您刷新单元格，或由于编辑而更新单元格，则会再次应用 `cellStyle`、`cellClass` 和 `cellClassRules`。这具有以下效果：
+
+-   `cellStyle`：应用所有新样式。如果新样式与旧样式相同，则新样式覆盖旧样式。如果新样式不存在，则保留旧样式（表格不会删除样式）。
+-   `cellClass`：应用所有新类。旧类不会被删除，因此请注意类会累积。如果您想删除旧类，则使用 cellClassRules。
+-   `cellClassRules`：与 `cellClass` 和 `cellStyle` 不同，`cellClassRules` 每次回调运行时动态添加或删除 CSS 类。当 `rowNode` 中的任何列更新时，会重新评估规则。这对于根据另一个单元格的值设置单元格样式很有用，但由于频繁执行可能会影响性能。
+
+{% note %}
+如果您使用 `cellStyle` 突出显示变化的数据，请注意表格不会删除样式。例如，如果您为某个条件将文本颜色设置为 'red'，那么当条件不满足时，您应该明确将其设置回默认值，例如 'black'。否则，一旦首次应用，突出显示将保留。
+{% /note %}
+
+```js
+// 不安全，红色将在首次应用后保留
+cellStyle: params => params.value > 80 ? { color: 'red' } : null
+```
+
+```js
+// 安全，当条件不为真时，黑色将覆盖红色
+cellStyle: params => params.value > 80 ? { color: 'red' } : { color: 'black' }
+```
+
+## 综合示例
+
+下面在完整工作示例中显示了上述两个 `cellClassRules` 代码片段。该示例演示了以下内容：
+
+-   年龄使用带有表达式的 `cellClassRules`（字符串而不是函数）。编辑单元格将更新样式。
+-   年份使用带有函数的 `cellClassRules`。编辑单元格将更新样式。
+-   日期和运动使用 `cellClass`。日期显式设置，运动使用函数设置。因为运动使用函数，它可以根据数据值选择类。编辑运动将产生不确定的结果，因为类值会累积。
+-   金牌隐式设置 `cellStyle`。它不依赖于单元格值。
+-   银牌和铜牌使用依赖于值的函数设置 `cellStyle`。编辑将更新 cellStyle。
+
+{% gridExampleRunner title="单元格样式" name="cell-styling" /%}
+
+## 第一列和最后一列
+
+可以通过使用 CSS 定位 `.ag-column-first` 和 `.ag-column-last` 选择器来设置第一列和最后一列中的单元格样式：
+
+```css
+.ag-cell.ag-column-first {
+    background-color: #2244CC44;
+}
+
+.ag-cell.ag-column-last {
+    background-color: #CC333344;
+}
+```
+
+{% gridExampleRunner title="单元格样式" name="cell-styling-first-last" /%}

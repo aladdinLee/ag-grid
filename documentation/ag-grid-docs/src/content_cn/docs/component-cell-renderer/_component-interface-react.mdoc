@@ -1,0 +1,11 @@
+{% if isFramework("react") %}
+单元格渲染器是一个普通的 React 组件，其 `props` 包含要渲染的值等内容。可以在下面的 [API 参考](#api-reference)中找到 props 的完整描述。
+
+```ts
+// 此组件被插入到单元格中
+const CustomButtonComp = props => {
+    return <>{props.value}</>;
+};
+```
+
+{% /if %}

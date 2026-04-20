@@ -1,0 +1,32 @@
+{% if isFramework("react") %}
+可以通过传递给 `AgGridReact` 组件的 ref 访问网格的 API。
+
+```jsx
+// 创建 gridRef
+const gridRef = useRef();
+
+const onClick = useCallback(() => {
+    // 使用 gridRef 访问 API
+    gridRef.current?.api.deselectAll();
+}, []);
+
+<AgGridReact ref={gridRef}  />
+```
+
+{% warning %}
+gridRef.current 值在 AgGridReact 组件初始化后才会定义。
+如果您想尽快访问 API（即进行初始化工作），请考虑监听 `gridReady` 事件。
+{% /warning %}
+
+所有网格事件和回调的参数中也提供了 `api`。
+
+```jsx
+// 在事件处理程序中直接访问 API
+onGridReady = useCallback((event: GridReadyEvent) => {
+    event.api.resetColumnState();
+},[]);
+
+<AgGridReact onGridReady={onGridReady} />
+```
+
+{% /if %}

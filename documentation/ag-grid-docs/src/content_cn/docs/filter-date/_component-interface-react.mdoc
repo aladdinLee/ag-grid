@@ -1,0 +1,42 @@
+{% if isFramework("react") %}
+自定义日期组件是受控组件，它们作为 props 的一部分接收日期值，并通过 `onDateChange` 回调将日期值更新传回网格。请注意，调用 `onDateChange` 时会立即应用日期。
+{% /if %}
+
+{% if isFramework("react") %}
+
+```jsx
+export default ({ date, onDateChange }) => {
+    ...
+    return (
+        <input
+            type="date"
+            value={convertToString(date)}
+            onChange={({ target: { value } }) => onDateChange(convertToDate(value))}
+        />
+    );
+}
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+{% note %}
+在以前版本的网格中，自定义组件是以命令式方式声明的。有关如何迁移到当前格式的详细信息，请参阅[迁移以使用 reactiveCustomComponents](./upgrading-to-ag-grid-31-1/#migrating-custom-components-to-use-reactivecustomcomponents-option)。
+{% /note %}
+{% /if %}
+
+{% if isFramework("react") %}
+以下 props 被传递给自定义日期组件（`CustomDateProps` 接口）。
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="CustomDateProps" config={ "description": "" } /%}
+{% /if %}
+
+{% if isFramework("react") %}
+以下回调可以传递给 `useGridDate` 钩子（`CustomDateCallbacks` 接口）。所有回调都是可选的，只有在提供回调时才需要使用该钩子。
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="CustomDateCallbacks" config={ "description": "" } /%}
+{% /if %}

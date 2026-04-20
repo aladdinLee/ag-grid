@@ -1,0 +1,90 @@
+---
+title: "加载组件"
+---
+
+加载组件为一行显示以表示数据正在加载。
+
+## 全宽加载行
+
+下面的示例演示了将提供的加载组件替换为自定义加载组件。
+
+-   **自定义加载组件**通过 `gridOptions.loadingCellRenderer` 通过名称提供。
+-   **自定义加载组件参数**使用 `gridOptions.loadingCellRendererParams` 提供。
+-   示例模拟长延迟以清楚地显示微调器。
+-   滚动网格将请求更多行并再次显示加载单元格渲染器。
+
+{% gridExampleRunner title="Custom Loading Cell Renderer" name="custom-loading-cell-renderer" /%}
+
+### 自定义加载行
+
+{% partial file="./_component-interface-javascript.mdoc" /%}
+{% partial file="./_component-interface-angular.mdoc" /%}
+{% partial file="./_component-interface-react.mdoc" /%}
+{% partial file="./_component-interface-vue.mdoc" /%}
+
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="ILoadingCellRendererParams" names=["api", "context", "node"] /%}
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="CustomLoadingCellRendererProps" names=["api", "context", "node"] /%}
+{% /if %}
+
+### 加载失败
+
+使用自定义加载组件时，您可以直接在组件中添加对加载失败的处理。
+
+在下面的示例中，请注意：
+
+-   **自定义加载组件**通过 `gridOptions.loadingCellRenderer` 通过名称提供。
+-   **自定义加载组件参数**使用 `gridOptions.loadingCellRendererParams` 提供。
+-   示例模拟长延迟以清楚地显示微调器并模拟加载失败。
+
+{% gridExampleRunner title="Custom Loading Cell Renderer Failed" name="custom-loading-cell-renderer-failed" /%}
+
+### 动态加载行选择
+
+可以动态确定要使用的加载单元格渲染器 - 即在运行时。这需要提供 `loadingCellRendererSelector`。
+
+{% if isFramework("javascript", "angular", "react") %}
+{% partial file="./_component-dynamic-angular-react-js.mdoc" /%}
+{% /if %}
+
+{% partial file="./_component-dynamic-vue.mdoc" /%}
+
+## 骨架加载
+
+可以通过启用 `suppressServerSideFullWidthLoadingRow` 将网格配置为在单元格中显示加载指示器。
+
+{% gridExampleRunner title="Skeleton Loading Cell Renderer" name="skeleton-loading-cell-renderer" /%}
+
+```
+const gridOptions = {
+    suppressServerSideFullWidthLoadingRow: true,
+};
+```
+
+### 自定义加载单元格
+
+可以覆盖默认网格行为，以便在每列的基础上提供渲染器。
+
+{% gridExampleRunner title="Custom Cell Loading Renderer" name="custom-cell-loading-renderer" /%}
+
+```
+const gridOptions = {
+    suppressServerSideFullWidthLoadingRow: true,
+    columnDefs: [
+        { field: 'athlete', loadingCellRenderer: CustomLoadingCellRenderer },
+        // 更多列，没有加载渲染器...
+    ],
+    defaultColDef: {
+        loadingCellRenderer: () => '',
+    },
+};
+```
+
+上面的示例演示了以下内容：
+
+-   启用了 `suppressServerSideFullWidthLoadingRow`，防止网格默认为全宽加载。
+-   在 _Athlete_ 列上配置了 `loadingCellRenderer`，允许仅为此列显示加载微调器。
+-   在 `defaultColDef` 上配置了 `loadingCellRenderer`，提供一个空单元格渲染器，以防止默认网格加载渲染器在其他列上显示。

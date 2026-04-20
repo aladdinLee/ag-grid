@@ -1,0 +1,75 @@
+---
+title: "行分组 - 排序"
+enterprise: true
+---
+
+本节提供有关如何配置和自定义行组排序方式的详细信息。
+
+## 排序行组
+
+行组按其分组的列进行[排序](./row-sorting/)，并使用该列上配置的任何[自定义排序](./row-sorting/#custom-sorting)。对由 `groupDisplayType` 生成的组列应用排序将对它表示的行分组列应用排序。
+
+{% gridExampleRunner title="混合组排序" name="mixed-group-sort" /%}
+
+上面的示例演示了对 `country` 和 `year` 列进行排序将对行组进行排序，单击对 `Group` 列进行排序会对 `country` 和 `year` 列应用排序。
+
+{% note %}
+当使用 `groupDisplayType` 和[单一组列](./grouping-single-group-column/)时，如果应用行分组的列具有不同的排序方向，则组列将显示混合排序图标。
+{% /note %}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroup: true, sort: 'desc' },
+        { field: 'year', rowGroup: true, sort: 'asc' },
+        // ...其他列定义
+    ],
+    groupDisplayType: 'singleColumn',
+}
+```
+
+## 自定义行组排序
+
+可以使用 `autoGroupColumnDef.comparator` 配置[自定义组排序](./row-sorting/#custom-sorting)，将生成的组列与具有行分组的列取消链接。这允许跨所有行分组级别应用自定义排序。
+
+{% gridExampleRunner title="自定义组排序" name="custom-group-sort" /%}
+
+{% note %}
+使用自定义组排序时，对 `Group` 列进行排序不再影响具有行分组的列，反之亦然。
+{% /note %}
+
+上面的示例演示了一个完全忽略数据的配置，更倾向于按后代数量对行进行排序：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroup: true },
+        { field: 'year', rowGroup: true },
+        // ...其他列定义
+    ],
+    autoGroupColumnDef: {
+        comparator: (valueA, valueB, nodeA, nodeB) => {
+            return nodeA.allLeafChildren.length - nodeB.allLeafChildren.length;
+        },
+    },
+}
+```
+
+## 未排序的组顺序
+
+当未应用排序时，组按它们在数据中出现的顺序排序。可以通过提供 `initialGroupOrderComparator` 网格选项来用自定义初始顺序覆盖此顺序。
+
+{% note %}
+由于这是组的初始顺序，它在过滤和聚合之前执行。这意味着它不能使用过滤后的数据或聚合值作为比较条件。
+{% /note %}
+
+{% gridExampleRunner title="初始组顺序" name="initial-group-order" /%}
+
+上面的示例演示了以下配置以基于叶子子行数量对组行进行排序：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    initialGroupOrderComparator: (params) =>
+        params.nodeA.allLeafChildren.length - params.nodeB.allLeafChildren.length,
+}
+```

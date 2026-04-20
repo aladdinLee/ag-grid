@@ -1,0 +1,18 @@
+{% if isFramework("javascript") %}
+
+```js
+const KEY_UP = 'ArrowUp';
+const KEY_DOWN = 'ArrowDown';
+
+colDef.suppressKeyboardEvent = params => {
+    console.log('单元格正在编辑: ' + params.editing);
+    console.log('键盘事件:', params.event);
+
+    // 如果正在编辑且用户按下上/下键，则返回 true（禁止）
+    const key = params.event.key;
+    const gridShouldDoNothing = params.editing && (key === KEY_UP || key === KEY_DOWN);
+    return gridShouldDoNothing;
+}
+```
+
+{% /if %}

@@ -1,0 +1,60 @@
+---
+title: "Excel 导出 - 图像"
+enterprise: true
+---
+
+Excel 导出允许在 Excel 导出文件中包含图像。例如，您可以将公司徽标添加到导出的 Excel 电子表格的顶部或底部，或导出您在网格单元格内显示的任何图像。
+
+## 导出图像
+
+您可以使用[导出参数](./excel-export-api/#excelexportparams)中显示的 addImageToCell 回调为任何网格单元格导出图像：
+
+{% interfaceDocumentation interfaceName="ExcelExportParams" names=["addImageToCell"] config={"description":""} /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    defaultExcelExportParams: {
+        addImageToCell: (rowIndex, column, value) => {
+            if (rowIndex === 1 && column.colId === 'athlete') {
+                const myCompanyLogo = getBase64Image('logo.png');
+                return {
+                    image: {
+                        id: 'company_logo',
+                        base64: myCompanyLogo,
+                        imageType: 'png',
+                        fitCell: true
+                    }
+                };
+            }
+        }
+    }
+}
+```
+
+需要注意的是，图像只能作为 `base64` 字符串导出，图像格式必须是 `PNG`、`GIF` 或 `JPG`。您可以使用第三方工具或使用本页示例中的代码将图像转换为 `base64` 字符串。
+
+{% note %}
+每个图像都需要有一个 `id`。这样，如果您在同一个导出操作中多次导出同一个图像，`id` 将用于访问图像数据，因此图像文件只会导入一次。
+{% /note %}
+
+{% warning %}
+目前，每个单元格只能导出一个图像。
+{% /warning %}
+
+## 带有图像的单元格
+
+下面的示例包含一个[自定义单元格渲染器](./component-cell-renderer/)，并使用 `addImageToCell` 回调将单元格值转换为 `base64` 图像。
+
+请注意以下内容：
+
+-   由于 `ExcelImage` 中的 `offsetX` 和 `offsetY` 属性，图像在单元格内获得边距。
+
+{% gridExampleRunner title="Excel 导出 - 带有图像的单元格" name="excel-export-cells-with-images" /%}
+
+## 带有图像和文本的单元格
+
+此示例具有一个[自定义单元格渲染器](./component-cell-renderer/)，显示图像和文本，并使用 `addImageToCell` 将单元格值转换为 `base64` 图像。
+
+请注意以下内容：
+
+-   由于 `ExcelImage` 中的 `offsetX` 和 `offsetY` 属性，图像在单元格内获得边距。

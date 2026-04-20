@@ -1,0 +1,50 @@
+---
+title: "客户端数据 - 单行/单元格更新"
+---
+
+您可以将更新目标定为单行或单元格。更新单行意味着要求网格替换特定行的数据项。更新单元格意味着保留数据项，但要求网格替换该数据项的一个属性。
+
+单行和单单元格更新都是通过首先获取行的行节点引用，然后使用相关的行节点 API 方法完成的。有关如何访问行节点，请参阅[访问数据](./accessing-data/)。
+一旦您可以访问所需的行节点，就可以使用以下行节点 API 方法更新其数据：
+
+{% apiDocumentation source="row-object/properties.json" section="data" names=["setData", "updateData", "setDataValue", "getDataValue"] /%}
+
+## 读取单元格值
+
+有两种读取单元格值的方法：
+
+-   **`rowNode.getDataValue(colKey)`** — 返回列的基础数据值。这包括解析的 valueGetter、组行上的聚合和计算公式，但不包括任何待处理的编辑。当您需要原始数据时使用此方法（例如用于计算或外部更新）。
+
+-   **`api.getCellValue({ rowNode, colKey })`** — 返回网格中显示的显示值，包括待处理的编辑和组列显示逻辑。传递 `useFormatter: true` 以获取格式化的字符串。当您需要用户看到的值时使用此方法。
+
+两种方法都接受可选的 `from` 参数来控制如何解析待处理的编辑 — 有关详细信息，请参阅[批量编辑 - 读取值](./cell-editing-batch/#reading-values)。
+
+## 视图刷新
+
+调用 `rowNode.setData`、`rowNode.updateData` 或 `rowNode.setDataValue` 后，网格的视图会自动刷新以反映更改。无需手动请求刷新。
+
+`setData` 和 `updateData` 之间的主要区别在于 `setData` 总是刷新每个单元格，而 `updateData` 只刷新值已更改的单元格。此外，当 `ColDef.enableCellChangeFlash = true` 时，`setData` 不会导致更改的单元格闪烁。
+
+## 排序/过滤器/分组刷新
+
+调用 `rowNode.setData`、`rowNode.updateData` 或 `rowNode.setDataValue` 后，网格不会更新以反映排序、过滤或分组的更改。
+
+要让网格更新其排序、过滤或分组，请调用网格 API `refreshClientSideRowModel()`。
+
+如果您希望网格自动更新排序、过滤或分组，则应考虑使用[事务更新](./data-update-transactions/)。
+
+## 更新行/单元格示例
+
+下面的示例演示了以下内容：
+
+-   **Set Price on Toyota**：Toyota 行上的价格值更新，网格刷新单元格。
+
+-   **Set Data on Ford**：Ford 行上的整个数据设置，网格刷新整行。更新的单元格不闪烁（即使 `enableCellChangeFlash = true`）。
+
+-   **Update Data on Ford**：Ford 行上的整个数据更新，网格刷新行中更改的值。更新的单元格闪烁（因为 `enableCellChangeFlash = true`）。
+
+-   **Sort**：在客户端行模型中重新运行排序 - 要查看此操作，请先对数据进行排序，然后编辑数据以破坏排序，然后点击此按钮修复排序。
+
+-   **Filter**：在客户端行模型中重新运行过滤器 - 要查看此操作，请先过滤数据，然后编辑数据以破坏过滤器（即存在不应存在的行），然后点击此按钮修复过滤器。
+
+{% gridExampleRunner title="更新行节点" name="updating-row-nodes" /%}

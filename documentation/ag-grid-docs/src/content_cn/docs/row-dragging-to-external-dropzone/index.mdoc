@@ -1,0 +1,60 @@
+---
+title: "拖动到外部放置区"
+---
+
+拖动到外部放置区涉及将行从网格移动到同一应用程序中的不同组件。当将行拖动与外部放置区一起使用时，数据使用网格事件移动或复制；这与使用浏览器事件的standard[拖放](./drag-and-drop/)形成对比。
+
+拖动到外部放置区使用网格的内部托管行拖动系统，结合行选择来创建无缝的数据拖放体验。
+
+{% apiDocumentation source="grid-api/api.json" section="rowDrag" names=["addRowDropZone", "removeRowDropZone"] /%}
+
+{% note %}
+如果您阅读了行拖动文档的[托管行拖动](./row-dragging-managed)部分，您可能注意到当您对网格进行 `sort`、`filter` 和 `rowGroup` 时，托管行拖动会停止工作。此规则的唯一例外是当您使用 `addRowDropZone` 注册外部放置区时。在这种情况下，您将能够从一个容器拖动到另一个容器，但将无法在网格内拖动行。
+{% /note %}
+
+## 添加和删除行放置目标
+
+要允许将行从网格拖动到外部元素或不同的网格，请从网格 API 调用 `addRowDropZone`。这将使传递的元素或 `Grid` 在移动行时成为有效目标。如果您以后希望删除该放置区，请使用网格 API 的 `removeRowDropZone` 方法。
+
+```js
+// 定义放置区
+const targetContainer = document.querySelector('.target-container');
+const dropZoneParams = {
+    getContainer: () => targetContainer,
+    onDragStop: params => {
+        // 在这里我们为目标容器创建一个元素
+        const element = createElement(params.node.data);
+        targetContainer.appendChild(element);
+    }
+};
+
+// 向网格注册放置区
+gridApi.addRowDropZone(dropZoneParams);
+
+// 不再需要时注销放置区
+gridApi.removeRowDropZone(dropZoneParams);
+```
+
+在下面的示例中，请注意以下几点：
+
+- 您可以在网格内移动行。
+- 您可以将行移动到右侧的容器。
+- 切换复选框以启用或禁用[抑制拖动时移动](./row-dragging-managed/#suppress-move-when-dragging)
+
+{% gridExampleRunner title="简单" name="simple" /%}
+
+## 网格之间拖动
+
+可以使用通用 `DropZone` 在网格之间拖放行。但是，此方法会将目标网格视为通用 `HTMLElement`，添加行应由 `onDragStop` 回调处理。如果您希望网格管理跨网格的拖放并处理记录应放置的位置，请查看[网格之间的行拖动](./row-dragging-to-grid/)
+
+在下面的示例中，请注意以下几点：
+
+- 行可以从一个网格拖动到另一个网格。当接收到行时，它**不会**从第一个网格中删除。这是示例的选择。示例同样可以从另一个网格中删除。
+
+- 如果该行已存在于网格中，它将不会被添加两次，并在开发者控制台中记录一条消息。发生这种情况是因为网格不允许重复 ID。
+
+- 可以通过将行拖动到"垃圾箱"放置区从两个网格中删除行。
+
+- 可以通过单击红色、绿色和蓝色按钮创建新行。
+
+{% gridExampleRunner title="两个网格" name="two-grids" /%}

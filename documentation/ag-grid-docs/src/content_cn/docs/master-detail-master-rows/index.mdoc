@@ -1,0 +1,76 @@
+---
+title: "主/从 - 主行"
+enterprise: true
+---
+
+主行是主网格内可以展开以显示从网格的行。
+
+## 静态主行
+
+一旦主网格配置了 `masterDetail=true`，主网格中的所有行都作为主行，因为它们可以展开以显示从网格。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    // 单独使用，所有行都将可展开
+    masterDetail: true,
+}
+```
+
+因为静态主行用于主/从的所有基本示例，所以这里不再给出另一个示例。
+
+## 动态主行
+
+动态主行允许专门决定主网格中的哪些行可以展开。这可能很有用，例如，如果主行没有子记录，则可能不希望允许展开主行。
+
+要指定应该展开哪些行，请提供网格回调 `isRowMaster`。该回调将为每行调用一次。返回 `true` 以允许展开，返回 `false` 以禁止该行展开。
+
+{% apiDocumentation source="grid-options/properties.json" section="masterDetail" names=["isRowMaster"] /%}
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    // 启用主/从
+    masterDetail: true,
+    // 指定要展开的行
+    isRowMaster: dataItem => {
+        return expandThisRow ? true : false;
+    }
+}
+```
+
+以下示例仅在存在相应的子记录时显示详情行。
+
+{% gridExampleRunner title="动态主行" name="dynamic"  exampleHeight=510 /%}
+
+## 更改动态主行
+
+由于[事务更新](./data-update-transactions/)导致行中的数据更改后，会重新调用回调 `isRowMaster`。这提供了更改行是否可展开的机会。
+
+```js
+// 要再次调用 isRowMaster，使用事务更新更新行
+const transaction = { update: [ updatedRecord1, updatedRecord2 ] };
+gridApi.applyTransaction(transaction);
+```
+
+在下面的示例中，只有具有要显示数据的主行才可展开。请注意以下几点：
+
+- 行'Nora Thomas'没有详情记录，因此不可展开。
+- 行'Mila Smith'有详情记录，因此可展开。
+- 单击'Clear Mila Calls'从 Mila Smith 中删除详情记录，这导致 Mila Smith 行不再是主行。
+- 单击'Set Mila Calls'为 Mila Smith 设置详情记录，这导致 Mila Smith 成为主行。
+
+{% gridExampleRunner title="动态更改主行" name="changing-dynamic-1"  exampleHeight=510 /%}
+
+下面的示例扩展了前面的示例。它演示了主行控制从行的常见场景。请注意以下几点：
+
+- 每个主行都有按钮可以添加或删除一个详情行。
+
+- 单击'Add'将：
+  - 添加一个详情行。
+  - 确保主行可展开。
+  - 确保主行已展开（即从网格可见）。
+
+- 单击'Remove'将：
+  - 删除一个详情行。
+  - 如果不存在详情行，确保主行不可展开
+
+{% gridExampleRunner title="动态更改主行" name="changing-dynamic-2"  exampleHeight=510 /%}

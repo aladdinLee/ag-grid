@@ -1,0 +1,63 @@
+{% if isFramework("vue") %}
+
+## 混合使用 JavaScript 和 Vue
+
+提供自定义组件时，您可以选择以下方式：
+
+1. 将 AG Grid 组件作为 JavaScript 提供。
+1. 将 AG Grid 组件作为 Vue 组件提供。
+
+例如，如果您想构建单元格渲染器，您可以选择使用 Vue 或使用纯 JavaScript 来构建单元格渲染器。
+
+以下代码片段展示了如何同时使用 JavaScript 和 Vue 组件：
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+```js
+<template>
+  <ag-grid-vue :components="components"
+               ...其他属性>
+  </ag-grid-vue>
+</template>
+
+<script>
+//...其他导入
+import {AgGridVue} from "ag-grid-vue3";
+import JavascriptComponent from './JavascriptComponent.js';
+import VueComponent from './VueComponent.vue';
+
+export default {
+  components: {
+      AgGridVue,
+      // Vue 组件在此注册
+      'vueComponent': VueComponent
+  }
+  data() {
+      return {
+          // JavaScript 组件在此注册，用于按名称查找组件时
+          components: {
+              // 声明 JavaScript 组件
+              'javascriptComponent': JavascriptComponent
+          },
+          columnDefs: [
+               {
+                  headerName: "JS Cell",
+                  field: "value",
+                  cellRenderer: JavascriptComponent,    // 直接引用/使用 JavaScript 组件
+              },
+              {
+                  headerName: "Vue Cell",
+                  field: "value",
+                  cellRenderer: 'vueComponent',  // 引用/使用 Vue 组件
+              }
+          ]
+      }
+  }
+  //...其他属性和方法
+}
+</script>
+```
+
+{% /if %}

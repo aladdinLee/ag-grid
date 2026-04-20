@@ -1,0 +1,68 @@
+---
+title: 示例日志记录器测试
+---
+
+这是一个内部页面，包含可用于测试示例日志记录器的示例。
+
+## 用法
+
+如果示例中存在任何 `console.log`，示例日志记录器将添加到示例运行器的底部。
+
+对象和数组显示为可折叠组件，默认情况下是折叠的。建议您在记录任何对象或数组之前添加字符串作为标签，以提供更多关于正在记录的内容的上下文，例如，
+
+```
+// ❌
+console.log(rowObject);
+
+// ✅
+console.log('Row:', rowObject);
+```
+
+## 示例日志记录器演示
+
+{% gridExampleRunner title="控制台日志" name="console-logs" /%}
+
+## 与代码语法高亮的比较
+
+```js
+console.log('string');
+console.log(23);
+console.log(null);
+console.log(undefined);
+console.log(NaN);
+console.log(true, false);
+console.log('string', 23, null, undefined, true, false);
+console.log([]);
+console.log(['string']);
+console.log(['string', 23, null, undefined, true, false]);
+console.log([{ a: 'string', b: 23, c: null }, 23, null, undefined, true, false]);
+console.log([{}]);
+console.log({ a: 'string', b: 23, c: null });
+console.log({ c: 'string', b: 23, a: null });
+console.log({ undefined: undefined, nan: NaN, null: null, infinity: Infinity, negativeInfinity: -Infinity });
+
+console.log({ a: 'more', b: 'here', c: undefined, d: 'more' });
+
+console.log(
+    'string',
+    23,
+    null,
+    undefined,
+    true,
+    false,
+    { a: 'more', b: 'here', c: 'now', d: 'more' },
+    { a: 'more', b: 'here', c: 'now', d: 'more' },
+    { a: 'more', b: 'here', c: 'now', d: 'more' },
+    { a: 'more', b: 'here', c: 'now', d: 'more' },
+    { a: 'more', b: 'here', c: 'now', d: 'more' },
+    'asdfasdfsadfsadfds asdfasdfsadfsadfds asdfasdfsadfsadfds asdfasdfsadfsadfds asdfasdfsadfsadfds asdfasdfsadfsadfds asdfasdfsadfsadfds asdfasdfsadfsadfds'
+);
+
+// 与控制台渲染不同的浏览器对象
+console.log(window, document, document.createElement('div'));
+console.log(new CSSStyleSheet(), new Event('click'), new FakeGrid());
+
+// AG Grid 替换类
+console.log(new AgColumn());
+console.log(new RowNode());
+```

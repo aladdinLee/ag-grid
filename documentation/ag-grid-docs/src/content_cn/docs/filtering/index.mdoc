@@ -1,0 +1,49 @@
+---
+title: "列筛选器"
+description: "列筛选器应用于 $framework 表格数据的列级别。使用内置列筛选器之一或定义自定义列筛选器。"
+---
+
+{% if isFramework("javascript", "angular", "vue") %}
+列筛选器是应用于列级别数据的筛选器。多个列筛选器可以同时激活（例如在不同列上设置的筛选器），表格将显示通过每列筛选器的行。
+{% /if %}
+
+{% if isFramework("react") %}
+{% videoSection id="pebXUHUdlos" title="React 列筛选器" showHeader=true %}
+列筛选器是应用于列级别数据的筛选器。多个列筛选器可以同时激活（例如在不同列上设置的筛选器），表格将显示通过每列筛选器的行。
+{% /videoSection %}
+{% /if %}
+
+列筛选器可以通过[列菜单](./column-menu/)或[工具面板](./tool-panel/)在表格 UI 中访问。
+
+{% video videoSrc="resources/column-filters.mp4" centered=true /%}
+
+## 列筛选器类型
+
+您可以使用表格提供的内置筛选器，或者如果您想自定义应用程序的筛选体验，可以构建自己的[筛选组件](./component-filter/)。
+
+有五个主要的内置筛选器，以及多筛选器。它们如下：
+
+-   [文本筛选器](./filter-text/) - 用于字符串比较的筛选器。
+-   [数字筛选器](./filter-number/) - 用于数字比较的筛选器。
+-   [BigInt 筛选器](./filter-bigint/) - 用于 `bigint` 比较的筛选器。
+-   [日期筛选器](./filter-date/) - 用于日期比较的筛选器。
+-   [集合筛选器](./filter-set/) {% enterpriseIcon /%} - 受 Microsoft Excel 筛选器工作方式影响的筛选器。
+-   [多筛选器](./filter-multi/) {% enterpriseIcon /%} - 允许同时使用两个筛选器（上述内置筛选器之一或自定义筛选组件）。
+
+## 示例：内置筛选器
+
+下面的示例演示了文本、数字、日期和集合筛选器，以及多筛选器：
+
+-   **运动员**列有文本筛选器。
+-   **年龄**列有数字筛选器。
+-   **日期**列有日期筛选器。
+-   **国家**列有集合筛选器。
+-   **运动**列有多筛选器（由文本筛选器和集合筛选器组成）。
+
+{% gridExampleRunner title="内置筛选器" name="provided-filters"  exampleHeight=560 /%}
+
+## 与快速筛选器和外部筛选器的关系
+
+列筛选器独立于[快速筛选器](./filter-quick/)和[外部筛选器](./filter-external/)工作。如果快速筛选器和/或外部筛选器与列筛选器一起应用，则考虑每种筛选器类型，只有当行通过所有三种类型时才会显示。
+
+列筛选器绑定到特定列。快速筛选器和外部筛选器不绑定到任何特定列。本文档部分仅讨论列筛选器。有关快速筛选器和外部筛选器，请单击上面的链接了解更多信息。

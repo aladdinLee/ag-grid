@@ -1,0 +1,149 @@
+---
+title: "主/从 - 详细信息网格"
+enterprise: true
+---
+
+当主网格中的行展开时，新的详细信息网格会出现在该行下方。本页描述与详细信息网格相关的配置选项。
+
+本页说明如何使用 `detailCellRendererParams` 网格选项配置详细信息单元格渲染器，以及如何使用主网格的 API 与详细信息网格交互。
+
+详细信息网格位于主网格的一行内，不使用主网格的任何列。详细信息单元格渲染器的工作是将详细信息网格绘制到提供的详细信息行中。
+
+## 详细信息网格定义
+
+详细信息网格是一个完全独立的网格实例。这意味着详细信息网格可以访问完整的网格功能范围。
+
+使用参数 `detailGridOptions` 向详细信息网格提供网格选项对象。
+
+下面的示例显示了配置具有一些额外网格选项的详细信息网格。请注意以下几点：
+
+-   `detailGridOptions` 在 `detailCellRendererParams` 内提供。
+-   详细信息网格选项设置了以下属性：`rowSelection={mode: 'multiRow', headerCheckbox: false}`、`pagination=true` 和 `paginationAutoPageSize=true`。
+-   详细信息网格选项提供了默认列定义（`defaultColDef`），使所有列使用 Flex 进行大小调整。
+
+{% gridExampleRunner title="详细信息网格选项" name="grid-options" /%}
+
+## 提供行
+
+通过实现详细信息单元格渲染器参数的 `getDetailRowData` 回调向详细信息网格提供行数据。此回调的接口如下：
+
+{% interfaceDocumentation interfaceName="IDetailCellRendererParams" names=["getDetailRowData"] config={"overrideBottomMargin":"1rem", "description": ""} /%}
+
+可以以同步方式立即调用 `successCallback`（如果数据已经可用，则典型），也可以在稍后异步调用（如果需要远程获取数据，则典型）。
+
+主网格将使用提供的数据在详细信息网格上调用 `api.setGridOption('rowData', data)`。
+
+下面显示了一个使用 `setTimeout()` 延迟向详细信息行提供数据以模拟详细信息中异步加载数据的示例。
+
+{% gridExampleRunner title="延迟加载详细信息行" name="lazy-load-rows"  exampleHeight=550 /%}
+
+## 动态定义
+
+一个主网格中会有许多详细信息网格实例，因为每次展开主行时，都会创建一个新的详细信息网格实例。可以动态创建详细信息单元格渲染器参数，以便每个详细信息网格获得自己的参数版本，从而允许每个详细信息网格以不同方式配置。
+
+这是通过向 `detailCellRendererParams` 提供一个函数来完成的，该函数反过来返回用于该详细信息网格的参数。
+
+下面显示了这方面的示例，其中详细信息网格配置了不同的列。请注意以下几点：
+
+-   展开行'Mila Smith'或'Harper Johnson'将使用具有列 {Call ID, Number} 的详细信息网格。
+-   展开所有其他行将使用具有列 {Call ID, Direction, Duration, Switch Code} 的详细信息网格。
+
+{% gridExampleRunner title="动态参数" name="dynamic-params" /%}
+
+{% partial file="./_changing-the-template.mdoc" /%}
+
+## 访问详细信息网格
+
+主网格管理所有详细信息网格实例。您可以访问底层详细信息网格的 API 以直接在这些网格上调用 API 方法。主网格在详细信息网格信息对象中存储对详细信息网格 API 的引用。
+
+详细信息网格信息对象包含对每个详细信息网格的底层[网格 API](./grid-api/) 的引用。详细信息网格信息的接口如下：
+
+{% interfaceDocumentation interfaceName="DetailGridInfo" config={"description": ""} /%}
+
+通过主网格的 API 通过以下方法访问详细信息网格信息对象：
+
+{% apiDocumentation source="grid-api/api.json" section="masterDetail" names=["getDetailGridInfo"] /%}
+
+```{% frameworkTransform=true %}
+// 通过 id 查找特定的 DetailGridInfo，然后对其调用 flashCells()
+const detailGridInfo = api.getDetailGridInfo('detail_someId');
+detailGridInfo.api.flashCells();
+```
+
+网格通过在父行的 ID 前添加 `detail_{ROW-ID}` 前缀来生成详细信息网格的 ID。例如，如果展开的主行的 ID 是 `"88"`，则详细信息网格/行的 ID 将是 `"detail_88"`。
+
+{% apiDocumentation source="grid-api/api.json" section="masterDetail" names=["forEachDetailGridInfo"] /%}
+
+```{% frameworkTransform=true %}
+// 遍历所有 DetailGridInfo，并对每个调用 flashCells()
+api.forEachDetailGridInfo(detailGridInfo => {
+    detailGridInfo.api.flashCells();
+});
+```
+
+以下示例显示了使用网格 API `flashCells()` 在详细信息网格上闪烁单元格。请注意以下几点：
+
+-   该示例通过 a) 将详细信息行高度设置为 200 像素和 b) 设置 CSS 以减少详细信息网格周围的填充来使其更紧凑。
+-   在主网格中实现回调 `getRowId` 以给每行一个 ID。在此实例中使用 `account` 属性。
+-   按钮'Flash Mila Smith'使用 `getDetailGridInfo` 访问 Mila Smith 详细信息网格的网格 API。
+-   按钮'Flash All'使用 `forEachDetailGridInfo` 访问所有现有的详细信息网格。
+
+{% gridExampleRunner title="详细信息网格 API" name="detail-grid-api"  exampleHeight=535 /%}
+
+## 详细信息网格生命周期
+
+当主行展开时，会创建详细信息行。当主行折叠时，详细信息行会被销毁。当主行第二次展开时，详细信息行会从头开始再次创建。如果详细信息行中有上下文，这可能是不可取的行为，例如，如果用户在详细信息行中对数据进行了排序或过滤，则第二次显示详细信息行时，排序或过滤将被重置。
+
+为了防止丢失详细信息行的上下文，网格提供了两个属性来缓存详细信息行以便下次显示该行时重用。这些属性如下：
+
+{% apiDocumentation source="grid-options/properties.json" section="masterDetail" names=["keepDetailRows", "keepDetailRowsCount"] /%}
+
+下面的示例演示保留详细信息行。请注意以下几点：
+
+-   主网格具有属性 `keepDetailRows=true` 以启用保留详细信息行。
+-   主网格具有属性 `keepDetailRowsCount=2`，它将保留的详细信息行数设置为 2。
+-   所有详细信息网格都允许移动和排序列。如果您更改详细信息网格的状态（例如，通过对详细信息网格进行排序），则关闭父行然后再次打开父行时，该状态将被保留。
+-   保留的详细信息行的最大数量为两个。如果您打开三个详细信息行并对每个详细信息网格应用排序，然后关闭所有三个详细信息行（这样都不显示）然后再次打开所有三个，则只有两个将保留排序状态。
+
+{% gridExampleRunner title="保留详细信息行" name="keep-detail-rows"  exampleHeight=565 /%}
+
+## 详细信息参数
+
+<!-- 下面我们不显示 React 的'template'，因此两次列出属性 -->
+
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="IDetailCellRendererParams" names=["detailGridOptions", "getDetailRowData", "template", "refreshStrategy"] /%}
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="IDetailCellRendererParams" names=["detailGridOptions", "getDetailRowData", "refreshStrategy"] /%}
+{% /if %}
+
+设置组件（如单元格渲染器）并向这些组件提供参数的模式在整个网格中是一致的，并在[网格组件](./components/)中进行了说明。
+
+与所有组件一样，参数对象（在本例中为 `detailCellRendererParams`）可以是对象，也可以是返回对象的函数。后者允许为每个详细信息网格提供不同的参数，从而允许以不同方式配置详细信息网格。
+
+## 详细信息网格样式
+
+详细信息网格必须与其主网格具有相同的主题，但您可以使用 CSS 更改详细信息网格的样式。有关更多详细信息，请参阅[主/从样式](./theming-master-detail/)。
+
+## 行选择
+
+默认情况下，在主网格中选择行对任何详细信息网格都没有影响。为了使主网格的选择状态反映在详细信息网格中（反之亦然），用户应使用 `rowSelection.masterSelects` 网格选项：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowSelection: {
+        mode: 'multiRow',
+        masterSelects: 'detail',
+    }
+}
+```
+
+在下面的示例中，选择主行将选择关联详细信息网格中的所有行。同样，选择详细信息网格中的所有行将选择主行。当仅选择详细信息网格中的某些行时，主行将具有不确定状态。
+
+{% gridExampleRunner title="行选择" name="row-selection"  exampleHeight=550 /%}
+
+请注意，选择主行将选择详细信息网格中的*所有*行，无论 `detailGridOptions` 中 `rowSelection.selectAll` 的值如何。
+
+另请注意，在主网格上调用 API 方法 `getSelectedNodes` 和 `getSelectedRows` 不会返回有关任何详细信息网格选择状态的任何信息。

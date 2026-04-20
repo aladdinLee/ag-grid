@@ -1,0 +1,113 @@
+---
+title: "版本兼容性"
+---
+
+下面列出了 AG Grid 的版本兼容性要求（如果存在）。
+
+{% if isFramework("javascript") %}
+只要您使用的是[支持的浏览器](./supported-browsers)，使用 JavaScript 版本的 AG Grid 就没有版本兼容性要求。
+{% /if %}
+
+{% if isFramework("vue") %}
+
+## AG Grid 和 Vue 兼容性图表
+
+下表给出了 AG Grid 版本与 Vue 版本的兼容范围。
+
+| Vue  | AG Grid  |
+| ---- | -------- |
+| 3.5+ | 33 - 35+ |
+| 3    | 18 - 32  |
+| 2    | 18 - 31  |
+
+{% note %}如果您使用 Composition API，我们强烈建议升级到版本 33 或更高版本，因为它在此领域引入了重大改进。{% /note %}
+
+{% /if %}
+
+{% if isFramework("angular") %}
+
+## AG Grid 和 Angular 兼容性图表
+
+下表给出了 AG Grid 版本与 Angular 版本的兼容范围。
+
+| Angular | AG Grid  |
+| ------- | -------- |
+| 19 - 21 | 28 - 35+ |
+| 18      | 28 - 35  |
+| 17      | 28 - 34  |
+| 16      | 28 - 32  |
+| 14 - 15 | 25 - 31  |
+| 12 - 13 | 25 - 30  |
+| 10 - 11 | 24 - 27  |
+| 9       | 23 - 27  |
+| 8       | 18 - 27  |
+| 6 - 7   | 18 - 22  |
+
+## 未来对 Angular 版本的支持
+
+未来的 AG Grid 版本将在发布时支持最低的 Angular 长期支持 (LTS) 版本。请参阅 [Angular 支持策略和计划](https://angular.dev/reference/releases#support-policy-and-schedule)。
+
+## Zoneless 支持
+
+AG Grid 完全兼容 [Zoneless](https://angular.dev/guide/zoneless) Angular 应用程序，无需额外配置。如果迁移到 Zoneless 并使用自定义组件，则这些组件必须满足 [Zoneless 兼容性要求](https://angular.dev/guide/zoneless#requirements-for-zoneless-compatibility)。
+
+## 迁移到 AG Grid v28+
+
+### Angular v12+
+
+要将 Angular v12+ 上的应用程序迁移到 AG Grid v28+，不需要更改依赖项。存在一些[重大更改](https://www.ag-grid.com/changelog/?fixVersion=28.0.0)，特别是 `AgGridModule` 不再支持 `.withComponents()`，因为不再需要它了。
+
+```diff
+@NgModule({
+    imports: [
+-         AgGridModule.withComponents([SquareComponent]),
++         AgGridModule,
+    ]
+})
+```
+
+如果使用 Angular v12+ 和最高到 v27 的 AG Grid 版本，构建输出中可能会出现以下警告。要避免这种情况，请升级到至少 AG Grid 的 v28 版本，该版本作为 Ivy 发行版发布。
+
+```bash
+Generating browser application bundles (phase: setup)...
+Processing legacy "View Engine" libraries:
+- ag-grid-angular [es2015/esm2015]
+Encourage the library authors to publish an Ivy distribution.
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+## AG Grid 和 React 兼容性图表
+
+下表给出了 AG Grid 版本与 React 版本的兼容范围。
+
+| React | AG Grid    |
+| ----- | ---------- |
+| 19+   | 32.3 - 35+ |
+| 18+   | 27.2 - 35+ |
+| 17+   | 22 - 35+   |
+| 16.8  | 22 - 35+   |
+| 15.x  | 18 - 21.2  |
+
+{% /if %}
+
+## Typescript 兼容性
+
+下表给出了每个 AG Grid 版本的最低 Typescript 版本。
+
+| AG Grid | Typescript |
+| ------- | ---------- |
+| 35+     | >= 5.4.5   |
+| 33 - 34 | >= 5.2.0   |
+| 32      | >= 5.1.6   |
+| 31      | >= 4.7.4   |
+| 30      | >= 4.3.5   |
+| 29      | >= 4.0.8   |
+| 28 - 27 | >= 3.7.7   |
+| 26 - 25 | >= 3.6.5   |
+
+## 文档归档
+
+要查看旧版本的 AG Grid 文档，请参阅[文档归档](/documentation-archive)。

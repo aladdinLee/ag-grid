@@ -1,0 +1,66 @@
+---
+title: "Excel 导出 - 额外内容"
+enterprise: true
+---
+
+## 前置和附加自定义内容
+
+前置和附加内容的推荐方法是将 ExcelCell 对象数组传递给 `prependContent` 或 `appendContent`。这确保额外内容正确转义。
+
+为了与早期版本的网格兼容，您还可以传递字符串，该字符串将在没有任何处理的情况下插入到文件中。您有责任正确格式化字符串。
+
+请注意以下内容：
+
+-   您可以选中并取消选中复选框，以通过 `prependContent` 和 `appendContent` 属性在网格前后添加额外内容。
+
+-   使用 `prependContent=ExcelRow[]` 或 `appendContent=ExcelRow[]`，将插入包含逗号和引号的自定义内容。这些逗号和引号在 Excel 中打开时将可见，因为它们已正确转义。
+
+{% gridExampleRunner title="Excel 导出 - 前置和附加内容" name="excel-export-prepend-append"  exampleHeight=815 /%}
+
+## 导出封面页
+
+除了在 Excel 文件中导出网格外，您还可以在 Excel 文件的单独工作表上提供其他内容。当您想添加封面页为用户提供此文件中数据的其他详细信息时，这很有用。
+
+{% gridExampleRunner title="Excel 导出 - 封面页" name="excel-export-cover-page" /%}
+
+## 添加页眉和页脚内容
+
+还可以以导出的 Excel 文件的页眉和页脚的形式添加额外内容。请注意，此页眉和页脚内容仅在从 Excel 打印或导出到 PDF 时可见。
+
+您可以通过 `headerFooterConfig: ExcelHeaderFooterConfig` 对象设置页眉和页脚内容。请参阅下面的详细文档。
+
+页眉和页脚对象接受以下占位符：
+
+-   `&[Page]`：打印当前页码。
+-   `&[Pages]`：打印总页数。
+-   `&[Date]`：打印当前日期。
+-   `&[Time]`：打印当前时间。
+-   `&[Tab]`：打印当前工作表名称。
+-   `&[Path]`：打印文件路径。
+-   `&[File]`：打印文件名。
+-   `&[Picture]`：向页眉或页脚添加图像，请参阅更多[向页眉或页脚添加图像](#adding-images-to-the-header-or-footer)。
+
+{% gridExampleRunner title="Excel 导出 - 自定义页眉和页脚" name="excel-export-header-footer"  exampleHeight=815 /%}
+
+## 向页眉或页脚添加图像
+
+除了将网格导出为 Excel 文件外，您还可以在工作表的页眉或页脚上提供图片。例如，当您想使用图像作为水印时，这很有用。
+请注意，水印图像仅在页眉和页脚视图中或 Excel 中打印时可见。
+
+{% gridExampleRunner title="Excel 导出 - 页眉图像" name="excel-export-header-image" /%}
+
+### ExcelHeaderFooterConfig
+
+{% interfaceDocumentation interfaceName="ExcelHeaderFooterConfig" overrideSrc="excel-export-api/excel-api.json"  /%}
+
+### ExcelHeaderFooter
+
+{% interfaceDocumentation interfaceName="ExcelHeaderFooter" overrideSrc="excel-export-api/excel-api.json"  /%}
+
+### ExcelHeaderFooterContent
+
+{% interfaceDocumentation interfaceName="ExcelHeaderFooterContent" overrideSrc="excel-export-api/excel-api.json" /%}
+
+### ExcelHeaderFooterImage
+
+{% interfaceDocumentation interfaceName="ExcelHeaderFooterImage" overrideSrc="excel-export-api/excel-api.json" /%}

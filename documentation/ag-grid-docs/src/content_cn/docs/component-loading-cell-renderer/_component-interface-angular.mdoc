@@ -1,0 +1,19 @@
+{% if isFramework("angular") %}
+加载单元格渲染器组件的接口如下：
+{% /if %}
+
+{% if isFramework("angular") %}
+
+```ts
+interface ILoadingCellRendererAngularComp {
+
+    // 必需 - agInit(params) 方法在加载单元格渲染器上调用一次。
+    agInit(params: ILoadingCellRendererParams): void;
+}
+```
+
+{% /if %}
+
+{% if isFramework("angular") %}
+`agInit(params)` 方法接受一个包含下面列出的项目的参数对象：
+{% /if %}

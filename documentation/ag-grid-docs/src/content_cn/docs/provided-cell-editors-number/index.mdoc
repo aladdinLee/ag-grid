@@ -1,0 +1,76 @@
+---
+title: "数字单元格编辑器"
+---
+
+使用标准 HTML 数字 `input` 的简单数字编辑器。
+
+数字单元格编辑器允许用户输入数值并使用 {% kbd "↑" /%} {% kbd "↓" /%} 键修改它们。
+
+## 启用数字单元格编辑器
+
+编辑下面网格中的任何单元格以查看数字单元格编辑器。
+
+{% gridExampleRunner title="数字编辑器" name="number-editor" /%}
+
+使用 `agNumberCellEditor` 启用，并使用 `INumberCellEditorParams` 配置。
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agNumberCellEditor',
+        cellEditorParams: {
+            min: 0,
+            max: 100
+        }
+        // ...其他属性
+    }
+]
+```
+
+## 自定义
+
+### 步长和精度
+
+可以配置递增/递减单元格值的步进行为的步长和精度。编辑下面网格中的任何单元格以查看自定义的步进行为。
+
+{% gridExampleRunner title="具有更改精度的数字编辑器" name="number-editor-step-and-precision" /%}
+
+可以使用以下属性自定义递增/递减数值的步进行为：
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agNumberCellEditor',
+        cellEditorParams: {
+            precision: 2,
+            step: 0.25,
+            showStepperButtons: true
+        }
+        // ...其他属性
+    }
+]
+```
+
+### 禁止步进
+
+可以禁用步进行为。编辑下面网格中的任何单元格以查看此效果。
+
+{% gridExampleRunner title="禁止步进的数字编辑器" name="number-editor-prevent-stepping" /%}
+
+可以如下所示禁用递增/递减数值的步进行为：
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agNumberCellEditor',
+        cellEditorParams: {
+            preventStepping: true
+        }
+        // ...其他属性
+    }
+]
+```
+
+## API 参考
+
+{% interfaceDocumentation interfaceName="INumberCellEditorParams" names=["min","max","precision","step","showStepperButtons", "preventStepping"] /%}

@@ -1,0 +1,72 @@
+{% if isFramework("javascript") %}
+
+有两种方式告诉网格使用自定义组件：
+
+-   直接引用。
+-   按名称。
+
+### 1. 直接引用
+
+最简单的方法是直接引用组件类。
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+
+```js
+gridOptions = {
+
+    columnDefs: [
+        {
+            field: 'country',
+            cellRenderer: CountryCellRenderer,
+            filter: CountryFilter
+        },
+    ],
+
+    ...
+}
+```
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+直接引用组件的优势是代码更简洁，没有按名称引用时添加的额外间接层。
+
+### 2. 按名称
+
+组件通过 `components` 网格属性提供给网格进行注册。`components` 网格属性包含组件名称到组件类的映射。所有类型的组件（编辑器、渲染器、过滤器等）都存储在一起，并且必须具有唯一的名称。
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+
+```js
+gridOptions = {
+
+    // 使用 'components' 网格属性注册组件
+    components: {
+        // 'countryCellRenderer' 映射到类 CountryCellRenderer
+        countryCellRenderer: CountryCellRenderer,
+        // 'countryFilter' 映射到类 CountryFilter
+        countryFilter: CountryFilter
+    },
+
+    // 然后按名称引用组件
+    columnDefs: [
+        {
+            field: 'country',
+            cellRenderer: 'countryCellRenderer',
+            filter: 'countryFilter'
+        },
+    ],
+
+    ...
+}
+```
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+按名称引用组件的优势是定义（例如列定义）可以由简单类型（即 JSON）组成，如果您希望持久化列定义，这很有用。
+{% /if %}

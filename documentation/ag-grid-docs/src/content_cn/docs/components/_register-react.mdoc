@@ -1,0 +1,90 @@
+{% if isFramework("react") %}
+{% note %}
+在版本 <= v31 中，自定义组件以命令式方式声明。有关如何迁移到当前格式的详细信息，请参阅 [迁移到使用 reactiveCustomComponents](./upgrading-to-ag-grid-31-1/#migrating-custom-components-to-use-reactivecustomcomponents-option)。
+{% /note %}
+{% /if %}
+
+{% if isFramework("react") %}
+有两种方式注册自定义组件：
+
+-   直接引用。
+-   按名称。
+
+### 1. 按直接引用
+
+当通过引用注册 React 组件时，您只需将组件传递到您想要使用它的地方（即单元格渲染器、过滤器等）。
+
+在此示例中，我们指定要在 `Cube` 列中使用 React `CubeComponent` 作为单元格渲染器：
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+```jsx
+//...其他导入
+import CubeComponent from './CubeComponent';
+
+const GridExample = () => {
+  // 其他属性和方法
+
+    const columnDefs = useMemo( () => [{field: 'value', cellRenderer: CubeComponent}], []);
+
+    return (
+        <AgGridReact
+            columnDefs={columnDefs}
+            ...其他属性
+        />
+    );
+};
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+直接引用组件的优势是代码更简洁，没有按名称引用时添加的额外间接层。
+
+### 2. 按名称
+
+当按名称注册 React 组件时，您需要先在网格的 `components` 属性中注册组件，然后在您想要使用它的地方（即作为单元格渲染器、过滤器等）按名称引用该组件。
+
+在此示例中，我们注册了 React `CubeComponent` 并为其指定了名称 `cubeComponent`（这可以是您选择的任何名称）。然后我们指定要在 `Cube` 列中使用先前注册的 `cubeComponent` 作为单元格渲染器：
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+```jsx
+//...其他导入
+import CubeComponent from './CubeComponent';
+
+const GridExample = () => {
+  // 其他属性和方法
+
+  const components = useMemo(() => ({
+      cubeComponent: CubeComponent
+  }), []);
+
+  const columnDefs = useMemo(() => [{field: 'value', cellRenderer: 'cubeComponent'}], []);
+
+  return (
+        <AgGridReact
+           components={components}
+           columnDefs={columnDefs}
+           ...其他属性
+        />
+  );
+};
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+按名称引用组件的优势是定义（例如列定义）可以由简单类型（即 JSON）组成，如果您希望持久化列定义，这很有用。
+{% /if %}
+
+{% if isFramework("react") %}
+{% note %}
+在此上下文中的 React 组件可以是任何有效的 React 组件 - 基于类的组件、Hook 甚至内联函数组件。
+无论使用何种类型的组件，都适用相同的规则。
+{% /note %}
+{% /if %}

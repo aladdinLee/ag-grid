@@ -1,0 +1,24 @@
+---
+title: "范围手柄"
+enterprise: true
+---
+
+使用单元格选择时，在最后一个单元格内有一个手柄可能很有用，以便能够调整当前范围的大小。
+
+## 启用范围手柄
+
+要启用范围手柄，在 `gridOptions` 中将 `cellSelection.handle` 设置为 `{ mode: 'range' }`。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    cellSelection: {
+        handle: {
+            mode: 'range',
+        }
+    }
+}
+```
+
+下面的示例演示了带有范围手柄的简单范围选择。
+
+{% gridExampleRunner title="范围手柄" name="range-selection-handle" /%}

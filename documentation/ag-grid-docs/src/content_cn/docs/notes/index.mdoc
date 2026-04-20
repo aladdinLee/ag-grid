@@ -1,0 +1,171 @@
+---
+title: "备注"
+enterprise: true
+---
+
+备注允许用户向单个单元格附加注释，而无需在行数据中存储备注文本。带有备注的单元格在网格中标记，备注操作可从上下文菜单获得，悬停带有备注的单元格会打开内置的可调整大小的备注编辑器，当允许备注时，`Shift + F2` 为聚焦的单元格打开或创建备注。
+
+## 启用备注
+
+通过提供 `notesDataSource` 启用备注。这允许您将备注状态保存在单独的存储中，并独立于行数据持久化它。
+
+右键单击单元格或按 `Shift + F2` 添加备注。悬停带有备注的单元格以查看它。使用 `noteShowDelay` 和 `noteHideDelay` 控制备注弹出窗口在悬停时出现和消失的速度。
+
+{% gridExampleRunner title="备注" name="notes" exampleHeight=440 /%}
+
+{% apiDocumentation source="grid-options/properties.json" section="notes" names=["notesDataSource"] /%}
+
+```{% frameworkTransform=true %}
+const noteStore = {};
+
+const gridOptions = {
+    getRowId: (params) => String(params.data.id),
+    notesDataSource: {
+        getNote: ({ rowNode, column }) => noteStore[rowNode.id]?.[column.getColId()],
+        setNote: ({ rowNode, column, note }) => {
+            const row = (noteStore[rowNode.id] ??= {});
+
+            if (note === undefined) {
+                delete row[column.getColId()];
+            } else {
+                row[column.getColId()] = note;
+            }
+        },
+    },
+};
+```
+
+上面的示例使用 `getRowId()`，以便备注存储可以通过行 ID 和列 ID 一致地键入备注。
+
+## 备注元数据
+
+任何备注元数据，包括 `author`、`createdAt` 和 `updatedAt`，都完全按照数据源提供的方式呈现。
+
+{% gridExampleRunner title="备注元数据" name="notes-metadata" exampleHeight=480 /%}
+
+内置备注编辑器仅更新备注文本。如果从内置 UI 创建的备注也应包含元数据，请在 `notesDataSource.setNote()` 中标记它。该示例包含一个 `Authenticated User` 输入，以模拟当前用户被标记到保存的备注中。
+
+```{% frameworkTransform=true %}
+const getCurrentUser = () => document.getElementById('current-user').value;
+const getDisplayTimestamp = () => new Date().toLocaleString('en-GB');
+
+const gridOptions = {
+    notesDataSource: {
+        setNote: ({ rowNode, column, note }) => {
+            const row = (noteStore[rowNode.id] ??= {});
+            const colId = column.getColId();
+            const existingNote = row[colId];
+
+            if (note === undefined) {
+                delete row[colId];
+            } else {
+                row[colId] = {
+                    ...existingNote,
+                    ...note,
+                    author: getCurrentUser(),
+                    createdAt: existingNote?.createdAt ?? getDisplayTimestamp(),
+                    updatedAt: getDisplayTimestamp(),
+                };
+            }
+        },
+    },
+};
+```
+
+## 只读备注
+
+设置 `CellNote.readOnly = true` 使备注仅可查看。只读备注仍然可以从悬停、上下文菜单或 `Shift + F2` 打开，但不能通过内置 UI 编辑或删除。网格 API 仍然可以以编程方式更新或删除只读备注。
+
+`Athlete` 有可编辑的备注。`Country` 和 `Sport` 有**只读**备注，因此可以查看但不能通过内置 UI 编辑或删除。
+
+{% gridExampleRunner title="只读备注" name="notes-read-only" exampleHeight=440 /%}
+
+```ts
+noteStore.set(noteKey('3', 'country'), {
+    text: 'Check the latest federation naming guidance for this country.',
+    author: 'AG Grid',
+    updatedAt: '27 Mar 2026, 14:30',
+    readOnly: true,
+});
+```
+
+## 禁止备注操作
+
+使用 `colDef.suppressCellNoteActions` 禁止列或特定行的内置备注操作。禁止的单元格仍然允许在悬停时查看现有备注并通过 `getCellNote()` 查看，但添加/编辑/删除操作和备注创建快捷键被阻止。
+
+`Year` 和 `Sport` 禁止内置备注操作。这些单元格上的现有备注仍然可以在悬停时查看，而其他列保留标准的添加、编辑和删除行为。
+
+{% gridExampleRunner title="禁止备注" name="notes-suppressing" exampleHeight=440 /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'athlete' },
+        { field: 'year', suppressCellNoteActions: true },
+        { field: 'sport', suppressCellNoteActions: params => params.data?.sport === 'Swimming' },
+    ],
+};
+```
+
+## 全宽行
+
+备注也适用于全宽行。
+
+{% gridExampleRunner title="带全宽行的备注" name="notes-full-width" exampleHeight=460 /%}
+
+全宽行使用单独的备注标识。数据源不接收 `column`，而是接收 `location: 'fullWidthRow'` 和可选的 `pinned` 值。此示例每个全宽行仅存储一个备注，因此它按键行 ID 键入备注。
+
+```ts
+noteStore.set('2', {
+    text: 'This note belongs to a full width row.',
+});
+```
+
+如果您使用带有固定部分的嵌入全宽行并需要每个部分单独的备注，请在存储键中包含 `pinned`。
+
+## 功能交互
+
+加载 `ContextMenuModule` 时，默认上下文菜单会自动添加备注操作。如果自定义 `getContextMenuItems()`，请包含内置 `cellNote` 项以保留标准备注操作：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    getContextMenuItems: () => ['cellNote', 'copy', 'export'],
+};
+```
+
+内置 `cellNote` 项根据当前单元格状态展开：
+
+- 当单元格没有备注且允许创建备注时为 `Add Cell Note`。
+- 当现有备注可编辑时为 `Edit Note` 和 `Remove Note`。
+- 当现有备注为只读时为 `View Note` 和禁用的 `Remove Note`。
+- 当单元格被禁止时为禁用的备注操作。现有的禁止备注仍然显示 `View Note`。
+
+`Shift + F2` 为聚焦的单元格打开现有备注，或者如果单元格允许备注且还没有备注，则创建新备注。普通 `F2` 保留正常的单元格编辑行为。
+
+## API
+
+使用网格 API 以编程方式读取、写入、删除和刷新备注。这在从网格外部的应用程序 UI 编辑备注或底层备注存储直接更改时很有用。API 示例还显示了如何在备注负载上设置 `readOnly`。
+
+{% gridExampleRunner title="备注 API" name="notes-api" exampleHeight=560 /%}
+
+在上面的示例中，单击单元格选择它并自动同步工具栏控件。`Save via API` 使用 `setCellNote()` 更新备注，包括设置或清除 `readOnly`。`Remove via API` 清除备注，`Mutate Store Directly` 和 `Refresh Notes` 显示外部存储更新后如何重新同步网格。
+
+### 网格选项
+
+{% apiDocumentation source="grid-options/properties.json" section="notes" names=["noteShowDelay", "noteHideDelay"] /%}
+
+### API 参考
+
+{% apiDocumentation source="grid-api/api.json" section="notes" names=["getCellNote", "setCellNote", "refreshCellNotes"] /%}
+
+### NotesDataSource
+
+{% interfaceDocumentation interfaceName="NotesDataSource" /%}
+
+### CellNote
+
+{% interfaceDocumentation interfaceName="CellNote" config={"description":""} /%}
+
+### RefreshCellNotesParams
+
+{% interfaceDocumentation interfaceName="RefreshCellNotesParams" config={"description":""} /%}

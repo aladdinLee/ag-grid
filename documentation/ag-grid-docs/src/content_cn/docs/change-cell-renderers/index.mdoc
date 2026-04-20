@@ -1,0 +1,104 @@
+---
+title: "突出显示更改"
+---
+
+通过闪烁或动画单元格来突出显示更改。
+
+{% gridExampleRunner title="动画闪烁单元格" name="animated-flashing-cells" /%}
+
+上面的示例显示变化的值：
+
+-   列 A 和 B 使用[闪烁单元格](./change-cell-renderers/#flashing-cells)。
+-   列 C 和 D 使用[动画显示更改](./change-cell-renderers/#animate-show-changed-cells)单元格渲染器。
+-   列 E 和 F 使用[动画滑动单元格](./change-cell-renderers/#animate-slide-cells)单元格渲染器。
+
+## 闪烁单元格
+
+您可以通过表格 API 或通过启用数据更改时单元格闪烁来触发单元格闪烁。
+
+### 启用数据更改时闪烁
+
+设置列属性 `enableCellChangeFlash=true` 以在数据更改时闪烁单元格。
+
+{% gridExampleRunner title="闪烁数据更改" name="flashing-data-changes-coldef" /%}
+
+在上面的示例中：
+
+-   所有列都有 `enableCellChangeFlash=true`，因此单元格值的更改将闪烁单元格。
+-   点击 **更新一些数据** 将随机更新一些数据。然后表格将闪烁数据已更改的单元格。
+
+要更改效果的长度，使用表格选项 `cellFlashDuration` 和 `cellFadeDuration`。
+
+默认情况下，由列过滤器更新引起的值更改不会用单元格闪烁突出显示。可以通过启用表格选项 `allowShowChangeAfterFilter` 来切换此行为。
+
+### 使用 API 闪烁单元格
+
+或者使用表格 API `flashCells(params)` 闪烁单元格。params 对象接受要闪烁的列和行列表，以及 `flashDuration` 和 `fadeDuration` 值。
+
+{% apiDocumentation source="grid-api/api.json" section="refresh" names=["flashCells"] /%}
+
+调用 `flashCells()` 时，将 `flashDuration` 和 `fadeDuration` 值（以毫秒为单位）作为参数传递以更改单元格闪烁的持续时间。
+
+{% gridExampleRunner title="闪烁数据更改" name="flashing-data-changes" /%}
+
+在上面的示例中，所有三个按钮都使用 `flashCells(params)` API。请注意以下几点：
+
+-   点击 **闪烁一个单元格** 使用带有一列和一行的参数来闪烁相交的单元格。
+-   点击 **闪烁两行** 使用包含两个行节点的参数，导致这些行闪烁。
+-   点击 **闪烁两列** 使用包含两列的参数，导致这些列闪烁。
+
+### 自定义闪烁颜色
+
+每次单元格值更改时，表格默认添加 CSS 类 `ag-cell-data-changed` 500ms，然后默认添加 CSS 类 `ag-cell-data-changed-animation` 1,000ms。表格提供的主题使用它来应用背景颜色。要覆盖闪烁背景颜色，请覆盖相关的 CSS 类。
+
+{% gridExampleRunner title="自定义闪烁" name="customising-flashing" /%}
+
+上面的示例演示了使用 `--ag-value-change-value-highlight-background-color` CSS 变量自定义闪烁单元格背景颜色。
+
+## 动画单元格渲染器
+
+使用[单元格组件](./component-cell-renderer/)可以实现数据更改的有趣动画。您可以创建自己的或使用提供的显示更改单元格组件之一。表格开箱即用地提供两个这样的组件。
+
+### 动画显示更改单元格
+
+先前值和新值之间的差异临时显示在新值旁边，然后淡出。此差异以绿色或红色显示，分别表示值的增加或减少，同时还有指示更改方向的箭头。
+
+{% gridExampleRunner title="动画显示更改渲染器" name="animate-show-change-renderer"  exampleHeight=530 /%}
+
+上面的示例演示了以下内容：
+
+-   列 A、B 可编辑。
+-   列 C 和 D 通过点击按钮更新。
+-   对前 4 列中任何一列的更改会导致总计和平均列中的动画。
+-   这可以在列定义中设置为单元格渲染器：
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        // 在列定义中设置单元格渲染器
+        { cellRenderer: "agAnimateShowChangeCellRenderer" },
+    ]
+}
+```
+
+### 动画滑动单元格
+
+先前值以淡化的方式显示并滑动，随着旧值淡化和滑走而产生幽灵效果。
+
+{% gridExampleRunner title="动画滑动渲染器" name="animate-slide-renderer"  exampleHeight=530 /%}
+
+上面的示例演示了以下内容：
+
+-   列 A、B 可编辑。
+-   列 C 和 D 通过点击按钮更新。
+-   对前 4 列中任何一列的更改会导致总计和平均列中的动画。
+-   这可以在列定义中设置为单元格渲染器：
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        // 在列定义中设置单元格渲染器
+        { cellRenderer: "agAnimateSlideCellRenderer" },
+    ]
+}
+```

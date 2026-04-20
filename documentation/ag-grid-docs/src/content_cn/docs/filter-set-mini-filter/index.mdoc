@@ -1,0 +1,60 @@
+---
+title: "集合过滤器 - 迷你过滤器"
+enterprise: true
+---
+
+本节描述迷你过滤器的行为，并展示如何配置它。
+
+迷你过滤器允许用户在过滤器列表中搜索特定值。在迷你过滤器中输入文本将缩小集合过滤器中显示的值列表，但默认情况下不会过滤网格内的数据。
+
+{% video videoSrc="resources/mini-filter.mp4" centered=true /%}
+
+## 键盘快捷键
+
+当在迷你过滤器上按下 {% kbd "↵ Enter" /%} 键时，集合过滤器将独占选择过滤器列表中通过迷你过滤器的所有值，并立即应用过滤器（请注意，即使使用应用按钮，按 {% kbd "↵ Enter" /%} 也会应用过滤器）。
+
+或者，您可以选择在用户键入时应用迷你过滤器，即随着过滤器列表被过滤，集合过滤器将如上所述应用，以便网格中的结果也将同时被过滤。要启用此行为，请使用以下内容：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'country',
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                applyMiniFilterWhileTyping: true,
+            },
+        }
+    ]
+}
+```
+
+以下示例演示了此行为。请注意以下内容：
+
+-   Athlete 列的集合过滤器显示具有默认行为的迷你过滤器。尝试在迷你过滤器中键入以搜索过滤器列表，然后按 {% kbd "↵ Enter" /%} 键，注意如何使用显示的值过滤网格。
+-   Country 列的集合过滤器在您键入时应用迷你过滤器，因为 `filterParams.applyMiniFilterWhileTyping = true`。
+
+{% gridExampleRunner title="迷你过滤器键盘快捷键" name="mini-filter-keyboard-shortcuts"  exampleHeight=565 /%}
+
+## 自定义搜索
+
+有时需要为迷你过滤器搜索提供自定义处理，例如替换重音字符。
+
+与[文本过滤器](./filter-text/#text-formatter)一样，可以向集合过滤器提供文本格式化器，在应用迷你过滤器比较逻辑之前格式化文本。以下代码片段显示了如何配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'athlete',
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                textFormatter: value => {
+                    return value
+                        .replace(/\s/g, '')
+                        .replace(/[àáâãäå]/g, 'a')
+                        .replace(/æ/g, 'ae')
+                        .replace(/ç/g, 'c')
+                        .replace(/[èéêë]/g, 'e')
+                        .replace(/[ìíîï]/g, 'i')
+                        .replace(/ñ/g, 'n')

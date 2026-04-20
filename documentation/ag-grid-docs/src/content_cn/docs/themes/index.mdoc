@@ -1,0 +1,67 @@
+---
+title: "内置主题"
+---
+
+内置主题为您的应用程序主题提供了起点。
+
+主题是从 `ag-grid-community` 包导入的对象，并使用 `theme` 表格选项提供给表格实例。
+
+```js
+import { themeBalham } from 'ag-grid-community';
+
+{% if isFramework("javascript") %}
+const gridOptions = {
+    theme: themeBalham,
+    ...
+}
+{% /if %}
+{% if isFramework("react") %}
+<AgGridReact
+    theme={themeBalham}
+    ...
+/>
+{% /if %}
+{% if isFramework("vue") %}
+// 在模板中
+<ag-grid-vue
+    :theme="theme"
+    ...
+></ag-grid-vue>
+
+// 在组件 setup 钩子中
+setup() {
+    return {
+        theme: themeBalham,
+    };
+}
+{% /if %}
+{% if isFramework("angular") %}
+// 在模板中
+<ag-grid-angular
+    [theme]="theme"
+/>
+
+// 在组件类中
+public theme = themeBalham;
+{% /if %}
+```
+
+## 内置主题
+
+-   Quartz - 我们的默认主题，具有高对比度和充足的填充。如果可用，将使用 IBM Plex Sans 字体**⁺**。
+-   Balham - 一个更传统的主题，模仿电子表格应用程序的模型。
+-   Material - 根据 Google 的 [Material v2](https://m2.material.io/) 设计系统设计的主题。这个主题对于具有大量空白空间的简单应用程序看起来很棒，如果您的应用程序的其余部分使用 Material Design，这是显而易见的选择。如果可用，将使用 Google Roboto 字体**⁺**。
+-   Alpine - Quartz 之前的默认主题。我们建议新项目使用 quartz；此主题旨在简化已使用 Alpine 的应用程序迁移到主题 API。
+
+**⁺** 您可以自己加载这些字体，或传递 `loadThemeGoogleFonts` 表格选项从 Google 的 CDN 加载它们。有关更多信息，请参阅[自定义字体](./theming-fonts/)。
+
+{% gridExampleRunner title="内置主题" name="built-in-themes" /%}
+
+## 自定义内置主题
+
+主题只是部件和参数的预设配置。选择主题作为起点后，您可以：
+
+1. 如果需要，选择不同的[配色方案](./theming-colors/#colour-schemes)。
+2. 使用[主题参数](./theming-parameters/)自定义边框、紧凑度、字体等。
+3. 使用[主题部件](./theming-parts/)混合和匹配不同主题的元素，例如 Quartz 的图标和 Material 的文本输入。
+4. [编写自己的 CSS](./theming-css/) 以无限控制表格外观。

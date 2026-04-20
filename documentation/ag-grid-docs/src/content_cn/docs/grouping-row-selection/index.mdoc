@@ -1,0 +1,52 @@
+---
+title: "行分组 - 层次结构选择"
+enterprise: true
+---
+
+行选择可以与组一起配置，以选择行的所有后代。
+
+## 选择后代
+
+当使用[多行选择](./row-selection-multi-row/)与行分组时，可以配置网格在选择行时影响后代和祖先行。
+
+要启用层次结构选择，请将 `selection.groupSelects` 选项设置为以下值之一：
+
+-   `'self'`：选择组行没有额外的副作用。
+-   `'descendants'`：选择组行将选择其所有后代。
+-   `'filteredDescendants'`：选择组行将选择其所有通过过滤器的后代。
+
+{% gridExampleRunner title="组选择" name="group-selection" /%}
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowSelection: {
+        mode: 'multiRow',
+        groupSelects: 'descendants',
+    },
+}
+```
+
+{% note %}
+当使用 `groupSelects: 'descendants'` 或 `groupSelects: 'filteredDescendants'` 时，组节点不会作为 `api.getSelectedNodes()` 或 `api.getSelectedRows()` 的一部分返回。
+{% /note %}
+
+## 组单元格中的复选框
+
+当使用[行选择](./row-selection/)与分组时，可以配置网格在组单元格中渲染复选框，位于展开/折叠箭头的右侧。
+
+这可以通过将 `rowSelection.checkboxLocation` 选项设置为 `'autoGroupColumn'` 来配置。
+
+{% gridExampleRunner title="组单元格复选框" name="group-cell-checkboxes" /%}
+
+上面的示例演示了以下配置以在组单元格中渲染复选框：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowSelection: {
+        mode: 'multiRow',
+        checkboxLocation: 'autoGroupColumn',
+    },
+}
+```

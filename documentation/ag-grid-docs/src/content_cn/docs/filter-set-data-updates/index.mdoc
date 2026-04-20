@@ -1,0 +1,98 @@
+---
+title: "集合筛选器 - 数据更新"
+enterprise: true
+---
+
+本节介绍如何通过[单元格编辑](./cell-editing/)和应用程序[更新数据](./data-update/)更改数据会影响集合筛选器的值。这仅在集合筛选器从网格数据中获取其值时适用。
+
+## 行/单元格更新
+
+行/单元格更新是指以下任何一项：
+
+-   通过网格 UI 进行的所有编辑，例如[单元格编辑](./cell-editing/)和[剪贴板操作](./clipboard/)。
+-   使用网格的[单行/单元格更新 API](./data-update-single-row-cell/)，即 `rowNode.setData(data)` 和 `rowNode.setDataValue(col,value)` API 方法。
+
+通过任何这些方法更新数据时，筛选器值将被刷新。
+
+以下是确定如何选择筛选器值的规则：
+
+-   **筛选器未激活**：更新前，筛选器中的'all'值被选中（因为筛选器未激活）。筛选列表将更新以反映数据更改，所有值将保持选中状态，筛选器保持未激活状态。
+-   **筛选器激活**：更新前，筛选器中的'some'值被选中（因为筛选器已激活）。筛选列表将更新以反映数据更改，但是只要筛选器值在任何事务后仍然存在，先前的选择将保持不变。如果更新导致新的筛选器值，则不会选择新的筛选器值。
+
+单元格编辑默认不会重新执行筛选，因此即使单元格中的值未在筛选器中选中，该行也不会被筛选掉。此默认行为模仿了 Excel 的工作方式。
+
+要在单元格编辑时执行筛选，请监听 `CellValueChanged` 事件并触发筛选，如下所示：
+
+{% apiDocumentation source="grid-events/events.json" section="editing" names=["cellValueChanged"] /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    onCellValueChanged: params => {
+        // 在单元格编辑时触发筛选
+        params.api.onFilterChanged();
+    }
+}
+```
+
+以下示例演示了使用集合筛选器进行单元格编辑。尝试以下操作：
+
+**不选择任何筛选器值：**
+
+-   将'B'单元格值更改为'X'，注意它被添加到筛选列表并**被选中**。
+
+**单击'Reset'并在筛选列表中取消选择'C'：**
+
+-   将'B'单元格值更改为'X'，注意它被添加到筛选列表但**未被选中**。
+-   请注意，虽然'X'未在筛选器中选中，但该行仍显示在网格中。这是因为单元格编辑不会触发网格筛选。
+
+{% gridExampleRunner title="单元格编辑更新" name="cell-editing-updates"  exampleHeight=480 /%}
+
+## 事务更新
+
+事务更新是指以下任何一项：
+
+-   通过[事务](./data-update-transactions/) API 更新数据。
+-   通过[异步事务](./data-update-high-frequency/) API 更新数据。
+-   更改行数据并提供[行 ID](./row-ids/)（因为这使用底层的事务）。
+
+使用任何这些方法更新数据时，筛选器值将被刷新。
+
+以下是确定如何选择筛选器值的规则：
+
+-   **筛选器未激活**：更新前，筛选器中的'all'值被选中（因为筛选器未激活）。筛选列表将更新以反映数据更改，所有值将保持选中状态，筛选器保持未激活状态。
+
+-   **筛选器激活**：更新前，筛选器中的'some'值被选中（因为筛选器已激活）。筛选列表将更新以反映数据更改，但是只要筛选器值在任何事务后仍然存在，先前的选择将保持不变。如果更新导致新的筛选器值，则不会选择新的筛选器值。
+
+与[单元格编辑](#row--cell-updates)不同，事务更新将在网格中执行筛选。
+
+以下示例演示了这些规则。尝试以下操作：
+
+**不选择任何筛选器值：**
+
+-   单击 **Update First Displayed Row**：这调用 `api.applyTransaction()` 并更新第一行中的值。注意'AX'现在出现在筛选列表中并**被选中**。
+-   单击 **Add New 'D' Row**：这调用 `api.applyTransaction()` 并向网格添加新行。注意'D'已添加到筛选列表并**被选中**。
+
+**单击'Reset'并在筛选列表中取消选择'C'：**
+
+-   单击 **Update First Displayed Row**：这调用 `api.applyTransaction()` 并更新第一行中的值。注意'AX'现在出现在筛选列表中并**未被选中**。
+-   请注意，由于'AX'在筛选列表中未被选中，它也已从网格中筛选掉。这是因为事务更新也会触发网格筛选。
+-   单击 **Add New 'D' Row**：这调用 `api.applyTransaction()` 并向网格添加新行。注意'D'已添加到筛选列表并**未被选中**。
+
+{% gridExampleRunner title="事务更新" name="transaction-updates"  exampleHeight=480 /%}
+
+## 设置新数据
+
+当调用 `api.setGridOption('rowData', data)` 时，添加新行时会保留现有的筛选选择。但是，可以使用 `api.setFilterModel(null)` 清除筛选选择。
+
+以下示例演示了 `api.setGridOption('rowData', data)` 如何影响筛选选择。尝试以下操作：
+
+-   从集合筛选列表中取消选择值'A'，然后单击 **Apply Data Update 1** 按钮，该按钮调用 `api.setGridOption('rowData', newData)` 向网格添加带有额外行的新数据。
+
+-   请注意，向网格提供新数据后，'A'仍保持未选中状态。
+
+-   单击 **Reset** 调用 `api.setGridOption('rowData', origData)` 恢复原始数据，但也使用 `api.setFilterModel(null)` 清除任何选择。
+
+-   应用筛选器，以便仅选中'B'，然后单击 **Apply Data Update 1**。请注意，'B'不再是筛选器值，因此不再在筛选列表中。
+    单击 **Apply Data Update 2**，注意'B'返回到筛选列表但仍保持未选中状态。
+
+{% gridExampleRunner title="设置新数据" name="setting-new-data"  exampleHeight=500 /%}

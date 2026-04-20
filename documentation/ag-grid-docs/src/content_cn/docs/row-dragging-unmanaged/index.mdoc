@@ -1,0 +1,89 @@
+---
+title: "非托管行拖动"
+---
+
+非托管拖动是网格的默认拖动。要使用它，不要设置属性 `rowDragManaged`。
+
+{% gridExampleRunner title="行拖动简单非托管" name="simple-unmanaged" /%}
+
+上面的示例展示了如何使用非托管行拖动和事件实现简单的行拖动，类似于[托管行拖动](./row-dragging-managed)示例；
+但是，移动行的逻辑在应用程序中，而不是在网格中。
+
+根据是否有排序或过滤处于活动状态，应用程序设置属性 `suppressRowDrag=true`。
+这是因为示例中的逻辑没有涵盖这些场景，并希望在排序或过滤处于活动状态时阻止行拖动。
+
+## 与托管行拖动的区别
+
+非托管拖动与托管拖动有以下区别：
+
+- 网格不管理行的移动。网格唯一响应的是触发拖动事件。应用程序负责移动行（如果应用程序想要这样做）。
+- 允许在应用排序时拖动。
+- 允许在应用过滤时拖动。
+- 允许在应用行组或透视时拖动。
+
+{% note %}
+网格不可能为适合所有使用场景的行拖动提供通用解决方案。提供非托管行拖动是为了让应用程序开发人员能够通过响应网格发出的事件来满足他们的需求。
+{% /note %}
+
+## 行拖动事件
+
+托管行拖动和非托管行拖动都会触发行拖动事件。
+
+有五个与行拖动相关的网格事件：
+
+- `rowDragEnter`：拖动已开始，或拖动已经开始且鼠标在之前离开网格后重新进入网格。
+- `rowDragMove`：拖动时鼠标已移动。
+- `rowDragLeave`：拖动时鼠标已离开网格。
+- `rowDragEnd`：拖动已在网格上完成。
+- `rowDragCancel`：拖动已在网格上取消。
+
+通常拖动会触发以下事件：
+
+1. `rowDragEnter` 触发一次 - 拖动已开始。
+1. `rowDragMove` 触发多次 - 鼠标正在行上拖动。
+1. `rowDragEnd` 触发一次 - 拖动已完成。
+
+如果鼠标离开或重新进入网格，则会触发额外的 `rowDragLeave` 和 `rowDragEnter` 事件。如果拖动在网格外完成，则 `rowDragLeave` 是最后触发的事件，不会触发 `rowDragEnd`，因为拖动不是在网格上结束的。
+
+{% note %}
+创建网格时，会向网格主体添加一个负责触发所有行拖动事件的[放置区](./row-dragging-to-external-dropzone/)。这就是为什么行拖动事件（包括 `rowDragEnd`）仅在网格顶部发生时才触发。如果您需要监控行拖动何时在网格外结束，例如，请使用 [DragStopped](./grid-events/#reference-dragAndDrop-dragStopped) 事件。
+{% /note %}
+
+五个行拖动事件都继承 `RowDragEvent` 接口。
+
+{% interfaceDocumentation interfaceName="RowDragEvent" /%}
+
+## 示例事件
+
+上面的示例演示了非托管行拖动，应用程序或网格都没有尝试重新排列行。
+这是为了表明网格不会尝试重新排列行，除非将 `rowDragManaged` 属性设置为 true。
+该示例还演示了所有触发的事件。
+
+从示例中可以注意以下几点：
+
+- 第一列有 `rowDrag=true`，导致单元格中包含可拖动区域。
+
+- 网格没有设置 `rowDragManaged`，导致网格在拖动时不会重新排列行。
+
+- 所有拖动事件都被监听，当接收到一个事件时，它会被打印到控制台。最好在新标签页中打开示例并打开开发者控制台查看。
+
+- 因为没有设置 `rowDragManaged`，即使应用了排序或过滤，行拖动仍然保持启用状态。这是因为您的应用程序应该使用 `suppressRowDrag` 属性决定是否允许或抑制拖动。
+
+- 在拖动行时，调用 `setRowDropPositionIndicator` API 方法以使用水平线指示器显示预计的行放置位置。
+
+{% gridExampleRunner title="行拖动事件" name="dragging-events" /%}
+
+{% note %}
+使用非托管行拖动拖动多行时，应用程序控制拖动的内容。
+可以使用事件一次拖动多行，例如在使用行选择时一次移动所有选中的行。
+{% /note %}
+
+另请参见[防止在某些行上放置](./row-dragging-managed/#preventing-dropping-on-certain-rows)。
+
+{% note %}
+有关包括托管行拖动支持在内的分组特定指南，请参见[行组行拖动](./grouping-row-dragging/)。
+{% /note %}
+
+## 其他行模型
+
+非托管行拖动适用于任何行模型 - [无限](./infinite-scrolling/)、[服务器端](./server-side-model/)和[视口](./viewport/)。使用非托管拖动时，特定拖动发生时的行为实现取决于您的应用程序。

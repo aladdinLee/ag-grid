@@ -1,0 +1,18 @@
+---
+title: "网格选项参考"
+description: "$framework 数据网格的网格选项参考。浏览用于配置选择、透视、聚合、筛选、编辑、键盘导航的所有网格选项。"
+---
+
+实现 `GridOptions<TData>` 接口。
+
+网格将响应属性更新，除非它们标记为 `Initial`。请参阅[更新网格选项](./grid-interface/#updating-grid-options)。
+
+{% apiDocumentation source="grid-options/properties.json" config={ "showInitialDescription": true } /%}
+
+{% if isFramework("angular", "vue") %}
+{% apiDocumentation source="grid-options/grid-option.json" config={ "showInitialDescription": true } /%}
+{% /if %}
+
+{% if isFramework("react") %}
+{% apiDocumentation source="grid-options/react-grid-options.json" config={ "showInitialDescription": true } /%}
+{% /if %}

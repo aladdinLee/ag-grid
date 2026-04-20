@@ -1,0 +1,233 @@
+---
+title: "剪贴板"
+enterprise: true
+---
+
+您可以使用系统剪贴板在表格中复制和粘贴项目。
+
+## 如何复制
+
+对于企业用户，从表格复制**默认启用**。要将选择复制到系统剪贴板，您可以使用快捷键 {% kbd "^ Ctrl" /%}+{% kbd "C" /%}，或右键单击单元格并从上下文菜单中选择"复制"。除非启用了[单元格选择](./cell-selection)或[行选择](./row-selection)，否则您只会从当前聚焦的单元格复制。
+
+复制多个单元格时，内容将以 Excel 兼容格式复制，字段
+由 `\t`（制表符）字符分隔。
+
+## 复制单元格范围
+
+当通过设置 `gridOptions.cellSelection=true` 启用[单元格范围](./cell-selection)时，复制将把单元格范围的内容复制到剪贴板。通过点击单元格并使用鼠标拖动来选择范围，然后使用 {% kbd "^ Ctrl" /%}+{% kbd "C" /%} 快捷键复制。
+
+可以使用 {% kbd "^ Ctrl" /%} 和鼠标拖动一次选择多个单元格范围。复制时，所有范围都将复制到剪贴板。请注意，复制时不保留多个范围的相对位置，它们在剪贴板中垂直堆叠。
+
+在下面的示例中尝试：
+
+-   通过点击和拖动选择单元格范围
+-   使用 {% kbd "^ Ctrl" /%}+{% kbd "C" /%} 复制
+-   粘贴到外部程序/文本编辑器。
+
+{% gridExampleRunner title="复制单元格范围" name="copy-range" /%}
+
+## 复制行
+
+当通过将 `gridOptions.rowSelection.mode` 设置为 `"singleRow"` 或 `"multiRow"` 启用[行选择](./row-selection)时，默认行为是仅将聚焦的单元格复制到剪贴板。
+为了复制整行，启用 `gridOptions.rowSelection.copySelectedRows` 标志。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowSelection: {
+        mode: 'multiRow',
+        copySelectedRows: true,
+    }
+}
+```
+
+下面的示例演示了复制行。最初，按 {% kbd "^ Ctrl" /%}+C 将选择聚焦的单元格，无论选择了哪些行。
+您可以通过切换"复制选定行"复选框来启用 `copySelectedRows` 标志来更改此行为：
+
+-   打开"复制选定行"复选框
+-   在下面的示例中选择一行或多行并按 {% kbd "^ Ctrl" /%}+C
+-   在文本编辑器中粘贴复制的内容
+-   当"复制选定行"复选框打开时，粘贴的内容包括所有选定的行。当"复制选定行"复选框关闭时，粘贴的内容仅包括聚焦的单元格。
+
+{% gridExampleRunner title="复制行" name="copy-row" /%}
+
+## 复制标题
+
+通过启用选项 `copyHeadersToClipboard`，可以将列标题连同单元格内容一起复制到剪贴板。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    copyHeadersToClipboard: true,
+}
+```
+
+{% apiDocumentation source="grid-options/properties.json" section="clipboard" names=["copyHeadersToClipboard"] /%}
+
+在下面的示例中尝试：
+
+-   通过点击和拖动选择单元格范围
+-   使用 {% kbd "^ Ctrl" /%}+{% kbd "C" /%} 复制
+-   粘贴到外部程序/文本编辑器，注意列标题也被复制了。
+
+{% gridExampleRunner title="复制单元格范围和标题" name="copy-range-with-headers" /%}
+
+## 自定义剪贴板交互
+
+如果您想自己进行复制到剪贴板（即不使用表格的剪贴板交互），则实现回调 `sendToClipboard(params)`。如果您处于具有用于与剪贴板交互的自定义 API 的非标准 Web 容器中，请使用此选项。回调获取要放入剪贴板的数据，您的工作是调用自定义 API。
+
+下面的示例显示使用 `sendToClipboard(params)`，但不是使用剪贴板，而是通过将数据打印到控制台来演示回调。
+
+{% gridExampleRunner title="控制剪贴板复制" name="custom" /%}
+
+## 通过 API 复制
+
+您可以使用表格 API 方法：`copySelectedRowsToClipboard(...)` 和 `copySelectedRangeToClipboard(...)`
+分别复制行或范围，这些 API 调用接受可选参数以启用复制列和组标题。
+
+{% apiDocumentation source="grid-api/api.json" section="clipboard" names=["copySelectedRangeToClipboard", "copySelectedRowsToClipboard"] /%}
+
+## 如何剪切
+
+对于企业用户，从表格剪切**默认启用**。要将选择剪切到系统剪贴板，您可以使用快捷键 {% kbd "^ Ctrl" /%}+{% kbd "X" /%}，或右键单击单元格并从上下文菜单中选择"剪切"。除非启用了[范围选择](./cell-selection)或[行选择](./row-selection)，否则您只会从当前聚焦的单元格复制。
+
+剪切操作将与复制操作完全相同，只是数据随后将从表格中删除，因此剪切操作将使用上述相同的属性来自定义 `复制` 过程。
+
+## 禁用剪切
+
+由于 `剪切` 是破坏性过程，因此在表格选项中添加了 `suppressCutToClipboard` 属性。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    suppressCutToClipboard: true
+}
+```
+
+这在下面的示例中演示。请注意以下几点：
+
+-   选择单元格并按 {% kbd "^ Ctrl" /%}+{% kbd "X" /%} 将不会 `复制` 或 `剪切` 数据。
+-   上下文菜单不会显示 `剪切` 选项。
+
+{% gridExampleRunner title="剪贴板禁止剪切" name="suppress-cut" /%}
+
+## 如何粘贴
+
+在企业版本中默认启用粘贴，只要您粘贴到的单元格是[可编辑的](./cell-editing)（不可编辑的单元格无法修改，即使使用粘贴操作），就可以进行粘贴。您可以在聚焦于表格时使用快捷键 {% kbd "^ Ctrl" /%}+{% kbd "V" /%} 进行粘贴。
+
+粘贴的行为根据您是选择了单个单元格还是范围而变化：
+
+-   当**选择单个单元格**时。如果要粘贴多个单元格，粘贴将从选定的单元格开始。
+-   当**选择单元格范围**时。如果要粘贴的选定范围大于复制的范围，如果均匀匹配，它将重复，否则它只会将单元格复制到范围的开始。
+
+## 禁用粘贴
+
+您可以通过设置表格属性 `suppressClipboardPaste=true` 来关闭整个表格的粘贴操作。
+
+或者您可以通过在列定义上设置属性 `suppressPaste` 来禁用特定列或单元格的粘贴。这可以是布尔值或函数（使用函数为特定单元格指定，或布尔值为整列）。
+
+{% apiDocumentation source="column-properties/properties.json" section="columns" names=["suppressPaste"] /%}
+
+## 处理粘贴的数据
+
+剪贴板数据将默认使用[导出时使用值格式化器](./value-formatters/#formatting-for-export)在复制时格式化单元格，以及[导入时使用值解析器](./value-parsers/#use-value-parser-for-import)在粘贴时格式化单元格。
+
+可以专门为剪贴板覆盖此行为。这可以在单个单元格或整个粘贴操作上完成。
+
+### 处理单个单元格
+
+处理单个单元格的接口和参数如下：
+
+{% apiDocumentation source="grid-options/properties.json" section="clipboard" names=["processCellForClipboard", "processHeaderForClipboard", "processGroupHeaderForClipboard", "processCellFromClipboard"] /%}
+
+上面的三个回调在下面的示例中演示。请注意以下几点：
+
+-   当单元格复制到剪贴板时，值以 'C-' 为前缀。可以通过使用鼠标拖动范围并按 {% kbd "^ Ctrl" /%}+{% kbd "C" /%} 来复制单元格。
+-   当单元格从剪贴板粘贴时，值以 'Z-' 为前缀。可以通过按 {% kbd "^ Ctrl" /%}+{% kbd "V" /%} 来粘贴单元格。
+-   当标题复制到剪贴板时，值以 'H-' 为前缀。可以使用上下文菜单复制标题。
+-   当组标题复制到剪贴板时，值以 'GH-' 为前缀。可以使用上下文菜单复制标题。
+
+{% gridExampleRunner title="示例处理" name="process" /%}
+
+### 从剪贴板处理数据
+
+要完全控制粘贴时处理剪贴板数据，您可以使用以下回调：
+
+{% apiDocumentation source="grid-options/properties.json" section="clipboard" names=["processDataFromClipboard"] /%}
+
+以下示例显示处理剪贴板数据的自定义代码：
+
+-   单元格根据单元格内容开头的颜色着色
+-   在表格中复制一个单元格范围，其中包括一个以 `Red` 开头的单元格值。粘贴到表格中将粘贴一个自定义的 4x4 单元格网格。
+-   在表格中复制一个单元格范围，其中包括一个以 `Yellow` 开头的单元格值，并且**不**包括任何 `Red` 单元格值。粘贴此复制的单元格范围将取消粘贴操作，不粘贴任何内容
+-   任何其他复制的单元格数据将按原样粘贴
+
+{% gridExampleRunner title="示例处理数据" name="process-all" /%}
+
+### 在表格底部粘贴新行
+
+默认情况下，当在表格中显示的最后一条记录附近粘贴多行时，任何超过表格中显示的总行数的行都不会被粘贴。
+
+为了在表格中插入所有复制的行，需要自定义 `processDataFromClipboard` 函数，使用[事务更新 API](./data-update-transactions/#transaction-update-api) 添加必要数量的新行。
+
+下面的示例使用自定义 `processDataFromClipboard` 函数向表格添加新行，以适应所有复制的行：
+
+-   使用 {% kbd "⇧ Shift" /%} + 点击选择表格中的前 3 行
+-   按 {% kbd "^ Ctrl" /%}+{% kbd "C" /%} 复制选定的行
+-   选择最后一行的 `Ryan Lochte` 单元格并按 {% kbd "^ Ctrl" /%}+{% kbd "V" /%} 粘贴复制的行
+-   注意 `Ryan Lochte` 行已被覆盖，并在表格底部创建了 2 个额外的行以容纳额外的 2 行粘贴
+
+{% gridExampleRunner title="粘贴新行" name="pasting-extra-rows" /%}
+
+### 只读编辑
+
+当表格处于[只读编辑](./value-setters/#read-only-edit)模式时，`剪贴板`不会更新表格内的数据。相反，表格触发 `cellEditRequest` 事件，允许应用程序处理更新请求。
+
+{% apiDocumentation source="grid-events/events.json" section="editing" names=["cellEditRequest"] /%}
+
+下面的示例将显示如何结合 `剪贴板` 和 `readOnlyEdit=true` 更新单元格值。
+
+{% gridExampleRunner title="剪贴板 - 只读编辑" name="read-only-edit" /%}
+
+## 更改复制和粘贴的分隔符
+
+默认情况下，表格将使用 `\t`（制表符）作为字段分隔符。这是为了使复制/粘贴与 Excel 兼容。如果您想要另一个分隔符，则可以将属性 `gridOptions.clipboardDelimiter` 设置为您选择的值。
+
+## 使用浏览器的文本选择
+
+表格的选择和复制功能替换了用于选择和复制文本的内置浏览器行为。如果您想使用正常的浏览器行为，则应在 gridOptions 中设置 `enableCellTextSelection=true`。请注意以下几点：
+
+-   当 `enableCellTextSelection=true` 时，按 {% kbd "^ Ctrl" /%}+{% kbd "C" /%} 不会复制聚焦的单元格值，而只会复制表格单元格内选定的文本。使用 AG Grid Enterprise 时，用户可以通过右键单击表格单元格显示[上下文菜单](./context-menu/)并点击任何复制菜单项来复制整个单元格值。
+
+-   当 `enableCellTextSelection=true` 时，需要设置选项 `ensureDomOrder=true` 以正确支持可访问性。请参阅[确保 DOM 元素顺序](./accessibility/#ensure-dom-element-order)。
+
+{% note %}
+这不是企业配置，可以随时使用以启用单元格文本选择。
+{% /note %}
+
+在下面的示例中查看此行为：
+
+-   聚焦表格单元格并按 {% kbd "^ Ctrl" /%}+{% kbd "C" /%}。单元格值不会被复制，因为没有选择文本。
+
+-   点击单元格并拖动其值以选择文本。按 {% kbd "^ Ctrl" /%}+{% kbd "C" /%}，值将被复制。
+
+-   此示例使用 AG Grid Community 版本，因此上下文菜单不可用于复制聚焦的单元格值。在 AG Grid Enterprise 中，上下文菜单将可用于复制整个聚焦的单元格值，而无需将其选择为文本。
+
+{% gridExampleRunner title="使用浏览器文本选择" name="cellTextSelection" /%}
+
+## 剪贴板事件
+
+以下事件与剪贴板操作相关：
+
+{% apiDocumentation source="grid-events/events.json" section="clipboard" names=["cutStart","cutEnd","pasteStart","pasteEnd"] config={"overrideBottomMargin":"0rem"} /%}
+
+{% apiDocumentation source="grid-events/events.json" section="editing" names=["cellValueChanged"] config={ "hideMore":false} /%}
+
+对于剪切或粘贴操作，事件将触发如下：
+
+1. 一个 `cutStart`/`pasteStart` 事件。
+1. 许多 `cellValueChanged` 事件。
+1. 一个 `cutEnd`/`pasteEnd` 事件。
+
+如果应用程序每次收到 `cellValueChanged` 时都在做工作，您可以使用 `cutStart`/`pasteStart` 和 `cutEnd`/`pasteEnd` 事件暂停应用程序的工作，然后在剪切/粘贴操作后为所有受剪切/粘贴操作影响的单元格做工作。
+
+复制到剪贴板不会触发任何事件，因为这不会更改表格的数据。
+
+{% gridExampleRunner title="剪贴板事件" name="clipboard-events" /%}

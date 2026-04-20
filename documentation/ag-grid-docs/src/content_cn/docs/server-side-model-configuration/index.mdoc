@@ -1,0 +1,126 @@
+---
+title: "SSRM 配置"
+enterprise: true
+---
+
+本节介绍服务端缓存和服务端行模型中可用的配置。
+
+由于服务端行模型中可用的许多配置与服务端缓存相关，因此了解网格如何将从服务器获取的数据组织到缓存中非常重要。
+
+## 服务端缓存
+
+网格将行排列成块，这些块依次存储在缓存中，如下图所示：
+
+{% flex justifyContent="center" %}
+
+{% imageCaption imagePath="resources/serverSideCache.png" alt="serverSideCache" centered=true constrained=true enableDarkModeFilter=true %}
+{% flex justifyContent="center" %}
+图 1. 服务端缓存
+{% /flex %}
+{% /imageCaption %}
+
+{% /flex %}
+
+有一个包含顶级行（即在根节点上）的缓存，以及每个单独的[行分组](./server-side-model-grouping/)级别的缓存。当网格初始化时，它将检索包含行的初始数量（根据配置）的块，随着用户向下滚动，将加载更多块。
+
+多个[配置](./server-side-model-api-reference/)，如 `cacheBlockSize` 和 `maxBlocksInCache`，以服务端缓存表示。
+
+下面的示例演示了一些配置。请注意以下几点：
+
+-   网格属性 `cacheBlockSize = 50`。这将块大小设置为 50，因此每次读回 50 行。
+-   网格属性 `maxBlocksInCache = 2`。这意味着网格将仅在内存中保留两个块。要查看此操作，请滚动超过第 100 行（这将需要加载第三个块），然后快速滚动回开始，您将观察到第一个块需要重新加载。
+
+{% gridExampleRunner title="缓存配置" name="cache-configurations" /%}
+
+## 块加载防抖
+
+可能需要滚动整个数据集而无需加载中间块。
+
+下面的示例显示如何实现块加载防抖。请注意以下几点：
+
+-   来自服务器的响应设置 `rowCount` 属性，以便设置垂直滚动条边界，使得可以滚动整个数据集。
+
+-   `blockLoadDebounceMillis = 1000` - 块加载延迟 `1000ms`。这允许在滚动到高级位置时跳过块。
+
+-   网格属性 `debug = true`。这意味着浏览器的开发者控制台将显示加载块详细信息。
+
+{% gridExampleRunner title="块加载防抖" name="block-load-debounce" /%}
+
+## 提供额外数据
+
+可以在数据源生命周期之外向网格提供额外数据。这可用于在滚动之前用数据填充网格、提供层次结构数据或提供额外块。
+
+{% apiDocumentation source="grid-api/api.json" section="serverSideRowModel" names=["applyServerSideRowData"] /%}
+
+下面的示例演示可以在数据源流程之外用数据填充网格。请注意以下几点：
+
+-   第一个加载行从不显示，因为默认加载前 100 行
+-   默认提供 100 行，忽略 `cacheBlockSize` 属性
+-   这些额外行的加载绕过 `blockLoadDebounceMillis` 和 `maxConcurrentDatasourceRequests` 属性。
+
+{% gridExampleRunner title="额外行数据" name="additional-row-data" /%}
+
+## 初始滚动位置
+
+使用服务端行模型时，可以设置网格的初始滚动位置。这是通过在将数据源设置到网格后调用 `api.ensureIndexVisible()` 来实现的。
+
+{% note %}
+重要的是 `serverSideInitialRowCount` 属性设置为大于提供给 `api.ensureIndexVisible()` 的行索引与网格视口中显示的行数之和的值。
+{% /note %}
+
+这在下面的示例中演示，请注意以下几点：
+
+-   设置 `serverSideInitialRowCount` 属性以为垂直滚动条提供初始长度。
+
+-   设置数据源后，调用 `api.ensureIndexVisible(5000, 'top')`，导致网格向下滚动到第 `5000` 行。
+
+{% gridExampleRunner title="初始滚动位置" name="initial-scroll-position" /%}
+
+## 提供行 ID
+
+服务端行模型的某些功能需要行 ID 才能启用或增强其行为，这些功能包括[行选择](./server-side-model-selection/)、[事务](./server-side-model-updating-transactions/)和[刷新数据](./server-side-model-updating-refresh/)。
+
+服务端行模型需要唯一的行 ID 以在新数据加载后识别行。例如，如果应用导致加载新行的排序或过滤器，网格需要能够识别先前已知的行。
+
+行 ID 由应用程序使用 `getRowId()` 回调提供：
+
+{% apiDocumentation source="grid-options/properties.json" section="rowModels" names=["getRowId"] /%}
+
+实现 `getRowId()` 时，必须确保行在整个数据集中具有唯一的行 ID。建议使用数据中提供的 ID，例如数据库主键。
+
+### 提供唯一组 ID
+
+分组时，可能没有简单的方法从数据中获取组级别的唯一行 ID。这是因为组行并不总是对应存储中的一行。
+
+为了处理此场景，网格在提供给 `getRowId()` 的 `GetRowIdParams` 中提供 `parentKeys` 和 `level` 属性。
+
+这些可用于创建唯一的组 ID，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    getRowId: params => {
+        const parentKeysJoined = (params.parentKeys || []).join('-');
+        if (params.data.id != null) {
+            return parentKeysJoined + params.data.id;
+        }
+        const rowGroupCols = params.api.getRowGroupColumns();
+        const thisGroupCol = rowGroupCols[params.level];
+        return parentKeysJoined + params.data[thisGroupCol.getColDef().field];
+    }
+}
+```
+
+## 总计行
+
+可以在网格顶部或底部显示总计行，即使在平面网格上没有行分组。有关完整详细信息和示例，请参阅[总计行](./server-side-model-grouping/#grand-total-row)。
+
+## 调试信息
+
+使用服务端行模型时，收集每个块的状态可能会有所帮助。可以使用 `api.getCacheBlockState()` 收集此信息，或者您可以在网格属性中启用 `debug: true` 以在加载块时查看此输出记录到控制台。
+
+在下面的示例中，请注意以下几点：
+
+-   已启用网格选项 `debug: true`
+-   在网格中滚动时，块信息记录到控制台
+
+{% gridExampleRunner title="缓存块状态" name="cache-block-state" /%}

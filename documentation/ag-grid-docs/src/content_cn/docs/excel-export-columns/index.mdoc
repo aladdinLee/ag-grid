@@ -1,0 +1,53 @@
+---
+title: "Excel 导出 - 列"
+enterprise: true
+---
+
+Excel 导出允许您选择将哪些列导出到 Excel。
+
+默认情况下，网格中所有当前可见的列都包含在 Excel 导出中。但是，您可以轻松控制将哪些特定列导出到 Excel 文件。
+
+## 列表头
+
+默认情况下，列表头和组列表头包含在 Excel 导出中。但是，您可以通过将 `skipColumnGroupHeaders` 和 `skipColumnHeaders` 属性设置为 `true` 来禁止导出列表头行。
+
+请注意以下内容：
+
+-   默认情况下，导出所有分组列表头行和列表头行。
+-   如果选中 Skip Column Group Headers，将跳过组表头。
+-   如果选中 Skip Column Headers，将跳过普通表头。
+
+{% gridExampleRunner title="Excel 导出 - 列表头" name="excel-export-column-headers"  exampleHeight=815 /%}
+
+## 隐藏列
+
+默认情况下，隐藏列不包含在导出中。如果您需要导出所有列，即使它们当前在网格中隐藏，请将 allColumns 属性设置为 true。
+
+请注意以下内容：
+
+-   默认情况下，**只导出可见列**。bronze、silver 和 gold 列将不会导出。
+-   如果选中 `All Columns`，bronze、silver 和 gold 列将包含在导出的文件中。
+
+{% gridExampleRunner title="Excel 导出 - 隐藏列" name="excel-export-hidden-columns"  exampleHeight=815 /%}
+
+## 可折叠列
+
+[分组列](./column-groups/)可以作为分组列导出到 Excel。但是，要正确配置此功能，需要注意以下几点：
+
+1. 默认情况下，只导出可见列。折叠的列是隐藏的，因此不会导出到 Excel。为了导出折叠的列，请在提供给网格的 [ExcelExportParams](./excel-export-api/#excelexportparams) 中设置 `allColumns: true`。但是，这也会导出网格中的所有隐藏列。如果要导出折叠的列但不导出所有隐藏列，可以通过 [columnKeys](./excel-export-api/#reference-ExcelExportParams-columnKeys) 属性设置要导出的列列表。
+
+1. Excel 没有 `columnGroupShow: 'closed'` 等效项，因此此选项在 Excel 中折叠列时不会以相同的方式工作。
+
+1. 如果两个可折叠组并排，Excel 会将这两个组合并为一个。
+
+在下面的示例中，将网格导出到 Excel，打开导出的 Excel 文档并注意以下内容：
+
+-   列 **Gold**、**Silver**、**Bronze** 将在导出的 Excel 文档中显示为可折叠列组。
+
+-   导出的 Excel 文档还将包含 Total 列，但此列不会包含在"可折叠"组中。
+
+{% note %}
+使用透视导出[透视结果列](./pivoting-result-columns/)时，只导出当前可见的列作为分组列。折叠的透视结果列根本不会导出，即使设置了 [ExcelExportParams](./excel-export-api/#excelexportparams) 选项 `allColumns:true`。
+{% /note %}
+
+{% gridExampleRunner title="Excel 导出 - 可折叠列" name="excel-export-collapsible-columns" /%}

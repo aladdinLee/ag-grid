@@ -1,0 +1,193 @@
+---
+title: "无障碍访问"
+---
+
+AG Grid 在当今市场上可用的表格中提供了最好的无障碍访问支持。本页面提供了如何在表格实现中解决无障碍访问问题的指导。
+
+## Web 一致性指南
+
+即使您没有被强制要求符合任何特定的无障碍标准，了解概述的指南也是有帮助的，因为它们通常是值得纳入基于 Web 的应用程序的良好实践。
+
+目前最常遇到的一致性指南是：
+
+-   [ADA](https://www.ada.gov/) - 美国司法部
+-   [Section 508](https://www.section508.gov/) - 美国联邦机构
+-   [WCAG 2.0](https://www.w3.org/WAI/intro/wcag) - 全球接受的标准
+
+WCAG 2.0 有3个一致性级别：A、AA 和 AAA（按一致性顺序）
+
+由于符合 WCAG 2.0 级别 AA 指南也符合 ADA 和 Section 508 标准，大多数组织可能希望以此标准为目标。
+
+## 高对比度主题
+
+对于因色觉缺陷而视力受损的用户，在使用颜色提供信息时应格外小心。
+
+以我们的演示页面为例，Chrome 插件 [Colorblindly](https://chrome.google.com/webstore/detail/colorblindly/floniaahmccleoclneebhhmnjgdfijgg/related?hl=en) 显示了带有颜色指示器的单元格在完全色盲（单色视/全色盲）用户眼中的样子。
+
+{% imageCaption imagePath="resources/accessibility-colour-contrast.png" alt="高对比度主题" constrained=true maxWidth="50rem" /%}
+
+要创建高对比度主题，请查看[主题](./themes/)文档了解详情。
+
+## 键盘导航
+
+有运动障碍的用户以及视力受损的用户通常依赖键盘进行导航。
+
+有关如何在不使用鼠标的情况下导航表格的详细信息，请参阅[键盘导航](./keyboard-navigation/)文档。请注意，可以提供自定义导航，这对于某些无障碍要求可能很有用。
+
+## 屏幕阅读器
+
+视力受损的用户通常需要屏幕阅读器的帮助来解释和与基于表格的应用程序交互。
+
+有许多屏幕阅读器可用，但目前 Windows 上最流行的屏幕阅读器是 [JAWS](https://www.freedomscientific.com/Downloads/JAWS)，对于 MAC 用户，它是嵌入的 [VoiceOver](http://help.apple.com/voiceover/info/guide) 软件。我们的测试集中在这些屏幕阅读器上。
+
+为了涵盖最广泛的用例和屏幕阅读器，AG Grid 采用了基于标准的方法来实现无障碍支持。我们没有针对特定屏幕阅读器优化我们的实现，而是遵循 W3C WCAG 标准，并添加了相关的 ARIA 标签，让屏幕阅读器可以宣布任何 AG Grid 元素及其状态。
+
+然而，不同的屏幕阅读器以不同的方式解释 WCAG 标准。因此，它们可能为同一个 AG Grid 元素生成不同的公告，或者根本没有公告。
+
+这就是为什么我们建议测试不同的屏幕阅读器如何宣布您正在使用的应用程序的 UI，选择最好的一个并推荐给您的用户。我们认为这是指导您的用户如何在此获得最佳体验的最佳方式，直到屏幕阅读器改进对 WCAG 标准的支持。
+
+## ARIA 属性
+
+为了给屏幕阅读器提供解释和与表格交互所需的上下文信息，[ARIA](https://www.w3.org/TR/wai-aria/) 属性被添加到表格 DOM 元素中。当使用普通 HTML 元素如 `div` 和 `span` 创建复杂的 DOM 结构时，这些属性特别有用，AG Grid 就是这种情况。
+
+检查 DOM 时，您会注意到添加了以下角色和属性：
+
+-   **role="treegrid"** / **role="grid"** - 标记表格的封闭元素。当使用[树形数据](./tree-data/)或表格应用了[行分组](./grouping/)时，表格具有 `role="treegrid"`。在其他情况下，当提供平面数据或使用[主/从](./master-detail/)时，表格具有 `role="grid"`。
+
+    **注意：** 您可以使用[表格 API](./grid-api/) 中的 `setGridAriaProperty` 方法在面板中设置任何 aria 属性（role="treegrid"）。
+
+    -   **aria-rowcount** - 宣布行数。
+    -   **aria-colcount** - 宣布列数。
+    -   **aria-multiselectable="true"** - 标记表格能够选择多行。
+
+-   **role="rowgroup"** - 作为表头行和表格行的容器的元素。
+-   **role="row"** - 列标题或表格单元格的行。
+    -   **aria-rowindex** - 宣布行的可见索引。
+    -   **aria-selected** - 仅在行可选择时存在，它宣布选择状态。
+    -   **aria-expanded** - 仅在行组中存在，它宣布展开状态。
+-   **role="columnheader"** - 包含列标题的元素。
+    -   **aria-colindex** - 宣布列的可见索引。
+    -   **aria-colspan** - 仅在列跨多列时存在，它帮助引导屏幕阅读器。
+    -   **aria-expanded** - 仅在分组标题中存在，它宣布展开状态。
+    -   **aria-sort** - 仅在可排序列中存在，它宣布排序状态。
+-   **role="gridcell"** - 包含表格单元格的元素。
+    -   **aria-colindex** - 宣布单元格的可见索引。
+    -   **aria-selected** - 仅在单元格可选择时存在，它宣布选择状态。
+    -   **aria-expanded** - 仅在组单元格中存在，它宣布展开状态。
+-   **role="tablist"** - 作为单级选项卡项容器的元素。
+-   **role="tab"** - 将元素标记为选项卡列表项。
+-   **role="tree"** - 作为可能有多个级别的项目容器的元素。
+-   **role="treeitem"** - 将元素标记为树的项目。
+    -   **aria-level** - 宣布树的当前级别。
+    -   **aria-expanded** - 仅在项目有子项时存在，它宣布当前展开状态。
+-   **role="listbox"** - 作为将作为列表呈现的多个元素容器的元素。
+-   **role="option"** - 将元素标记为列表框的项目。
+    -   **aria-setsize** - 宣布列表框中的项目总数。
+    -   **aria-posinset** - 宣布项目在集合中的位置。
+    -   **aria-selected** - 仅在项目可选择时存在，它宣布当前选择状态。
+    -   **aria-checked** - 仅在项目有复选框时存在，它宣布当前选中状态。
+-   **role="presentation"** - 表示应忽略元素。
+-   **aria-hidden="true"** - 表示元素和子元素应被忽略。
+-   **aria-label** - 用于提供有关当前聚焦项目的信息。
+-   **aria-labelledby** - 用于提供具有当前聚焦元素标签的元素的 id。
+-   **aria-describedby** - 用于提供有关当前选择项目的附加信息。
+
+这些属性将使屏幕阅读器能够解释和导航表格的列和行。
+
+{% note %}
+其他一些表格声称支持复杂的表格布局和交互，但根据我们自己的独立测试和从用户那里收到的反馈，这显然不是事实。
+{% /note %}
+
+## 为无障碍访问自定义表格
+
+为了支持大型数据集，同时最小化内存占用和响应式用户体验，表格使用行和列虚拟化，根据需要加载新的行和列。然而，屏幕阅读器假设表格的所有元素在页面加载时都已加载，并且它们按照视觉外观的顺序出现在 DOM 中。为了满足这些要求，我们建议进行以下更改。
+
+### 确保 DOM 元素顺序
+
+默认情况下，行和列在 DOM 中可能以错误的顺序出现。这种"错误顺序"可能导致屏幕阅读器解析时产生不一致的结果。
+
+要强制行和列顺序，启用以下 gridOptions 属性：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    ensureDomOrder: true,
+}
+```
+
+### 禁用组粘性行
+
+默认情况下，分组时，行的当前父级在滚动时"粘"在表格顶部。这导致行处于"错误顺序"，并导致屏幕阅读器解析时行索引的公告不一致。
+
+要禁用组粘性行，在 gridOptions 中设置 `suppressGroupRowsSticky={true}`：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    suppressGroupRowsSticky: true,
+}
+```
+
+{% note %}
+强制 DOM 顺序时动画将无法正常工作，因此请确保未启用它们。
+{% /note %}
+
+### 确保所有表格元素始终渲染
+
+为了确保所有表格元素都已加载，您需要禁用列和行虚拟化。最好的方法是使用[分页](./row-pagination/)。这样可以减少初始加载时间和内存占用，同时确保这些行的所有元素都已加载供屏幕阅读器使用。
+
+如果您的要求是使用滚动而不是分页，您可以禁用行虚拟化，但代价是增加内存占用。请测试其性能，如果不满意，请切换到使用分页。
+
+可以按以下方式禁用列虚拟化：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    suppressColumnVirtualisation: true,
+}
+```
+
+这意味着如果您有100列，但由于滚动只有10列可见，所有100列将始终被渲染。
+
+可以按以下方式禁用行虚拟化：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    suppressRowVirtualisation: true,
+}
+```
+
+但请注意，大量渲染的行将意味着 DOM 中有大量渲染，这将减慢速度。
+
+## 为无障碍访问自定义的表格示例
+
+下面的示例展示了一个简单的表格布局，启用了以下属性：
+
+-   `ensureDomOrder` - 确保 DOM 中的行和列始终以与表格中显示的相同顺序出现。
+-   `suppressColumnVirtualisation` 和 `suppressRowVirtualisation` - 确保所有列和行出现在 DOM 中。
+
+{% gridExampleRunner title="为无障碍访问自定义的表格" name="accessibility" /%}
+
+## 自定义 ARIA 标签
+
+表格对于 `rows`、`group cells`、`filters`、`search fields` 等区域有默认的 ARIA 标签。如果需要自定义这些标签，可以通过更改 ARIA 的[本地化变量](./localisation/)来实现。请参阅[本地化示例](./localisation/#customising-a-provided-locale)，检查项目或使用屏幕阅读器查看自定义效果。
+
+## 已知限制
+
+在 AG Grid 中使用高级功能会使 DOM 结构与屏幕阅读器所做的假设不兼容。这导致在使用特定功能时存在一些无障碍限制：
+
+-   ### 导航到固定行/列
+
+    屏幕阅读器假设视觉和 DOM 元素顺序相同。具体来说，当您固定一行/列时，它会导致元素在不同的容器中渲染。这就是为什么您不能使用屏幕阅读器导航到固定行/列单元格，因为实际上，这意味着它们在与可滚动的其他列/行不同的元素中渲染。
+
+-   ### 全宽行
+
+    全宽行在不同的容器中渲染，因此屏幕阅读器无法宣布它们，原因与`固定行/列`相同。这也包括行分组，当 `groupDisplayType="groupRows"` 时
+
+-   ### 分组列中宣布正确列名的限制
+
+    即使所有 aria 标签都已应用于必要的元素，当表格结构变得更复杂时（例如分组列），一些屏幕阅读器在导航标签时也会遇到困难。这就是为什么在宣布正确的列名时存在一些限制。
+
+-   ### 不宣布表格单元格或表格标题的状态更改
+
+    一些屏幕阅读器不会识别当前聚焦元素发生的更改（包括此元素的子元素）。因此，为了检测更改（例如排序状态、更新标签等），您需要将焦点移到另一个元素然后再移回。
+
+-   ### 服务器端行模型
+    使用服务器端行模型（SSRM）时不支持宣布表格中的行数。这是因为在使用 SSRM 的所有场景中无法知道行数。

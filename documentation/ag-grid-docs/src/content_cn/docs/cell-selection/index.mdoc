@@ -1,0 +1,137 @@
+---
+title: '单元格选择'
+enterprise: true
+---
+
+单元格选择允许类似 Excel 的单元格范围选择。单元格选择对于视觉上突出显示数据、将数据复制到[剪贴板](./clipboard/)或使用[状态栏](./status-bar/)进行聚合非常有用。
+
+## 启用单元格选择
+
+通过将 `gridOptions.cellSelection` 设置为 `true` 或配置对象来启用单元格选择。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    cellSelection: true,
+}
+```
+
+启用后，可以通过以下方式选择范围：
+
+-   **鼠标拖动：** 在单元格上按下鼠标并拖动到另一个单元格上释放。将在两个单元格之间创建范围并清除任何现有范围。
+
+-   **Ctrl + 鼠标拖动：** 在使用鼠标拖动创建范围时按住 {% kbd "^ Ctrl" /%} 键**在现有范围外**将创建新的单元格范围选择并保留任何现有范围。
+
+-   **Shift + 点击：** 点击一个单元格以聚焦该单元格，然后按住 {% kbd "⇧ Shift" /%} 同时点击另一个单元格，将在两个单元格之间创建范围。
+
+-   **Shift + 方向键：** 聚焦一个单元格，然后按住 {% kbd "⇧ Shift" /%} 并使用方向键将从聚焦单元格开始创建范围。
+
+-   **Ctrl + Shift + 方向键：** 聚焦一个单元格，然后按住 {% kbd "^ Ctrl" /%} + {% kbd "⇧ Shift" /%} 并使用方向键将从聚焦单元格到按下方向键方向的最后一个单元格创建范围。
+
+### 单元格范围取消选择
+
+可以通过以下方式取消选择现有范围的一部分：
+
+-   **Ctrl + 鼠标拖动：** 按住 {% kbd "^ Ctrl" /%} 并**在现有范围内**开始拖动范围将导致新范围覆盖的任何单元格被取消选择。
+
+-   **Ctrl + 点击：** 按住 {% kbd "^ Ctrl" /%} 并点击单元格将仅取消选择该单元格。
+
+请注意，取消选择范围的一部分可以将范围拆分为多个范围，因为单个范围有限制必须是矩形。
+
+下面的示例演示了简单的单元格选择。可以以上述所有方式选择单元格范围。
+
+{% gridExampleRunner title="单元格范围选择和取消选择" name="range-selection" /%}
+
+## 防止选择多个范围
+
+默认情况下可以选择多个范围。要将单元格选择限制为单个范围，即使按住 {% kbd "^ Ctrl" /%} 键，也将 `cellSelection.suppressMultiRanges` 设置为 `true`。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    cellSelection: {
+        suppressMultiRanges: true,
+    }
+}
+```
+
+以下示例演示了单个范围单元格选择：
+
+{% gridExampleRunner title="单元格范围选择禁止多个" name="range-selection-suppress-multi" /%}
+
+## 通过列标题选择单元格
+
+用户可以通过将 `cellSelection.enableColumnSelection` 设置为 `true` 并点击列标题或在列标题聚焦时按 {% kbd "↵ Enter" /%} 键来选择列中的所有可见单元格。
+
+-   默认情况下，选择列时会清除所有其他范围。如果您希望保留现有选择，请按住 {% kbd "^ Ctrl" /%} 然后选择列标题。
+-   通过列选择选中的单元格可以通过按住 {% kbd "^ Ctrl" /%} 然后点击列标题来取消选择。
+-   用户可以通过按住 {% kbd "⇧ Shift" /%} 然后点击另一个列标题来扩展列选择的范围。
+-   通过键盘交互时，用户可以在列标题聚焦时按 {% kbd "↵ Enter" /%} 代替点击列标题。
+
+下面的示例演示了此功能，使用以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    cellSelection: {
+        enableColumnSelection: true,
+    }
+}
+```
+
+{% gridExampleRunner title="通过列标题选择单元格" name="column-header-cell-selection" /%}
+
+{% note %}
+启用列选择时，[行排序](./row-sorting)需要额外按住 {% kbd "⌥ Alt" /%} 键才能进行正常交互（即点击或按 {% kbd "↵ Enter" /%}）。
+
+类似地，通过键盘进行[列组展开](./column-groups)需要额外按住 {% kbd "⌥ Alt" /%} 键才能按 {% kbd "↵ Enter" /%}。
+{% /note %}
+
+## 固定列和行的范围
+
+可以选择跨越表格固定和非固定部分的单元格范围。如果这样做，所选范围在列或行顺序方面不会有任何间隙。
+
+例如，如果您在左侧固定区域开始拖动并拖动到右侧固定区域，则中心区域的所有列也将成为范围的一部分。同样对于固定行，如果单元格范围跨越固定行，则不会出现行间隙。范围将在固定到顶部的行、中心和固定到底部的行之间连续。
+
+可以这样理解：如果您有固定行和/或列的表格，那么在脑海中"展平"表格，使所有行和列都可见，然后单元格选择将在展平版本中按预期工作，其中只有完整矩形可选。
+
+{% gridExampleRunner title="单元格范围选择和固定区域" name="range-selection-pinned-areas" /%}
+
+## 突出显示标题
+
+可以通过将 `cellSelection.enableHeaderHighlight` 设置为 `true` 来突出显示作为范围一部分的表格标题。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    cellSelection: {
+        enableHeaderHighlight: true,
+    }
+}
+```
+
+{% gridExampleRunner title="单元格范围选择标题突出显示" name="range-selection-highlight-headers" /%}
+
+## 向下复制单元格范围
+
+当您在范围中选择了多行时，按 {% kbd "^ Ctrl" /%}+{% kbd "D" /%} 键将把顶行值复制到所选范围的所有其他行。
+
+默认情况下，通过[导出时使用值格式化器](./value-formatters/#formatting-for-export)和[导入时使用值解析器](./value-parsers/#use-value-parser-for-import)功能，在复制范围时将使用值格式化器和值解析器。
+
+## 批量单元格编辑
+
+当启用[单元格编辑](./cell-editing/)并选择了单元格范围时，键入以输入新值并按 {% kbd "^ Ctrl" /%}+{% kbd "↵ Enter" /%} 键将把新提供的单元格值设置到所选单元格范围中的所有可编辑单元格。
+
+## 删除单元格范围
+
+当启用[单元格编辑](./cell-editing/)时，按 {% kbd "Delete" /%} 键将清除范围中的所有单元格（通过将单元格值设置为 `null`）。如果您的列使用 `valueParser`，它将接收空字符串（`''`）作为新值。
+
+这还将触发以下事件：
+
+{% apiDocumentation source="grid-events/events.json" section="editing" names=["cellSelectionDeleteStart","cellSelectionDeleteEnd"] /%}
+
+## API 参考
+
+{% note %}
+单元格选择状态可以作为[表格状态](./grid-state/)的一部分保存和恢复。
+{% /note %}
+
+在这里，您可以找到 `cellSelection` 的所有配置选项的完整列表。
+
+{% interfaceDocumentation interfaceName="CellSelectionOptions" config={"description":""} /%}

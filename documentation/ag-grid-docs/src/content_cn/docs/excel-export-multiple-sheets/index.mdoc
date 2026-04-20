@@ -1,0 +1,60 @@
+---
+title: "Excel 导出 - 多个工作表"
+enterprise: true
+---
+
+Excel 导出提供了将多个工作表的 Excel 文件导出的方法。当您需要将不同网格的数据导出到单个 Excel 文件时，这很有用。
+
+## 工作原理
+
+将网格导出到不同的工作表遵循特定的过程：
+
+1. 您通过在网格实例上调用 `getSheetDataForExcel` 方法开始该过程，以获取为特定工作表导出的数据。
+1. 您在同一个网格上使用不同的数据（或不同的导出参数）或在不同的网格实例上多次调用此方法，并将每个导出的数据集存储为数组的元素。
+1. 一旦所有需要的工作表都存储在数组中，调用 `exportMultipleSheetsAsExcel` 或 `getMultipleSheetsAsExcel` 方法将它们打包到单个 Excel 工作簿中。
+
+{% warning %}
+调用 `getSheetDataForExcel` 会启动一个**多工作表**导出过程，该过程只能通过调用 `exportMultipleSheetsAsExcel` 或 `getMultipleSheetsAsExcel` 方法来结束。在调用这两个方法之一完成过程之前，无法使用 `exportDataAsExcel` 或 `getDataAsExcel` 从网格导出任何数据。
+{% /warning %}
+
+## 使用选定的行
+
+在此示例中，我们使用 `onlySelected=true` 属性将网格数据分割为多个工作表，每个工作表包含 100 行数据。具体来说：
+
+1. 我们使用 `setNodesSelected` 手动选择 100 行。
+2. 然后我们使用带有 `onlySelected` 选项的 `getSheetDataForExcel` 仅为这些选定的节点生成工作表数据。
+3. 然后我们再次取消选择行以避免影响 UI。
+
+请注意以下内容：
+
+-   表头在每个页面上导出，因此每个页面将包含 101 条记录（包括表头）。
+-   因为每个导出没有指定 `sheetName`，它们将被命名为 `ag-grid`、`ag-grid_1`、`ag-grid_2` 等。
+
+{% gridExampleRunner title="Excel 导出 - 带数据选择的多个工作表" name="excel-export-multiple-sheets-selected" /%}
+
+## 使用数据过滤
+
+在此示例中，我们过滤 sport 列以将网格数据分割为多个工作表，每个工作表包含特定 sport 值的所有数据。
+
+请注意以下内容：
+
+-   导出的 Excel 文件将为每个运动结果包含一个工作表。
+-   每个工作表都使用运动名称作为工作表名称导出。
+
+{% gridExampleRunner title="Excel 导出 - 带过滤数据的多个工作表" name="excel-export-multiple-sheets-by-filter" /%}
+
+## 多个网格到多个工作表
+
+在此示例中，我们导出两个网格，每个网格导出到同一个 Excel 文件的单独工作表。将几行从左侧网格拖动到右侧网格，然后单击网格上方的导出按钮。
+
+请注意以下内容：
+
+-   `Athletes` 网格的内容将导出到 `Athletes` 工作表。
+-   `Selected Athletes` 网格的内容将导出到 `Selected Athletes` 工作表。
+-   只有 `onExcelExport` 方法与**Excel 导出**相关
+
+{% gridExampleRunner title="Excel 导出 - 带多个网格的多个工作表" name="excel-export-multiple-sheets-multiple-grids" /%}
+
+## API
+
+### API 方法

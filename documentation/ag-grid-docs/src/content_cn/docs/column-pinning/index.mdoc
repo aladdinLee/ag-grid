@@ -1,0 +1,49 @@
+---
+title: "列固定"
+---
+
+您可以通过将列定义上的 `pinned` 属性设置为 `'left'` 或 `'right'` 来固定列。
+
+```{% frameworkTransform=true suppressFrameworkContext=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'athlete', pinned: 'left' }
+    ],
+}
+```
+
+下面显示了一个示例，左侧有三个固定列，右侧有一个固定列。该示例还演示了在运行时通过 API 更改固定。
+
+网格将重新排列列，使"左固定"列排在前面，"右固定"列排在最后。在下面的示例中，固定列的状态会影响列的顺序，因此当"Country"被固定时，它会跳到第一位置。
+
+{% gridExampleRunner title="Column Pinning" name="column-pinning"  exampleHeight=570 /%}
+
+## 通过列拖动固定
+
+可以通过以下方式移动列来固定列：
+
+-   当其他列被固定时，将列拖到现有的固定区域。
+-   当没有列被固定时，将列拖到网格的边缘并等待大约一秒钟。然后网格会假设您想要固定并创建一个固定区域并将列放入其中。
+
+{% video videoSrc="resources/pinning-by-moving.mp4" centered=true /%}
+
+## 调整固定区域的大小
+
+调整固定列的大小时，固定区域（左侧和右侧）的大小将限制为 `grid - 50px` 的大小。这将防止网格的中心视口变得不可访问。出于同样的原因，如果过宽的列被固定，网格将自动从固定区域取消固定列，以使中心视口再次可见。要自定义被取消固定的列，请提供网格选项 `processUnpinnedColumns`。
+
+{% apiDocumentation source="grid-options/properties.json" section="columnPinning" names=["processUnpinnedColumns"] /%}
+
+## 锁定固定
+
+如果您不希望用户能够使用 UI 进行固定，请设置属性 `lockPinned=true`。这将以以下方式阻止 UI：
+
+-   将列拖到固定区域不会固定该列。
+-   对于 AG Grid Enterprise，列菜单将没有固定选项。
+
+下面的示例演示了固定被锁定的列。可以注意到以下几点：
+
+-   列 **Athlete** 通过配置固定，并且 `lockPinned=true`。这意味着该列将始终被固定，无法将列拖出固定区域。
+-   列 **Age** 未固定，并且 `lockPinned=true`。这意味着无法通过拖动列来固定该列。
+-   所有其他列正常工作。可以通过拖动将它们添加到固定区域或从固定区域移除。
+
+{% gridExampleRunner title="Lock Pinned" name="lock-pinned" /%}

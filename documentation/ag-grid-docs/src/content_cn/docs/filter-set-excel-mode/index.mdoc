@@ -1,0 +1,52 @@
+---
+title: "集合筛选器 - Excel 模式"
+enterprise: true
+---
+
+集合筛选器是 Excel 自动筛选器的更强大版本，允许用户在更短的时间内轻松构建更复杂的筛选集合。但是，有时您可能希望为用户提供类似 Excel 的体验。为此，您可以使用 Excel 模式。
+
+## 启用 Excel 模式
+
+要启用 Excel 模式，只需将 `excelMode` 选项添加到筛选器参数：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'animal',
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                // 可以是 'windows' 或 'mac'
+                excelMode: 'windows',
+            },
+        }
+    ]
+}
+```
+
+Excel 的自动筛选器的行为因您使用的是 Windows 还是 Mac 版本而异。因此，网格允许您通过将 `excelMode` 分别设置为 `'windows'` 或 `'mac'` 来选择所需的行为。
+
+下面的示例演示了不同模式之间的差异：
+
+-   **Default** 列演示了网格中集合筛选器的默认行为。
+-   **Excel (Windows)** 列演示了 Windows Excel 模式下集合筛选器的行为。
+-   **Excel (Mac)** 列演示了 Mac Excel 模式下集合筛选器的行为。
+
+{% gridExampleRunner title="Excel 模式" name="excel-mode"  exampleHeight=640 /%}
+
+## 模式之间的差异
+
+下表显示了行为差异以及网格的默认行为以供比较。请注意，可以使用[集合筛选器](./filter-set)页面上详述的其他选项以多种方式更改网格的默认行为。这些选项也可以与 Excel 模式结合使用，以提供最大的灵活性。
+
+{% matrixTable dataFileName="excel-mode"
+    columns={
+        "behaviour": "行为",
+        "agGrid": "默认",
+        "windowsExcel": "Excel (Windows)",
+        "macExcel": "Excel (Mac)"
+    }
+    cellRenderer={
+        "agGrid": "tickCross",
+        "windowsExcel": "tickCross",
+        "macExcel": "tickCross"
+    } /%}

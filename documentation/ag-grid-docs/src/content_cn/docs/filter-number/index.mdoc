@@ -1,0 +1,60 @@
+---
+title: "数字过滤器"
+---
+
+数字过滤器允许您过滤数字数据。
+
+{% imageCaption imagePath="resources/number-filter.png" alt="数字过滤器" centered=true /%}
+
+## 启用数字过滤器
+
+{% gridExampleRunner title="数字过滤器" name="number-filter" /%}
+
+数字过滤器是 AG Grid Community 中具有数字[单元格数据类型](./cell-data-types/)的列的默认过滤器，但也可以显式配置，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'price',
+            // Community 版本中数字列默认使用数字过滤器
+            filter: true,
+            filterParams: {
+                // 向数字过滤器传递其他参数
+            },
+        },
+        {
+            field: 'quantity',
+            // 显式配置列使用数字过滤器
+            filter: 'agNumberColumnFilter',
+            filterParams: {
+                // 向数字过滤器传递其他参数
+            },
+        },
+    ],
+}
+```
+
+## 数字过滤器参数
+
+数字过滤器通过列定义的 `filterParams` 属性配置（`INumberFilterParams` 接口）：
+
+{% interfaceDocumentation interfaceName="INumberFilterParams" overrideSrc="filter-number/number-filter-params.json" config={"description":"", "sortAlphabetically":true} /%}
+
+## 自定义数字支持
+
+数字过滤器的默认行为是使用 `number` 输入，但这具有混合的浏览器支持和行为。如果要覆盖默认行为，或允许用户键入其他字符（例如货币符号、千位逗号等），数字过滤器允许您控制允许用户键入的字符。在这种情况下，使用 `text` 输入，JavaScript 控制允许用户的字符（而不是浏览器）。您还可以提供自定义逻辑将提供的值解析为用于过滤的数字。
+
+通过指定类似于以下的配置来启用自定义数字支持：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'age',
+            filter: 'agNumberColumnFilter',
+            filterParams: {
+                // 注意：确保像从字符串创建 RegExp 一样转义
+                allowedCharPattern: '\\d\\-\\,',
+                numberParser: text => {
+                    return text == null ? null : parseFloat(text.replace(',', '.'));

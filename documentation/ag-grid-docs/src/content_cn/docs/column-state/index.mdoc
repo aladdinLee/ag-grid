@@ -1,0 +1,166 @@
+---
+title: "列状态"
+---
+
+{% if isFramework("javascript", "angular", "vue") %}
+列定义包含有状态和无状态属性。有状态属性的值可以由网格更改（例如，用户单击列标题可以更改列排序）。无状态属性不会从列定义中设置的值更改（例如，一旦将标题名称设置为列定义的一部分，它通常不会更改）。
+{% /if %}
+
+{% if isFramework("react") %}
+{% videoSection id="d9Kohpbt42M" title="React Column State" showHeader=true %}
+列定义包含有状态和无状态属性。有状态属性的值可以由网格更改（例如，用户单击列标题可以更改列排序）。无状态属性不会从列定义中设置的值更改（例如，一旦将标题名称设置为列定义的一部分，它通常不会更改）。
+{% /videoSection %}
+{% /if %}
+
+{% note %}
+DOM 也有有状态和无状态属性。例如，考虑一个 DOM 元素，设置 `element.style.width="100px"` 将无限期地将宽度设置为 100 像素，浏览器不会更改此值。但是设置 `element.scrollTop=200` 将设置滚动位置，但浏览器可以在用户交互后进一步更改滚动位置，因此滚动位置是有状态的，因为浏览器可以更改状态。
+{% /note %}
+
+列的有状态属性的完整列表由 `ColumnStateParams` 接口表示：
+
+{% interfaceDocumentation interfaceName="ColumnStateParams" config={ "description": "" } /%}
+
+本节详细介绍了如何在不更新列定义的情况下操作此类状态项。
+
+## 保存和应用状态 {% #save-and-apply %}
+
+{% note %}
+如果您只对在网格初始化时恢复列状态感兴趣，您应该考虑使用[初始状态](./grid-state/)，它包含所有列状态属性。
+{% /note %}
+
+提供了两个 API 方法用于获取和设置列状态。`api.getColumnState()` 获取当前列状态，`api.applyColumnState(params)` 设置列状态。
+
+{% apiDocumentation source="grid-api/api.json" section="state" names=["getColumnState", "applyColumnState", "resetColumnState"] /%}
+
+下面的示例演示了保存和恢复列状态。尝试以下操作：
+
+1. 单击 'Save State' 保存列状态。
+1. 更改一些列状态，例如调整列大小、移动列、应用列排序或行分组等。
+1. 单击 'Restore State'，列状态将恢复到您单击 'Save State' 时的状态。
+1. 单击 'Reset State'，状态将恢复到列定义中定义的状态。
+
+{% gridExampleRunner title="Save and Apply State" name="save-apply-state" /%}
+
+## 部分状态
+
+在获取和/或应用列状态时，可以专注于特定列和/或特定属性。这允许对列状态进行细粒度控制，例如设置哪些列被固定，而不影响任何其他状态属性。
+
+### 应用部分状态
+
+应用列状态时，如果列状态中缺少某些状态属性或列，则适用以下规则：
+
+-   未提供或设置为 `undefined` 的属性将保持不变。例如，如果列的列状态只有 `pinned`，则固定将应用于该列，但其他属性（如 `sort`）将保持不变。
+
+-   当应用状态时，网格中有其他未在提供的状态中出现的列，则 `params.defaultState` 将应用于这些额外的列。
+
+-   如果未提供 `params.defaultState`，则网格中的任何额外列都不会更新。
+
+将这些规则结合在一起可以实现灵活的细粒度状态控制。以下面的代码片段为例：
+
+```{% frameworkTransform=true %}
+// 将 Athlete 列升序排序
+api.applyColumnState({
+    state: [
+        {
+            colId: 'athlete',
+            sort: 'asc'
+        }
+    ]
+});
+// 将 Athlete 列升序排序并清除所有其他列的排序
+api.applyColumnState({
+    state: [
+        {
+            colId: 'athlete',
+            sort: 'asc'
+        }
+    ],
+    defaultState: {
+        // 重要：说 'null'，因为 undefined 意味着 '什么都不做'
+        sort: null
+    }
+});
+// 清除所有列的排序，保持所有其他属性不变
+api.applyColumnState({
+    defaultState: {
+        // 重要：说 'null'，因为 undefined 意味着 '什么都不做'
+        sort: null
+    }
+});
+// 清除所有列的排序、行分组、透视和固定，保持所有其他属性不变
+api.applyColumnState({
+    defaultState: {
+        // 重要：说 'null'，因为 undefined 意味着 '什么都不做'
+        sort: null,
+        rowGroup: null,
+        pivot: null,
+        pinned: null
+    }
+});
+// 对列排序，但不做其他任何事情
+api.applyColumnState({
+    state: [
+        { colId: 'athlete' },
+        { colId: 'country' },
+        { colId: 'age' },
+        { colId: 'sport' }
+    ],
+    applyOrder: true
+});
+```
+
+下面的示例显示了对列状态的一些细粒度访问。
+
+{% gridExampleRunner title="Fine Grained State" name="fine-grained-state" /%}
+
+### 保存部分状态
+
+使用上述技术，可以保存和恢复状态中参数的子集。下面的示例通过有选择地保存和恢复 a) 排序状态，和 b) 列可见性和顺序状态来演示这一点。
+
+请注意，当保存和恢复排序状态时，其他状态属性（宽度、行分组、列顺序等）不会受到影响。
+
+同样，当保存和恢复可见性和顺序时，重新应用状态时只会影响可见性和顺序。
+
+{% gridExampleRunner title="Selective State" name="selective-state" /%}
+
+## 注意事项
+
+对于特定的状态属性，有一些需要注意的事项。它们如下：
+
+### null vs undefined
+
+对于所有状态属性，`undefined` 意味着_"不应用此属性"_，`null` 意味着_"清除此属性"_。
+
+例如，设置 `sort=null` 将清除列上的排序，而设置 `sort=undefined` 将保留当前存在的任何排序。
+
+唯一的例外是列宽度。不支持设置 `null`，因为宽度是强制性的 - 没有宽度的列是不存在的。
+
+### 行分组和透视
+
+有两个属性表示行分组和透视。首先使用布尔属性 `rowGroup` 和 `pivot`，其次使用索引属性 `rowGroupIndex` 和 `pivotIndex`。
+
+当调用 `getColumnState()` 时，所有 `rowGroup`、`pivot`、`rowGroupIndex` 和 `pivotIndex` 都会被返回。当调用 `applyColumnState()` 时，优先使用索引变体。例如，如果同时存在 `rowGroup` 和 `rowGroupIndex`，则应用 `rowGroupIndex`。
+
+## 列事件
+
+应用列状态时将引发列事件，因为这些事件通常会引发。例如，如果应用状态导致列被固定或取消固定，则将引发 `columnPinned` 事件。
+
+下面的示例演示了基于列状态更改引发的事件。该示例将事件信息记录到控制台。
+
+{% gridExampleRunner title="Column Events" name="column-events" /%}
+
+## 列组状态
+
+列组状态关注列组的状态。列组只有一个状态属性，即组是打开还是关闭。
+
+要获取列组的状态，请使用 API 方法 `api.getColumnGroupState()`。要设置列组状态，请使用 API 方法 `api.setColumnGroupState(stateItems)`。
+
+{% apiDocumentation source="grid-api/api.json" section="state" names=["getColumnGroupState", "setColumnGroupState", "resetColumnGroupState"] /%}
+
+下面的示例演示了获取和设置列组状态。请注意以下几点：
+
+-   单击 'Save State' 将保存列组的打开/关闭状态。
+-   单击 'Restore State' 将恢复之前保存的状态。
+-   单击 'Reset State' 将重置列状态以匹配列定义，即所有列组都将关闭。
+
+{% gridExampleRunner title="Column Group State" name="column-group-state" /%}

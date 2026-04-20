@@ -1,0 +1,89 @@
+---
+title: "交叉过滤图表 API"
+enterprise: true
+---
+
+交叉过滤图表允许用户以简单直观的方式与数据交互。单击图表元素会自动过滤网格和其他交叉过滤图表中的值。
+
+{% gif imagePath="resources/cross-filtering.gif" alt="Cross Filtering" /%}
+
+集成图表的这一内置功能对于创建交互式报告和仪表板特别有用。
+
+## 创建交叉过滤图表
+
+交叉过滤图表是通过网格 API 上的 `createCrossFilterChart(params)` 以编程方式创建的。
+
+{% apiDocumentation source="grid-api/api.json" section="charts" names=["createCrossFilterChart"] /%}
+
+以下代码片段显示了如何创建交叉过滤饼图：
+
+```{% frameworkTransform=true %}
+api.createCrossFilterChart({
+    chartType: 'pie',
+    cellRange: {
+        columns: ['salesRep', 'sale'],
+    },
+    aggFunc: 'sum',
+});
+```
+
+请注意，在上面的代码片段中，`sale` 值按 `salesRep` 类别聚合，因为指定了 `aggFunc: 'sum'`。
+
+以下代码片段显示了上述图表的相应列配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'salesRep', filter: 'agSetColumnFilter', chartDataType: 'category' },
+        { field: 'sale', chartDataType: 'series' },
+    ],
+}
+```
+
+{% note %}
+交叉过滤图表仅支持客户端行模型。需要在类别列上启用网格过滤，使用[集合过滤器](./filter-set/)或[多重过滤器](./filter-multi/)。定义[图表数据类型](./integrated-charts-range-chart/#coldefchartdatatype)也很重要，因为当所有数据都被过滤掉时无法推断类型。
+{% /note %}
+
+以下示例显示了如何创建简单的交叉过滤饼图。请注意以下几点：
+
+-   **单击**饼图的一个扇区以按所选销售代表过滤网格中的行。
+-   **Ctrl (Cmd) 单击**另一个扇区以另外添加与所选销售代表对应的行。
+-   **单击图表背景**以删除/重置网格中的过滤以恢复网格中的所有行。
+
+{% gridExampleRunner title="简单交叉过滤" name="simple-cross-filter"  exampleHeight=680 /%}
+
+## 交叉过滤 API
+
+交叉过滤 API 与[范围图表](./integrated-charts-api-range-chart/)共享类似的 API，但是有不同的默认值，这些默认值对交叉过滤有意义。
+
+{% apiDocumentation source="grid-api/api.json" section="charts" names=["createCrossFilterChart"] /%}
+
+{% br /%}
+
+{% interfaceDocumentation interfaceName="CreateCrossFilterChartParams" overrideSrc="integrated-charts-api-cross-filter-chart/cross-filter-api.json" /%}
+
+## 交叉过滤图表类型
+
+以下示例显示了支持交叉过滤的不同图表类型：
+
+### 示例：销售仪表板 #1
+
+{% gridExampleRunner title="销售仪表板" name="sales-dashboard"  exampleHeight=1000 /%}
+
+### 示例：销售仪表板 #2
+
+{% gridExampleRunner title="销售仪表板 2" name="sales-dashboard2"  exampleHeight=1000 /%}
+
+### 示例：人口最多的城市
+
+{% gridExampleRunner title="人口最多的城市" name="most-populous-cities"  exampleHeight=1000 /%}
+
+### 示例：自定义主题
+
+在此示例中，我们使用自定义主题通过 `customChartTheme` 和 `chartTheme` 设置图表样式。有关更多信息，请参阅[自定义图表主题](./integrated-charts-customisation/#custom-chart-themes)部分。
+
+{% note %}
+请注意，对于交叉过滤图表中的外观更改，必须使用自定义主题。交叉过滤图表依赖主题从现有主题颜色派生过滤值颜色。在主题覆盖中指定自己的颜色将禁用此行为。
+{% /note %}
+
+{% gridExampleRunner title="自定义主题" name="custom-theme"  exampleHeight=1000 /%}

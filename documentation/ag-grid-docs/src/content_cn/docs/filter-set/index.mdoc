@@ -1,0 +1,60 @@
+---
+title: "集合过滤器 - 概述"
+enterprise: true
+description: "集合过滤器的工作方式类似于 Excel，提供复选框以从集合中选择值。"
+---
+
+集合过滤器从 Excel 的自动过滤器中汲取灵感，允许对数据集进行过滤。
+
+{% imageCaption imagePath="resources/set-filter.png" alt="集合过滤器" centered=true /%}
+
+## 集合过滤器部分
+
+集合过滤器由以下部分组成：
+
+-   **[迷你过滤器](./filter-set-mini-filter/)**：用于缩小过滤器列表中可供选择的值。
+-   **全选**：用于选择/取消选择过滤器列表中显示的所有值。
+-   **[过滤器列表](./filter-set-filter-list/)**：可以选择/取消选择的集合过滤器值列表，用于设置过滤器。
+-   **[过滤器按钮](./filter-applying/#apply-clear-reset-and-cancel-buttons)**：可以选择性地添加到集合过滤器底部的操作按钮。
+
+## 启用集合过滤器
+
+集合过滤器是 AG Grid Enterprise 中使用的默认过滤器（除非已[默认禁止](#suppress-set-filter-by-default)或未注册 `SetFilterModule`），但也可以显式配置，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        // Enterprise 版本中默认使用集合过滤器
+        { field: 'athlete', filter: true },
+        // 显式配置列使用集合过滤器
+        { field: 'country', filter: 'agSetColumnFilter' },
+    ],
+}
+```
+
+以下示例演示了如何启用集合过滤器。请注意以下内容：
+
+-   **Athlete** 列具有 `filter=true`，默认为集合过滤器，因为此示例使用 AG Grid Enterprise。
+-   **Country** 列使用 `filter='agSetColumnFilter'` 显式配置为使用集合过滤器。
+-   所有其他列使用 `filter='agNumberColumnFilter'` 配置为使用[数字过滤器](./filter-number/)。
+-   可以通过单击[浮动过滤器](./floating-filters/)中的过滤器图标来访问过滤器。
+
+{% gridExampleRunner title="启用集合过滤器" name="enabling-set-filters"  exampleHeight=565 /%}
+
+## 默认禁止集合过滤器
+
+当 `filter = true` 时，AG Grid Enterprise 默认使用集合过滤器。要根据[单元格数据类型](./cell-data-types/)使用[文本过滤器](./filter-text/)、[数字过滤器](./filter-number/)或[日期过滤器](./filter-date/)（如在 AG Grid Community 中），请设置网格选项 `suppressSetFilterByDefault = true`。
+
+## 集合过滤器参数
+
+集合过滤器通过列定义的 `filterParams` 属性配置（`ISetFilterParams` 接口）：
+
+{% interfaceDocumentation interfaceName="ISetFilterParams" overrideSrc="filter-set/set-filter-params.json" config={"description":"", "sortAlphabetically":true} /%}
+
+### 更新集合过滤器参数
+
+当使用更新的集合过滤器参数设置新的列定义时，集合过滤器将更新以反映这些参数。对于某些过滤器参数，更改参数将使过滤器模型无效。这将导致过滤器重置。
+
+以下过滤器参数将重置集合过滤器 - `treeList`、`treeListPathGetter`、`caseSensitive`、`comparator` 和 `excelMode`。
+
+此外，一些列定义属性也会重置集合过滤器 - `filterValueGetter`、`keyCreator`（除非在旧的和新的过滤器参数中都指定），以及 `valueFormatter`（如果没有 `keyCreator` 且[单元格数据类型](./cell-data-types/#pre-defined-cell-data-types)不是 `'number'` 或 `'text'`）。

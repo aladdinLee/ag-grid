@@ -1,0 +1,49 @@
+---
+title: "活动覆盖层"
+---
+
+应用程序可以按需显示覆盖层，而不考虑网格状态。这是通过提供活动覆盖层来实现的，活动覆盖层可以是提供的覆盖层之一，也可以是自定义覆盖层组件。
+
+{% gridExampleRunner title="活动覆盖层（组件类）" name="active-overlay-component" exampleHeight=350 /%}
+
+## 显示活动覆盖层
+
+要按需显示覆盖层，请设置 `activeOverlay` / `activeOverlayParams` 网格选项。要清除覆盖层，请设置 `activeOverlay = undefined`。
+
+{% apiDocumentation source="grid-options/properties.json" section="overlays" names=["activeOverlay", "activeOverlayParams"] /%}
+
+{% if isFramework("javascript", "angular") %}
+实现 `IOverlayComp` 接口以提供自定义覆盖层，网格将在创建或刷新组件时提供 `IOverlayParams`。
+{% /if %}
+{% if isFramework("angular") %}
+{% interfaceDocumentation interfaceName="IOverlayAngularComp" config={"asCode":true } /%}
+{% /if %}
+{% if isFramework("javascript") %}
+{% interfaceDocumentation interfaceName="IOverlayComp" config={"asCode":true } /%}
+{% /if %}
+
+{% if isFramework("vue") %}
+任何有效的 Vue 组件都可以使用，但是可选的 `IOverlay` 接口公开接收 `IOverlayParams` 的生命周期钩子。
+{% /if %}
+
+{% if isFramework("vue") %}
+{% interfaceDocumentation interfaceName="IOverlay" config={"asCode":true } /%}
+{% /if %}
+
+下面的示例演示使用网格提供的覆盖层作为活动覆盖层。请注意以下几点：
+
+{% if isFramework("javascript", "angular","react") %}
+
+- activeOverlays 优先于提供的加载覆盖层。
+- 无论网格状态如何，都可以显示 activeOverlay，即即使有行也显示无行覆盖层。
+- StatusOverlay 在[组件](./components/#2-by-name)映射中注册，并通过设置 `activateOverlay = "statusOverlay"` 为使用的键来显示。
+
+{% /if %}
+{% if isFramework("vue") %}
+
+- activeOverlays 优先于提供的加载覆盖层。
+- 无论网格状态如何，都可以显示 activeOverlay，即即使有行也显示无行覆盖层。
+- StatusOverlay 在[组件](./components/#registering-custom-components)映射中注册，并通过设置 `activateOverlay = "statusOverlay"` 为使用的键来显示。
+
+{% /if %}
+{% gridExampleRunner title="活动覆盖层切换器" name="active-overlay-switcher" exampleHeight=350 /%}

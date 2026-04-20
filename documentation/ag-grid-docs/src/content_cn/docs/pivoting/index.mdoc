@@ -1,0 +1,94 @@
+---
+title: "透视"
+enterprise: true
+---
+
+透视在另一个维度上分解数据。
+
+透视可以在表格列定义中配置，也可以使用表格 API 应用。用户还可以通过 UI 使用[侧边栏](./pivoting/#using-the-side-bar)或[透视面板](./pivoting/#enabling-the-pivot-panel/)配置透视，如下所示：
+
+{% gridExampleRunner title="透视概述" name="pivot-overview" exampleHeight=650 /%}
+
+## 启用透视
+
+要启用透视，在 gridOptions 中设置 `pivotMode: true` 并在所需列上启用 `pivot` 列属性，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroup: true },
+        { field: 'gold', aggFunc: 'sum' },
+        { field: 'sport', pivot: true },
+    ],
+    pivotMode: true,
+};
+```
+
+在上面的代码片段中，行在 `Country` 列上[分组](./grouping)，并[聚合](./aggregation)以计算每个国家赢得的 `Gold` 奖牌总数。您必须提供至少一个聚合列，因为透视时只显示聚合行。
+
+然后将透视应用于 `Sport` 列值，这会生成一个[透视结果列](./pivoting-result-columns/)，显示每个国家在每个运动项目中赢得的 `Gold` 奖牌总数，如本例所示：
+
+{% gridExampleRunner title="简单示例" name="simple" /%}
+
+{% note %}
+启用[树形数据](./tree-data)的透视目前不受支持。透视只能与[行分组](./grouping)一起使用。
+{% /note %}
+
+## 通过 UI 配置
+
+透视通常由最终用户控制，而不是由开发人员配置。表格为用户提供了一些 UI 选项来控制这些设置。
+
+### 使用侧边栏
+
+[侧边栏](./side-bar)是透视最常见的控件，因为它允许用户切换透视模式（相当于设置表格选项 `pivotMode`），以及通过右键单击上下文菜单或拖放设置[行分组](./grouping)、[聚合](./aggregation)和透视列。
+
+{% gridExampleRunner title="侧边栏" name="side-bar" exampleHeight=600 /%}
+
+在上面的示例中，`Sport` 列配置了 `enablePivot: true`。这使用户能够使用 UI 控件按列进行透视，例如当在侧边栏中右键单击列时，将 `Sport` 添加到标签的选项变得可用。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        // ...其他列定义
+        { field: 'sport', enablePivot: true },
+    ],
+    sideBar: 'columns',
+    pivotMode: true,
+};
+```
+
+有关配置[侧边栏](./side-bar)的更多信息，请参阅[列工具面板](./tool-panel-columns/)文档。
+
+### 启用透视面板
+
+透视面板是一个替代的 UI 控件，用于允许用户控制透视列。它是附加到表格顶部的面板，类似于[行组面板](./grouping-group-panel)，允许用户通过拖放重新排序、删除或添加透视列。
+
+下面的示例演示了透视面板与[列工具面板](./tool-panel-columns/)一起使用，该面板已配置为通过隐藏透视部分来增加[侧边栏](./side-bar)中的可用空间。
+
+{% gridExampleRunner title="启用透视面板" name="pivot-panel"  /%}
+
+这使用以下配置仅在透视激活时显示透视面板：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        // ...其他列定义
+        { field: 'sport', pivot: true, enablePivot: true },
+        { field: 'year', pivot: true, enablePivot: true },
+    ],
+    pivotMode: true,
+    pivotPanelShow: 'onlyWhenPivoting',
+};
+```
+
+## 透视模式与透视激活
+
+即使表格上没有激活透视，也可以打开透视模式。当一个或多个透视列用作列标签时，透视处于激活状态。在这种情况下，表格将正常显示数据，但将删除没有分组或值激活的列。
+
+下面的示例演示了透视模式与激活透视的列之间的区别。该示例有三种操作模式，可以使用顶部按钮在它们之间切换。模式如下：
+
+-   **1 - 分组激活：** 这是正常分组。表格使用 Gold、Silver 和 Bronze 的聚合进行分组。用户可以钻取到最低级别的行数据，并且没有聚合或分组的列（例如 Country、Year、Date 和 Sport）会显示。
+
+-   **2 - 分组激活与透视模式：** 这是 `pivotMode=true` 的分组，但没有激活任何透视。显示的数据与第一个选项相同，只是表格删除了对最低级别行数据的访问，并且不显示没有聚合或分组的列。
+
+-   **3 - 分组激活与透视模式和透视激活：** 这是 `pivotMode=true` 和透视激活的分组。请注意，Year 列已添加到列标签，现在每年的透视结果列都存在。

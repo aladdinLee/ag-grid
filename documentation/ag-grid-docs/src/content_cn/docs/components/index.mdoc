@@ -1,0 +1,424 @@
+---
+title: "自定义组件"
+---
+
+{% if isFramework("javascript", "vue") %}
+您可以创建自己的自定义组件来自定义网格的行为。例如，您可以自定义单元格的渲染方式、值的编辑方式，还可以创建自己的过滤器。
+{% /if %}
+
+{% if isFramework("react") %}
+{% videoSection id="eglfpHRpcu0" title="React 自定义组件" showHeader=true %}
+您可以创建自己的自定义组件来自定义网格的行为。例如，您可以自定义单元格的渲染方式、值的编辑方式，还可以创建自己的过滤器。
+{% /videoSection %}
+{% /if %}
+
+{% if isFramework("angular") %}
+{% videoSection id="A5-Li_9oPSE" title="Angular 自定义组件" showHeader=true %}
+您可以创建自己的自定义组件来自定义网格的行为。例如，您可以自定义单元格的渲染方式、值的编辑方式，还可以创建自己的过滤器。
+{% /videoSection %}
+{% /if %}
+
+您可以在网格中提供的组件类型的完整列表如下：
+
+-   [单元格组件](./component-cell-renderer/)：自定义单元格的内容。
+-   [表头组件](./column-headers-components/#custom-component)：自定义列的表头。
+-   [内部表头组件](./column-headers-components/#inner-header-component)：自定义列的内部表头。
+-   [表头组组件](./column-groups/#custom-group-component)：自定义列组的表头。
+-   [内部表头组组件](./column-groups/#inner-header-group-component)：自定义列组的内部表头组件。
+-   [编辑组件](./cell-editors/)：自定义单元格的编辑。
+-   [过滤器组件](./component-filter/)：出现在列菜单中的自定义列过滤器。
+-   [浮动过滤器](./component-floating-filter/)：出现在列菜单中的自定义列浮动过滤器。
+-   [日期组件](./filter-date/#custom-selection-component)：自定义日期过滤器中的日期选择组件。
+-   [菜单项组件](./component-menu-item/)：自定义网格菜单中的项目。
+-   [加载组件](./component-loading-cell-renderer/)：使用服务器端行模型时自定义加载单元格行。
+-   [覆盖层组件](./overlays-overview/)：自定义加载、无行、无匹配行和导出覆盖层组件或提供自定义覆盖层。
+-   [状态栏组件](./status-bar/)：自定义状态栏组件。
+-   [工具面板组件](./component-tool-panel/)：自定义工具面板组件。
+-   [工具提示组件](./tooltips/)：自定义单元格工具提示组件。
+
+本页面的其余部分提供了所有组件类型通用的信息。
+
+## 注册自定义组件
+
+{% partial file="./_register-javascript.mdoc" /%}
+{% partial file="./_register-angular.mdoc" /%}
+{% partial file="./_register-react.mdoc" /%}
+{% partial file="./_register-vue.mdoc" /%}
+
+点击 `Push For Total` 按钮将在开发者控制台中记录结果。
+
+{% gridExampleRunner title="注册组件" name="register"  exampleHeight=580 /%}
+
+## 提供额外参数
+
+每个自定义组件都从网格获取一组参数。例如，对于单元格组件，网格提供要渲染的值等。您可以通过提供特定于应用程序的额外参数（例如使用什么货币符号）来为自定义组件提供额外的属性。
+
+要提供额外参数，请使用属性 `[prop-name]Params`，例如 `cellRendererParams`。
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'price',
+            cellRenderer: PriceCellRenderer,
+            cellRendererParams: {
+                currency: 'EUR'
+            }
+        },
+    ],
+}
+```
+
+{% partial file="./_js-fw-angular.mdoc" /%}
+{% partial file="./_js-fw-react.mdoc" /%}
+{% partial file="./_js-fw-vue.mdoc" /%}
+{% partial file="./_js-fw-common-end.mdoc" /%}
+
+{% if isFramework("react") %}
+
+## 高阶组件
+
+{% /if %}
+
+{% if isFramework("react") %}
+如果您使用 `connect` 来使用 Redux，或者您正在使用高阶组件 (HOC) 来包装网格 React 组件，您还需要确保网格可以访问新创建的组件。为此，您需要确保设置了 `forwardRef`：
+{% /if %}
+
+{% if isFramework("react") %}
+
+```jsx
+export default connect((state) => {
+    return {
+        currencySymbol: state.currencySymbol,
+        exchangeRate: state.exchangeRate
+    }
+}, null, null, { forwardRef: true } // 在使用 AgGridReact 时必须为 react/redux 提供
+)(PriceRenderer);
+```
+
+{% /if %}
+
+{% if isFramework("angular", "vue") %}
+
+## 子组件到父组件的通信
+
+{% /if %}
+
+{% if isFramework("angular") %}
+在 Angular 中有多种管理组件通信的方式（共享服务、局部变量等），但您通常需要一种简单的方法让"父"组件知道"子"组件上发生了某些事情。在这种情况下，最简单的方法是使用网格的 `context` 功能来保存对父组件的引用，然后子组件可以访问该引用。
+{% /if %}
+
+{% if isFramework("angular") %}
+
+```ts
+//...其他导入
+import {Component} from '@angular/core';
+import {ICellRendererAngularComp} from 'ag-grid-angular';
+import {CubeComponent} from './cube.component';
+
+@Component({
+  selector: 'app-root',
+  template: `
+      <ag-grid-angular [context]="context" /* ...其他属性 */ />
+  `
+})
+export class AppComponent {
+  constructor() {
+      this.context = {
+          componentParent: this
+      }
+  }
+
+  parentMethod() {
+      // 做一些事情
+  }
+  //...其他属性和方法
+}
+
+@Component({
+  selector: 'cell-renderer',
+  template: `
+      ...组件模板...
+  `
+})
+export class CellRendererComponent implements ICellRendererAngularComp {
+  params: any;
+  componentParent: any;
+
+  agInit(params) {
+      this.params = params;
+      this.componentParent = this.params.context.componentParent;
+      // 现在可以访问网格组件 - 例如：this.componentParent.parentMethod()
+  }
+
+  //...其他属性和方法
+}
+```
+
+{% /if %}
+
+{% if isFramework("angular") %}
+请注意，虽然我们在这里使用了 `componentParent` 作为属性名称，但它可以是任何内容 - 主要点是您可以使用 `context` 机制在组件之间共享信息。
+{% /if %}
+
+{% if isFramework("vue") %}
+在 Vue 中有多种管理组件通信的方式（共享服务、局部变量等），但您通常需要一种简单的方法让"父"组件知道"子"组件上发生了某些事情。在这种情况下，最简单的方法是使用网格的 `context` 功能来保存对父组件的引用，然后子组件可以访问该引用。
+{% /if %}
+
+{% if isFramework("vue") %}
+
+```js
+// 父网格组件
+<template>
+  <ag-grid-vue :context="context" ...其他属性>
+  </ag-grid-vue>
+</template>
+
+<script>
+//...其他导入
+import {AgGridVue} from "ag-grid-vue3";
+import CubeComponent from './CubeComponent.vue';
+
+export default {
+  components: {
+      AgGridVue
+  }
+  data() {
+      return {
+          context: {}
+      }
+  },
+  beforeMount() {
+      this.context = {
+          componentParent: this
+      }
+  },
+  methods: {
+      parentMethod() {
+          // 做一些事情
+      }
+  }
+  //...其他属性和方法
+}
+</script>
+
+// 子网格组件
+<template>
+  <ag-grid-vue ...其他属性>
+  </ag-grid-vue>
+</template>
+
+<script>
+//...其他导入
+
+export default {
+  methods: {
+      doSomethingOnGrid() {
+          // 现在可以通过 this.params.context.componentParent 访问网格组件
+          this.params.context.componentParent.parentMethod()
+      }
+  }
+  //...其他属性和方法
+}
+</script>
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+请注意，虽然我们在这里使用了 `componentParent` 作为属性名称，但它可以是任何内容 - 主要点是您可以使用 `context` 机制在组件之间共享信息。
+{% /if %}
+
+## 组件使用
+
+下表总结了组件、它们的配置位置以及使用的属性。
+
+| 组件                                                                       | 位置                                                    | 属性                                                                        |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [单元格组件](./component-cell-renderer/)                                    | 列定义                                        | cellRenderer{% br /%}cellRendererParams{% br /%}cellRendererSelector             |
+| [编辑器组件](./cell-editors/)                                             | 列定义                                        | cellEditor{% br /%}cellEditorParams{% br /%}cellEditorSelector                   |
+| [过滤器](./component-filter/)                                                   | 列定义                                        | filter{% br /%}filterParams                                                      |
+| [浮动过滤器](./component-floating-filter/)                                 | 列定义                                        | floatingFilter{% br /%}floatingFilterParams                                      |
+| [日期组件](./filter-date/#custom-selection-component)                     | 列定义                                        | dateComponent{% br /%}dateComponentParams                                        |
+| [表头组件](./column-headers-components/#custom-component)               | 列定义                                        | headerComponent{% br /%}headerComponentParams                                    |
+| [内部表头组件](./column-headers-components/#inner-header-component)   | 列定义                                        | innerHeaderComponent{% br /%}innerHeaderComponentParams                          |
+| [表头组组件](./column-groups/#custom-group-component)               | 列定义                                        | headerGroupComponent{% br /%}headerGroupComponentParams                          |
+| [内部表头组组件](./column-groups/#inner-header-group-component)   | 列定义                                        | innerHeaderGroupComponent{% br /%}innerHeaderGroupComponentParams                |
+| [工具提示组件](./tooltips/#custom-component)                               | 列定义                                        | tooltipComponent{% br /%}tooltipComponentParams                                  |
+| [组行单元格组件](./grouping-group-rows/#custom-cell-renderer)         | 网格选项                                              | groupRowRenderer{% br /%}groupRowRendererParams                                  |
+| [组行内部单元格组件](./grouping-group-rows/#custom-inner-renderer)  | cellRendererParams{%br /%}groupRowRendererParams{%br /%} | innerRenderer{% br /%}innerRendererParams                                        |
+| [详情单元格组件](./master-detail-custom-detail/)                         | 网格选项                                              | detailCellRenderer{% br /%}detailCellRendererParams                              |
+| [全宽单元格组件](./full-width-rows/#understanding-full-width)        | 网格选项                                              | fullWidthCellRenderer{% br /%}fullWidthCellRendererParams                        |
+| [加载单元格组件](./component-loading-cell-renderer/)                    | 网格选项{%br /%}列定义                     | loadingCellRenderer{% br /%}loadingCellRendererParams                            |
+| [覆盖层组件](./overlays-provided/#customisation)                         | 网格选项                                              | overlayComponent{% br /%}overlayComponentParams{% br /%}overlayComponentSelector |
+| [活动覆盖层](./overlays-active/)                                            | 网格选项                                              | activeOverlay{% br /%}activeOverlayParams                                        |
+| [拖放图像](./row-dragging-customisation/#custom-drag-and-drop-image) | 网格选项                                              | dragAndDropImageComponent{% br /%}dragAndDropImageComponentParams                |
+| [状态栏组件](./status-bar/#custom-panels)                             | 网格选项 -> 状态栏                                | statusPanel{% br /%}statusPanelParams                                            |
+| [工具面板](./component-tool-panel/)                                           | 网格选项 -> 侧边栏                                  | toolPanel{% br /%}toolPanelParams                                                |
+| [菜单项](./component-menu-item/)                                             | 网格选项 -> 菜单                                      | menuItem{% br /%}menuItemParams                                                  |
+
+## 网格提供的组件
+
+网格附带可以使用的预注册组件。网格提供的每个组件都以命名空间 'ag' 开头，以最大限度地减少与用户提供的组件的命名冲突。网格提供的组件的完整列表在下表中。
+
+| 拖放      |                                                         |
+| ------------------ | ------------------------------------------------------- |
+| agDragAndDropImage | 拖动网格部分时的默认覆盖元素 |
+
+| 日期输入 |                                    |
+| ----------- | ---------------------------------- |
+| agDateInput | 过滤器使用的默认日期输入 |
+
+| 列表头      |                             |
+| ------------------- | --------------------------- |
+| agColumnHeader      | 默认列表头       |
+| agColumnHeaderGroup | 默认列组表头 |
+
+| 列过滤器                            |                                                           |
+| ----------------------------------------- | --------------------------------------------------------- |
+| agSetColumnFilter {% enterpriseIcon /%}   | 集合过滤器（使用 AG Grid Enterprise 时的默认值）        |
+| agTextColumnFilter                        | 简单文本过滤器（使用 AG Grid Community 时的默认值） |
+| agNumberColumnFilter                      | 数字过滤器                                             |
+| agDateColumnFilter                        | 日期过滤器                                               |
+| agMultiColumnFilter {% enterpriseIcon /%} | 多重过滤器                                              |
+| agGroupColumnFilter {% enterpriseIcon /%} | 组列过滤器                                       |
+
+| 浮动过滤器                                  |                              |
+| ------------------------------------------------- | ---------------------------- |
+| agSetColumnFloatingFilter {% enterpriseIcon /%}   | 浮动集合过滤器          |
+| agTextColumnFloatingFilter                        | 浮动文本过滤器         |
+| agNumberColumnFloatingFilter                      | 浮动数字过滤器       |
+| agDateColumnFloatingFilter                        | 浮动日期过滤器         |
+| agMultiColumnFloatingFilter {% enterpriseIcon /%} | 浮动多重过滤器        |
+| agGroupColumnFloatingFilter {% enterpriseIcon /%} | 浮动组列过滤器 |
+
+| 单元格组件                             |                                                                |
+| ------------------------------------------- | -------------------------------------------------------------- |
+| agAnimateShowChangeCellRenderer             | 动画显示值变化的单元格组件                     |
+| agAnimateSlideCellRenderer                  | 动画滑动值变化的单元格组件                     |
+| agGroupCellRenderer                         | 显示组信息的单元格组件                |
+| agLoadingCellRenderer {% enterpriseIcon /%} | 使用企业行模型时加载行的单元格组件 |
+| agSkeletonCellRenderer                      | 显示骨架单元格的单元格组件                   |
+| agCheckboxCellRenderer                      | 为布尔值显示复选框的单元格组件     |
+
+| 覆盖层                |                          |
+| ----------------------- | ------------------------ |
+| agLoadingOverlay        | 加载覆盖层          |
+| agNoRowsOverlay         | 无行覆盖层         |
+| agNoMatchingRowsOverlay | 无匹配行覆盖层 |
+| agExportingOverlay      | 导出覆盖层        |
+
+| 单元格编辑器                                 |                                        |
+| -------------------------------------------- | -------------------------------------- |
+| agTextCellEditor                             | 文本单元格编辑器                       |
+| agSelectCellEditor                           | 选择单元格编辑器                     |
+| agRichSelectCellEditor {% enterpriseIcon /%} | 富选择编辑器                     |
+| agLargeTextCellEditor                        | 大文本单元格编辑器                 |
+| agNumberCellEditor                           | 数字单元格编辑器                     |
+| agDateCellEditor                             | 日期单元格编辑器                       |
+| agDateStringCellEditor                       | 日期表示为字符串的单元格编辑器 |
+| agCheckboxCellEditor                         | 复选框单元格编辑器                   |
+
+| 主从详情                              |                                       |
+| ------------------------------------------ | ------------------------------------- |
+| agDetailCellRenderer {% enterpriseIcon /%} | 主从网格的详情面板 |
+
+| 列菜单 / 上下文菜单       |                                         |
+| -------------------------------- | --------------------------------------- |
+| agMenuItem {% enterpriseIcon /%} | 列菜单或上下文菜单中的菜单项 |
+
+## 覆盖网格组件
+
+也可以覆盖组件。在网格使用默认值的地方，这意味着将使用覆盖组件代替。有意义的默认组件如下：
+
+-   **agDragAndDropImage**：更改拖动网格部分时的默认拖放图像。
+-   **agDateInput**：更改所有过滤器中的默认日期选择。
+-   **agColumnHeader**：更改所有列的默认列表头。
+-   **agColumnGroupHeader**：更改所有列的默认列组表头。
+-   **agLoadingCellRenderer**：更改企业行模型的默认加载单元格渲染器。
+-   **agSkeletonCellRenderer**：更改企业行模型的默认骨架加载单元格渲染器。
+-   **agLoadingOverlay**：更改默认的"加载"覆盖层。
+-   **agNoRowsOverlay**：更改默认的"无行"覆盖层。
+-   **agNoMatchingRowsOverlay**：更改默认的"无匹配行"覆盖层。
+-   **agExportingOverlay**：更改默认的"导出"覆盖层。
+-   **agCellEditor**：更改默认的单元格编辑器。
+-   **agDetailCellRenderer**：更改主从网格的默认详情面板。
+-   **agMenuItem**：更改列菜单和上下文菜单的默认菜单项。
+-   **agTooltipComponent**：更改所有工具提示的默认工具提示组件。
+
+要覆盖默认组件，请在 GridOptions `components` 属性中以以上名称注册自定义组件。
+
+{% if isFramework("javascript") %}
+
+```js
+const gridOptions = {
+    // 这里我们指定要使用的组件而不是默认组件
+    components: {
+        agDateInput: CustomDateComponent,
+        agColumnHeader: CustomHeaderComponent
+    }
+};
+```
+
+{% /if %}
+
+{% if isFramework("angular") %}
+
+```ts
+@Component({
+    selector: 'my-app',
+    template: `
+        <ag-grid-angular
+            [components]="components"
+            ...其他属性...
+        />
+    `
+})
+export class AppComponent {
+    // 这里我们指定要使用的组件而不是默认组件
+    public components = {
+        agDateInput: CustomDateComponent,
+        agColumnHeader: CustomHeaderComponent
+    };
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+```jsx
+const components = useMemo(() => (
+    { agDateInput: CustomDateComponent,
+        agColumnHeader: CustomHeaderComponent
+    }), []);
+
+<AgGridReact
+    components={components}
+    ...其他属性...
+/>
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+```ts
+const MyApp = {
+    // 这里我们指定要使用的组件而不是默认组件
+    components: {
+        'ag-grid-vue': AgGridVue
+        agDateInput: CustomDateComponent,
+        agColumnHeader: CustomHeaderComponent
+    },
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+{% note %}
+可覆盖的网格组件是您唯一需要额外使用 `components` 指定的组件，以便将其使用与实际组件绑定。
+所有其他注册类型都在列定义或 `AgGridVue` 组件本身上指定其使用。
+
+有关此示例，请参阅[日期组件](./filter-date/#custom-selection-component)文档。
+{% /note %}
+{% /if %}

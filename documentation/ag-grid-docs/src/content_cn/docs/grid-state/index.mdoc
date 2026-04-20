@@ -1,0 +1,104 @@
+---
+title: "网格状态"
+---
+
+本节介绍保存和恢复网格状态，例如筛选模型、选定的行等。
+
+## 保存和恢复状态
+
+以下按钮将保存和恢复状态记录到开发者控制台。
+
+{% gridExampleRunner title="网格状态" name="grid-state"  exampleHeight=630 /%}
+
+初始状态通过网格选项 `initialState` 提供。它仅在创建网格时读取一次。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    initialState: {
+        filter: {
+            filterModel: {
+                year: {
+                    filterType: 'set',
+                    values: ['2012'],
+                }
+            }
+        },
+        columnVisibility: {
+            hiddenColIds: ['athlete'],
+        },
+        rowGroup: {
+            groupColIds: ['athlete'],
+        }
+    }
+}
+```
+
+可以通过监听状态更新事件来检索当前网格状态，该事件在状态更改时使用最新状态触发，或通过 `api.getState()` 检索。
+
+状态也会在[网格预销毁事件](./grid-lifecycle/#grid-pre-destroyed)中传递，可用于在销毁网格时获取状态。
+
+{% apiDocumentation source="grid-events/events.json" section="gridLifecycle" names=["stateUpdated", "gridPreDestroyed"] /%}
+
+## 状态内容
+
+以下内容在网格状态中捕获：
+
+-   [聚合函数](./aggregation/)（列状态）
+-   [打开的列组](./column-groups/)
+-   [列顺序](./column-moving/)（列状态）
+-   [固定列](./column-pinning/)（列状态）
+-   [列大小](./column-sizing/)（列状态）
+-   [隐藏列](./column-properties/#reference-display-hide)（列状态）
+-   [列筛选模型](./filtering/)
+-   [高级筛选模型](./filter-advanced/#filter-model--api)
+-   [焦点单元格](./keyboard-navigation/)（仅限[客户端行模型](./row-models/)）
+-   [当前页](./row-pagination/)
+-   [透视模式和列](./pivoting/)（列状态）
+-   [单元格选择](./cell-selection/)
+-   [行组列](./grouping/)（列状态）
+-   [展开的行组](./grouping-opening-groups/)
+-   [行选择](./row-selection/)（可对所有行模型检索，但只能为[客户端行模型](./row-models/)和[服务器端行模型](./row-models/)设置）
+-   [固定行](./row-pinning)
+-   [侧边栏](./side-bar/)
+-   [排序](./row-sorting/)（列状态）
+
+{% note %}
+使用[服务器端行模型](./server-side-model/)或[无限行模型](./infinite-scrolling/)恢复当前页时，需要额外配置：
+
+-   对于服务器端行模型 - 将 `serverSideInitialRowCount` 属性设置为包含要显示行的值。
+-   对于无限行模型 - 将 `infiniteInitialRowCount` 属性设置为包含要显示行的值。
+
+{% /note %}
+
+所有状态属性都是可选的，因此如果您不想恢复某个属性，可以将其排除。
+
+如果应用部分但不是全部列状态属性，则必须将 `initialState.partialColumnState` 设置为 `true`。
+
+状态还包含网格版本号。应用具有较旧版本号的状态时，任何旧状态属性将自动迁移到当前格式。
+
+网格状态设计为可序列化，因此任何函数都将被剥离。例如，聚合函数应该[注册为自定义函数](./aggregation-custom-functions/#registering-custom-functions)以与状态一起工作，而不是设置为[直接应用函数](./aggregation-custom-functions/#directly-applied-functions)。
+
+{% interfaceDocumentation interfaceName="GridState" /%}
+
+## 设置状态
+
+恢复网格状态的最佳方法是通过上述初始状态。但是，也可以通过 `api.setState(state)` 在现有网格上恢复状态。
+
+{% note %}
+`setState` 仅应用于恢复网格状态。网格不支持用作受控组件，因此不要在每次状态更新时调用此方法。
+{% /note %}
+
+{% gridExampleRunner title="设置状态" name="set-state"  exampleHeight=630 /%}
+
+可以通过向 `setState` 传递包含要忽略的顶级属性的第二参数来维护各个状态内容的现有状态。例如，`api.setState(state, ['filter'])` 将维护网格中的现有筛选状态。
+
+## 将列状态转换为网格状态
+
+通过[列状态](./column-state/) API 检索的状态可以通过辅助函数 `convertColumnState` 和 `convertColumnGroupState` 转换为网格状态。
+
+```
+const state = {
+    ...convertColumnState(columnState),
+    ...convertColumnGroupState(columnGroupState)
+};
+```

@@ -1,0 +1,243 @@
+--- 
+title: "安装"
+description: "了解如何通过 NPM、CDN 或直接下载安装 AG Grid 社区版和企业版，包含分步说明和最佳实践。"
+---
+
+{% if isFramework("javascript") %}
+
+AG Grid 可以从 NPM、CDN 或直接下载，但我们强烈建议使用 NPM 或 CDN。使用 NPM 时，您需要导入包并注册要使用的模块。
+
+## NPM 安装
+
+{% /if %}
+
+{% if isFramework("react", "angular", "vue") %}
+
+AG Grid 可从 NPM 下载。安装后，您需要导入包并注册要使用的模块。
+
+## 安装
+
+{% /if %}
+
+{% if isFramework("react") %}
+安装 `ag-grid-react` 包，这也会安装 `ag-grid-community`：
+
+```bash
+npm install ag-grid-react
+```
+
+{% /if %}
+
+{% if isFramework("angular") %}
+安装 `ag-grid-angular` 包，这也会安装 `ag-grid-community`：
+
+```bash
+npm install ag-grid-angular
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+安装 `ag-grid-vue3` 包，这也会安装 `ag-grid-community`：
+
+```bash
+npm install ag-grid-vue3
+```
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+安装 `ag-grid-community` 包：
+
+```bash
+npm install ag-grid-community
+```
+
+{% /if %}
+
+要使用 AG Grid 企业版功能，安装 `ag-grid-enterprise` 包：
+
+```bash
+npm install ag-grid-enterprise
+```
+
+{% note %}
+您可以在没有许可证的情况下在本地测试 AG Grid 企业版。要在生产中测试、获取支持并移除水印和控制台警告，请[申请试用许可证](./community-vs-enterprise/#request-a-30-day-enterprise-bundle-trial-licence)。
+{% /note %}
+
+{% if isFramework("react") %}
+{% note %}
+`ag-grid-react` 和 `ag-grid-enterprise` 版本必须相同，以确保所有功能正常工作。
+{% /note %}
+{% /if %}
+
+{% if isFramework("angular") %}
+{% note %}
+`ag-grid-angular` 和 `ag-grid-enterprise` 版本必须相同，以确保所有功能正常工作。
+{% /note %}
+{% /if %}
+
+{% if isFramework("vue") %}
+{% note %}
+`ag-grid-vue3` 和 `ag-grid-enterprise` 版本必须相同，以确保所有功能正常工作。
+{% /note %}
+{% /if %}
+
+{% if isFramework("react", "angular", "vue") %}
+
+## 注册模块
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+
+### 注册模块
+
+{% /if %}
+
+{% if isFramework("react") %}
+使用 `AgGridProvider` 向所有表格实例提供模块和许可证密钥（仅企业版）。提供 `AllCommunityModule` 以访问所有社区功能，或提供 `AllEnterpriseModule` 以访问所有社区**和**企业功能：
+
+```jsx
+import { AllCommunityModule } from 'ag-grid-community';
+// import { AllEnterpriseModule } from 'ag-grid-enterprise';
+import { AgGridProvider, AgGridReact } from 'ag-grid-react';
+
+const modules = [AllCommunityModule];
+
+function App() {
+    return (
+        <AgGridProvider modules={modules} licenseKey="YOUR_LICENSE_KEY">
+            <AgGridReact /* ... props */ />
+        </AgGridProvider>
+    );
+}
+```
+
+{% /if %}
+
+{% if isFramework("javascript", "angular", "vue") %}
+注册 `AllCommunityModule` 以访问所有社区功能，或注册 `AllEnterpriseModule` 以访问所有社区**和**企业功能：
+
+```js
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+// import { AllEnterpriseModule } from 'ag-grid-enterprise';
+
+// 注册所有社区功能
+ModuleRegistry.registerModules([AllCommunityModule]);
+```
+
+{% /if %}
+
+{% note %}
+为了最小化包大小，只注册您想要使用的模块。有关更多信息，请参阅[选择模块](./modules/)文档。
+{% /note %}
+
+{% if isFramework("react", "angular", "vue") %}
+
+## 导入
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+
+### 导入
+
+{% /if %}
+
+{% if isFramework("react") %}
+从 `ag-grid-react` 包导入 `AgGridProvider` 和 `AgGridReact`：
+
+```js
+import { AgGridProvider, AgGridReact } from 'ag-grid-react';
+```
+
+{% /if %}
+
+{% if isFramework("angular") %}
+从 `ag-grid-angular` 包导入 `AgGridAngular` 组件：
+
+```js
+import { AgGridAngular } from 'ag-grid-angular';
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+从 `ag-grid-vue3` 包导入 `AgGridVue` 组件：
+
+```js
+import { AgGridVue } from "ag-grid-vue3";
+```
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+从 `ag-grid-community` 包导入 `createGrid` 以创建新的数据表格：
+
+```js
+import { createGrid } from 'ag-grid-community';
+```
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+
+## CDN 安装
+
+要安装 AG Grid 社区版，在您的 HTML 文件中包含以下脚本标签：
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@{% $agGridVersion %}/dist/ag-grid-community.min.js"></script>
+```
+
+要安装 AG Grid 企业版，在您的 HTML 文件中包含以下脚本标签：
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise@{% $agGridVersion %}/dist/ag-grid-enterprise.min.js"></script>
+```
+
+通过 CDN 安装 AG Grid 时，所有模块会自动为您注册。然后您可以通过 `agGrid` 全局变量访问 AG Grid。有关更多信息，请参阅[快速开始](./getting-started/)。
+
+## 下载
+
+如果您的项目不使用包管理器，并且您不想从 CDN 引用 AG Grid，您可以下载 AG Grid 的源文件并将其保存在您的项目结构中。
+
+{% warning %}
+下载 AG Grid 会使升级更加复杂且容易出错。我们建议从 NPM 包或 CDN 使用 AG Grid。
+{% /warning %}
+
+{% tabs %}
+{% tabItem id="community" label="社区版" %}
+您可以从 {% link href="https://github.com/ag-grid/ag-grid/releases/download/release-{% $agGridVersion %}/ag-grid-community.tgz" %}GitHub 仓库{% /link %}下载 AG Grid 社区版。
+
+解压后，您会在 `dist` 文件夹中看到四个包文件：
+
+-   `dist/ag-grid-community.js` — 包含 JavaScript 和 CSS 的标准包
+-   `dist/ag-grid-community.min.js` — 包含 JavaScript 和 CSS 的压缩包
+-   `dist/ag-grid-community.noStyle.js` — 包含 JavaScript 但不包含 CSS 的标准包
+-   `dist/ag-grid-community.min.noStyle.js` — 包含 JavaScript 但不包含 CSS 的压缩包
+
+如果您决定使用 `noStyle` 版本的包，样式表文件位于 `styles` 文件夹中。
+
+{% /tabItem %}
+{% tabItem id="enterprise" label="企业版" %}
+您可以从 {% link href="https://github.com/ag-grid/ag-grid/releases/download/release-{% $agGridVersion %}/ag-grid-enterprise.tgz" %}GitHub 仓库{% /link %}下载 AG Grid 企业版。
+
+解压后，您会在 `dist` 文件夹中看到四个包文件：
+
+同样，分发中有四个包文件：
+
+-   `dist/ag-grid-enterprise.js` — 包含 JavaScript 和 CSS 的标准包
+-   `dist/ag-grid-enterprise.min.js` — 包含 JavaScript 和 CSS 的压缩包
+-   `dist/ag-grid-enterprise.noStyle.js` — 包含 JavaScript 但不包含 CSS 的标准包
+-   `dist/ag-grid-enterprise.min.noStyle.js ` — 包含 JavaScript 但不包含 CSS 的压缩包
+
+如果您决定使用 `noStyle` 版本的包，您应该使用 AG Grid 包中的样式文件（社区和企业所需的所有样式都在社区 CSS 文件中）。
+
+{% /tabItem %}
+{% /tabs %}
+
+下载包后，您可以像从 CDN 引用一样引用这些文件。有关更多信息，请参阅[快速开始](./getting-started/)。
+
+{% /if %}

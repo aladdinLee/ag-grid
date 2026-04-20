@@ -1,0 +1,56 @@
+{% if isFramework("angular") %}
+单元格渲染器可以是：
+
+-   返回 HTML 字符串或 DOM 对象的函数
+-   实现 [`ICellRendererAngularComp`](#api-reference) 接口的类
+
+如果您没有刷新要求，请使用单元格组件的函数变体。
+
+```ts
+interface ICellRendererAngularComp {
+    // 必需 - 渲染参数
+    agInit(params: ICellRendererParams): void;
+
+    // 必需 - 如果您在此方法中自己管理了单元格刷新，则返回 true，否则返回 false。
+    // 如果您返回 false，网格将从 DOM 中移除该组件，并在其位置创建一个新组件
+    // 并使用新值。
+    refresh(params: ICellRendererParams): boolean;
+}
+```
+
+提供基于类的组件时，它使用包含要渲染的值等内容的 `props` 进行初始化。完整的定义可以在下面的 [API 参考](#api-reference)中找到。
+
+```ts
+class CustomButtonComponent implements ICellRendererAngularComp {
+  // ...
+  agInit(props: ICellRendererParams): void {
+    this.cellValue = props.value;
+  }
+  // ...
+```
+
+使用基于函数的组件时，它接收相同的 `props` 作为参数，就像上面提供给 `agInit` 方法一样。
+在下面的示例中，我们输出一个取决于单元格值的字符串值：
+
+```js
+@Component({
+    selector: 'my-app',
+    template: `
+        <ag-grid-angular
+                [columnDefs]="columnDefs"
+                ...其他属性 />`
+})
+export class AppComponent {
+    columnDefs = [
+        {
+            headerName: "Value",
+            field: "value",
+            cellRenderer: params => params.value > 1000 ? "LARGE VALUE" : "SMALL VALUE"
+        }
+    ];
+    //...
+}
+```
+
+也可以编写基于 JavaScript 的单元格渲染器组件 - 请参阅[此处的文档](/javascript-data-grid/component-cell-renderer/#creating-custom-components)以获取更多信息
+{% /if %}

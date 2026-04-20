@@ -1,0 +1,37 @@
+{% if isFramework("react") %}
+自定义筛选器组件是受控组件，它们作为 props 的一部分接收筛选器模型，并通过 `onModelChange` 回调将模型更新传递回网格。筛选器模型为 `null` 意味着未应用筛选器（筛选器显示为非活动状态）。请注意，当调用 `onModelChange` 时，筛选器会立即应用。
+
+要实现筛选逻辑，自定义筛选器需要实现 `doesFilterPass` 回调，并将其提供给 `useGridFilter` 钩子。
+{% /if %}
+
+{% if isFramework("react") %}
+
+```jsx
+export default ({ model, onModelChange, getValue }) => {
+    const doesFilterPass = useCallback(({ node }) => {
+        // 筛选逻辑
+        return getValue(node).contains(model);
+    }, [model]);
+
+    // 向网格注册筛选器回调
+    useGridFilter({ doesFilterPass });
+
+    return (
+        <div>
+            <input
+                type="text"
+                value={model || ''}
+                onChange={({ target: { value }}) => onModelChange(value === '' ? null : value)}
+            />
+        </div>
+    );
+}
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+{% note %}
+在以前版本的网格中，自定义组件是以命令式方式声明的。有关如何迁移到当前格式的详细信息，请参阅[迁移到使用 reactiveCustomComponents](./upgrading-to-ag-grid-31-1/#migrating-custom-components-to-use-reactivecustomcomponents-option)。
+{% /note %}
+{% /if %}

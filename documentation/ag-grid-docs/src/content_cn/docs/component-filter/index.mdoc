@@ -1,0 +1,337 @@
+---
+title: "筛选器组件"
+---
+
+{% if isFramework("javascript", "angular", "vue") %}
+筛选器组件允许您向 AG Grid 添加自己的筛选器类型。当提供的筛选器不能满足您的要求时使用它们。
+{% /if %}
+
+{% if isFramework("react") %}
+{% videoSection id="98JVaTcoexc" title="React Custom Filter Components" showHeader=true %}
+筛选器组件允许您向 AG Grid 添加自己的筛选器类型。当提供的筛选器不能满足您的要求时使用它们。
+{% /videoSection %}
+{% /if %}
+
+下面的示例显示了 `Athlete` 列上具有"模糊"匹配的自定义筛选器。
+
+{% gridExampleRunner title="Custom Filter Component" name="custom-filter" /%}
+
+## 实现筛选器组件
+
+要配置自定义筛选器，首先启用网格选项 `enableFilterHandlers`。
+
+{% note %}
+如果不启用网格选项 `enableFilterHandlers`，仍然可以使用自定义筛选器，但这将涉及将筛选逻辑嵌入到自定义组件中，不建议这样做。请参阅[旧版筛选器组件](./component-filter-legacy/)。
+{% /note %}
+
+实现自定义筛选器需要两个部分：
+
+-   将向用户显示的自定义筛选器组件。
+-   运行筛选器的逻辑。
+
+{% if isFramework("react") %}
+自定义筛选器组件是受控组件，它们作为 props 的一部分接收筛选器模型，并通过 `onModelChange` 回调将模型更新传递回网格。
+{%/if %}
+
+{% if isFramework("javascript", "angular", "vue") %}
+自定义筛选器组件作为参数的一部分接收筛选器模型（在调用 `refresh` 方法时更新）。当通过 UI 更改模型时，它应该通过 `onModelChange` 回调将模型更新传递回网格。
+{%/if %}
+
+筛选器模型为 `null` 意味着未应用筛选器（筛选器显示为非活动状态）。请注意，当调用 `onModelChange` 时，筛选器会立即应用。可以通过[使用按钮](#using-buttons)更改此行为。
+
+{% partial file="./_component-interface-javascript.mdoc" /%}
+{% partial file="./_component-interface-angular.mdoc" /%}
+{% partial file="./_component-interface-react.mdoc" /%}
+{% partial file="./_component-interface-vue.mdoc" /%}
+
+## 自定义筛选器参数
+
+{% if isFramework("javascript") %}
+`init(params)` 方法接受一个包含下面列出的项目的参数对象。如果通过 `colDef.filterParams` 属性提供了自定义参数，
+这些参数将额外添加到参数对象中，如果存在名称冲突，将覆盖同名项目。
+{% /if %}
+
+{% if isFramework("angular") %}
+`agInit(params)` 方法接受一个包含下面列出的项目的参数对象。如果通过 `colDef.filterParams` 属性提供了自定义参数，
+这些参数将额外添加到参数对象中，如果存在名称冲突，将覆盖同名项目。
+{% /if %}
+
+{% if isFramework("vue") %}
+当实例化 Vue 组件时，网格将通过 `this.params` 使网格 API、许多实用方法以及单元格和行值可供您使用 - 其接口记录在下面。
+
+如果通过 `colDef.filterParams` 属性提供了自定义参数，这些参数将额外添加到参数对象中，
+如果存在名称冲突，将覆盖同名项目。
+{% /if %}
+
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="FilterDisplayParams" /%}
+{% /if %}
+
+{% if isFramework("react") %}
+
+### 筛选器 Props
+
+以下 props 传递给自定义筛选器组件（`CustomFilterDisplayProps` 接口）。如果通过 `colDef.filterParams` 属性提供了自定义 props，
+这些 props 将额外添加到 props 对象中，如果存在名称冲突，将覆盖同名项目。
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="CustomFilterDisplayProps" config={ "description": "" } /%}
+{% /if %}
+
+{% if isFramework("react") %}
+
+### 筛选器回调
+
+以下回调可以传递给 `useGridFilterDisplay` 钩子（`CustomFilterDisplayCallbacks` 接口）。所有回调都是可选的。只有在提供回调时才需要使用该钩子。
+
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="CustomFilterDisplayCallbacks" config={ "description": "" } /%}
+{% /if %}
+
+## 筛选器逻辑
+
+运行筛选器的逻辑可以通过以下两种方式之一提供：
+
+-   作为简单筛选情况的 `doesFilterPass` 回调。
+-   作为更复杂筛选情况的筛选器处理程序对象。
+
+逻辑通过 `filter` 属性与自定义组件一起作为 `ColumnFilter` 对象传递。
+
+{% interfaceDocumentation interfaceName="ColumnFilter" config={ "description": "" } /%}
+
+{% note %}
+筛选器逻辑仅与[客户端行模型](./row-models/)一起使用。如果仅与其他行模型一起使用，则不需要提供它，因为筛选逻辑在服务器上执行。如果提供了处理程序，它仍将被实例化，但不会调用 `doesFilterPass`。
+{% /note %}
+
+### doesFilterPass 回调
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'year',
+            filter: {
+                component: YearFilter, // 自定义筛选器组件
+                doesFilterPass: (params) => {
+                    // 在此处评估行的筛选器
+                    return params.model === params.handlerParams.getValue(params.node);
+                },
+            },
+        }
+    ],
+}
+```
+
+当执行筛选时（且筛选器处于活动状态），将为每一行调用回调 `doesFilterPass(params)`，并接受以下内容作为参数：
+
+{% interfaceDocumentation interfaceName="DoesFilterPassParams" config={ "description": "" } /%}
+
+### 筛选器处理程序
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'year',
+            filter: {
+                component: YearFilter, // 自定义筛选器组件
+                handler: (params) => ({
+                    doesFilterPass: (params) => {
+                        // 在此处评估行的筛选器
+                        return passes;
+                    },
+                    // 其他处理程序方法
+                }),
+            },
+        }
+    ],
+}
+```
+
+筛选器处理程序函数应返回一个 `FilterHandler`，该处理程序将在筛选器处于活动状态时创建。当执行筛选时（且筛选器处于活动状态），将针对每一行调用评估器上的 `doesFilterPass` 方法。
+
+筛选器处理程序对于需要解析筛选器模型以允许快速比较值的情况很有用。处理程序通过 `init` / `refresh` 方法传递最新的筛选器模型，然后可以在调用 `doesFilterPass` 之前处理模型。
+
+{% interfaceDocumentation interfaceName="FilterHandler" config={ "description": "" } /%}
+
+也可以在 `filterHandlers` 网格选项中定义筛选器处理程序，然后在列定义中通过字符串键引用它们。
+
+{% apiDocumentation source="grid-options/properties.json" section="filter" names=["filterHandlers"] /%}
+
+## 使用按钮
+
+可以将网格提供的筛选器的[筛选器按钮](./filter-applying/)与自定义筛选器组件一起使用。
+
+{% gridExampleRunner title="Filter Buttons" name="custom-filter-buttons" /%}
+
+上面的示例演示了通过相同的自定义筛选器组件使用带按钮的筛选器：
+
+-   **Year Default** 列不使用按钮。
+-   **Year Apply** 列使用应用按钮，并在应用时关闭筛选器弹出窗口。
+-   **Year Reset** 列使用重置按钮，它将筛选器设置回默认模型并应用它。
+
+按钮通过向筛选器传递附加参数（接口 `FilterWrapperParams`）来配置。
+
+{% interfaceDocumentation interfaceName="FilterWrapperParams" names=["buttons", "closeOnApply"] config={ "description": "" } /%}
+
+当按下按钮时，将通过 `refresh(params)` 方法更新自定义筛选器 `state` 参数，其中 `state.model` 是应该在筛选器中显示的模型。
+
+存在 `Apply` 按钮时，筛选器组件不再需要调用 `onModelChange(model)`，因为网格将在单击按钮时应用模型（尽管如果组件想以其他方式应用模型，仍然可以调用它）。相反，筛选器组件将使用当前在筛选器组件中显示的模型调用 `onStateChange({ model })`。这是网格在单击按钮时将应用的模型。如果筛选器在没有按钮的情况下使用，它也可以调用 `onAction('apply')` 来应用通过状态设置的模型。
+
+## 关联浮动筛选器
+
+如果您创建自己的筛选器，您有两个选项可以让浮动筛选器为该筛选器工作：
+
+1. 您可以创建自己的[自定义浮动筛选器](./component-floating-filter/)。
+1. 您可以在筛选器评估器上实现 `getModelAsString()` 方法。如果您实现此方法且不提供自定义浮动筛选器，AG Grid 将自动提供浮动筛选器的只读版本。请参阅[自定义筛选器和只读浮动筛选器](./component-floating-filter/#example-custom-filter-and-read-only-floating-filter)。
+
+如果不为自定义筛选器提供这两个选项中的任何一个，浮动筛选器的显示区域将为空。
+
+## 包含弹出元素的自定义筛选器
+
+有时您需要为筛选器创建自定义组件，这些组件也包含弹出元素。日期筛选器就是这种情况，因为它会弹出日期选择器。如果您使用的库将弹出元素锚定在父筛选器之外，那么当您单击它时，网格会认为您在筛选器外部单击，因此会关闭列菜单。
+
+有两种方法可以解决此问题：
+
+-   向浮动元素添加鼠标单击侦听器并将其设置为 `preventDefault()`。这样，单击事件不会冒泡到网格。
+    这是最好的解决方案，但只有在您自己编写组件时才能这样做。
+-   向浮动元素添加 `ag-custom-component-popup` CSS 类。可以在此处找到此用法的示例：[自定义日期组件](./filter-date/#custom-selection-component)
+
+## 使用自定义筛选器与网格提供的筛选器逻辑
+
+可以将网格提供的筛选器逻辑与自定义筛选器组件一起使用。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'year',
+            filter: {
+                component: YearFilter, // 自定义筛选器组件
+                handler: 'agNumberColumnFilterHandler', // 网格提供的数字筛选器处理程序
+            },
+        }
+    ],
+}
+```
+
+网格提供的处理程序是：
+
+-   `'agTextColumnFilterHandler'` - [文本筛选器](./filter-text/)处理程序。
+-   `'agNumberColumnFilterHandler'` - [数字筛选器](./filter-number/)处理程序。
+-   `'agBigIntColumnFilterHandler'` - [BigInt 筛选器](./filter-bigint/)处理程序。
+-   `'agDateColumnFilterHandler'` - [日期筛选器](./filter-date/)处理程序。
+
+下面的示例演示了将数字筛选器处理程序与自定义筛选器组件一起使用：
+
+{% gridExampleRunner title="Use Grid Handlers" name="use-grid-handlers" /%}
+
+## 访问组件实例
+
+{% if isFramework("angular", "vue", "javascript") %}
+AG Grid 允许您通过 `api.getColumnFilterInstance(colKey)` 方法获取筛选器组件实例的引用。
+{% /if %}
+
+{% if isFramework("react") %}
+AG Grid 允许您通过 `api.getColumnFilterInstance(colKey)` 获取筛选器组件实例的引用。这将返回一个包装组件，该组件与实现 `FilterDisplay` 的提供的网格筛选器组件匹配。要获取 React 自定义筛选器组件，可以在此使用辅助函数 `getInstance`。由于 React 组件是异步创建的，因此两种方法都需要使用回调。
+{% /if %}
+
+同样，您可以通过 `api.getColumnFilterHandler(colKey)` 获取筛选器处理程序的引用。
+
+{% if isFramework("angular") %}
+
+```ts
+// 让我们假设一个 Angular 组件如下
+@Component({
+    selector: 'filter-cell',
+    template: `
+        Filter: <input style="height: 10px" #input (ngModelChange)="onChange($event)" [ngModel]="text">
+    `
+})
+class PartialMatchFilterComponent implements IFilterDisplayAngularComp {
+    ... // 标准筛选器方法已隐藏
+
+    // 在筛选器上放置一个自定义方法
+    myMethod() {
+        // 做一些事情
+    }
+}
+
+// 稍后在您的应用程序中，如果您想执行 myMethod()...
+laterOnInYourApplicationSomewhere() {
+    // 假设在 name 列上有筛选器
+    api.getColumnFilterInstance<PartialMatchFilterComponent>('name').then(angularFilterInstance => {
+        angularFilterInstance.myMethod();
+    });
+}
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+```ts
+// 让我们假设一个 React 组件如下
+export default forwardRef((props, ref) => {
+    useImperativeHandle(ref, () => {
+        return {
+            ... // 必需的筛选器方法
+
+            // 在筛选器上放置一个自定义方法
+            myMethod() {
+                // 做一些事情
+            }
+        }
+    });
+
+    ... // 组件的其余部分
+}
+
+// 稍后在您的应用程序中，如果您想执行 myMethod()...
+laterOnInYourApplicationSomewhere() {
+    // 获取 name 列上的 AG Grid 筛选器组件的引用
+    api.getColumnFilterInstance('name').then(filterInstance => {
+        getInstance(filterInstance, comp => {
+            if (comp != null) {
+                comp.myMethod();
+            }
+        });
+    });
+}
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+```ts
+// 让我们假设一个 VueJS 组件如下
+export default {
+    template: `<input style="height: 20px" :ref="'input'" v-model="text">`,
+    data() {
+        ...data
+    },
+    methods: {
+        myMethod() {
+            // 做一些事情
+        },
+        ...其他方法
+    },
+
+    // 稍后在您的应用程序中，如果您想执行 myMethod()...
+    laterOnInYourApplicationSomewhere() {
+        // 假设在 name 列上有筛选器
+        api.getColumnFilterInstance('name').then(filterInstance => {
+            filterInstance.myMethod();
+        });
+    }
+```
+
+{% /if %}
+
+下面的示例说明了如何访问自定义筛选器组件并调用其上的方法。如果您单击 `Invoke Filter Instance Method` 按钮，它将调用实例 `componentMethod`，该方法记录到开发者控制台。
+
+{% gridExampleRunner title="Filter Component Instance" name="filter-component"  exampleHeight=445 /%}

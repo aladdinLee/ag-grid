@@ -1,0 +1,121 @@
+---
+title: "聚合 - 总计行"
+enterprise: true
+---
+
+本节介绍如何在表格中包含组和总计行。
+
+## 启用总计行
+
+可以通过将 `grandTotalRow` 表格选项设置为以下之一来在表格中包含总计行：`"top"`、`"bottom"`、`"pinnedTop"` 或 `"pinnedBottom"`。
+
+设置值为 `"top"` 或 `"bottom"` 分别将总计行渲染为表格中的第一行或最后一行。
+设置值为 `"pinnedTop"` 或 `"pinnedBottom"` 分别将总计行固定在表格的顶部或底部。
+
+{% note %}
+总计行也支持[服务器端行模型](./server-side-model-grouping/#grand-total-row)，包括在没有分组的平面表格上。
+{% /note %}
+
+{% gridExampleRunner title="启用总计行" name="enabling-grand-total" /%}
+
+以下配置显示如何在表格底部包含总计行：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    grandTotalRow: 'bottom',
+}
+```
+
+## 启用组总计行
+
+使用[行分组](./grouping/)或[树形数据](./tree-data/)时，可以通过将 `groupTotalRow` 表格选项设置为 `"top"` 或 `"bottom"` 在每个组中包含总计行。
+提供的值确定总计行将作为组中的第一行还是最后一行包含。
+
+{% gridExampleRunner title="启用组总计行" name="enabling-group-total" /%}
+
+以下配置显示如何在每个组的底部包含组总计行：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    // 在每个行组的底部添加小计
+    groupTotalRow: 'bottom',
+}
+```
+
+### 选择性显示组总计行
+
+可以通过向 `groupTotalRow` 表格选项提供回调来选择性地将总计行应用于某些组。
+此回调应返回 `"top"`、`"bottom"` 或 `undefined`，并将为每个行组调用以确定该组是否应显示总计行。
+
+{% gridExampleRunner title="选择性启用组页脚" name="enabling-group-total-selectively" /%}
+
+上面的示例演示了以下配置，用于为 `"United States"` 组和按 `"year"` 字段分组的行显示总计行：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupTotalRow: (params) => {
+        const node = params.node;
+        if (node && node.level === 1) return 'bottom';
+        if (node && node.key === 'United States') return 'bottom';
+        return undefined;
+    }
+}
+```
+
+### 保留组行值
+
+当总计行可见时，组行值被隐藏。可以通过将 `groupSuppressBlankHeader` 表格选项设置为 `true` 来防止此行为。
+
+{% gridExampleRunner title="隐藏空白组" name="suppress-blank-groups" /%}
+
+以下配置演示了防止隐藏组行值的配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupSuppressBlankHeader: true,
+}
+```
+
+## 组列单元格值
+
+使用[行分组显示类型](./grouping-display-types/)或带有组列的[树形数据](./tree-data-group-column/)时，组单元格将在页脚行中默认显示 `"Total"`。
+
+可以向默认的 `agGroupCellRenderer.cellRendererParams` 提供 `totalValueGetter` 以配置此单元格中显示的值。
+
+{% gridExampleRunner title="自定义页脚值" name="customising-footer-values" /%}
+
+上面的示例演示了使用以下配置为总计行和组总计行显示自定义组列值：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    autoGroupColumnDef: {
+        cellRendererParams: {
+            totalValueGetter: params =>  {
+                const isRootLevel = params.node.level === -1;
+                if (isRootLevel) {
+                    return '总计';
+                }
+                return `小计 (${params.value})`;
+            },
+        }
+    },
+}
+```
+
+{% note %}
+导出、复制自定义页脚或使用带有自定义组单元格值的查找时，还必须使用[processRowGroupCallback](./excel-export-customising-content/)为导出、[processCellForClipboard](./clipboard/#processing-individual-cells)为复制到剪贴板或[getFindText](./find/#using-find-with-cell-components)为查找添加自定义内容。
+{% /note %}
+
+## 禁用粘性行
+
+滚动时，所有总计行都会粘在视口的顶部或底部。可以使用 `suppressStickyTotalRow` 表格选项配置此行为。
+
+{% gridExampleRunner title="禁用粘性总计行" name="suppress-sticky-total-rows" /%}
+
+以下配置演示如何禁用总计行和组总计行的粘性行为：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    suppressStickyTotalRow: true,
+}
+```

@@ -1,0 +1,443 @@
+---
+title: "列标题 - 自定义组件"
+description: "为 $framework 表格创建自定义标题组件。自定义标题模板，创建内部标题组件，并实现具有排序、过滤和菜单支持的完全自定义标题。"
+---
+
+表格提供具有排序、过滤和菜单功能的默认标题组件。有三种方法可以自定义列标题：
+
+-   [自定义模板](#custom-template) - 向默认标题组件提供 HTML 模板，用于简单的布局更改，同时保留内置功能。
+-   [内部标题组件](#inner-header-component) - 仅用自定义组件替换标题名称显示，同时保留排序、过滤和菜单功能。
+-   [自定义组件](#custom-component) - 创建完全自定义的标题组件，完全控制渲染和行为。
+
+## 自定义模板
+
+向提供的标题组件提供 HTML 模板，用于简单的布局更改，同时保留内置排序、过滤和菜单功能。
+
+使用 `colDef.headerComponentParams` 设置模板。在 `defaultColDef` 表格选项上设置以应用于所有列。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    defaultColDef: {
+        width: 100,
+        headerComponentParams: {
+            template:
+                `<div class="ag-cell-label-container" role="presentation">
+                  <span data-ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></span>
+                  <span data-ref="eFilterButton" class="ag-header-icon ag-header-cell-filter-button"></span>
+                  <div data-ref="eLabel" class="ag-header-cell-label" role="presentation">
+                    <span data-ref="eSortOrder" class="ag-header-icon ag-sort-order"></span>
+                    <span data-ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon"></span>
+                    <span data-ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon"></span>
+                    <span data-ref="eSortNone" class="ag-header-icon ag-sort-none-icon"></span>
+                    ** <span data-ref="eText" class="ag-header-cell-text" role="columnheader"></span>
+                    <span data-ref="eFilter" class="ag-header-icon ag-filter-icon"></span>
+                  </div>
+                </div>`
+        }
+    }
+}
+```
+
+下面的示例演示了自定义模板。请注意，指定自己的模板与其他配置兼容：
+
+-   `suppressHeaderFilterButton` 在以下列中指定：**运动员**、**国家**、**日期**和**铜牌**列
+-   `sortable=false` 在以下列中指定：**年龄**、**年份**、**运动**、**银牌**和**总计**列
+-   **金牌**是唯一没有 `sortable=false` 或 `suppressHeaderFilterButton` 的列
+
+{% gridExampleRunner title="标题模板" name="header-template" /%}
+
+### 默认模板
+
+这是 AG Grid 中使用的默认模板：
+
+```html
+<div class="ag-cell-label-container" role="presentation">
+    <span data-ref="eMenu" class="ag-header-icon ag-header-cell-menu-button" aria-hidden="true"></span>
+    <span data-ref="eFilterButton" class="ag-header-icon ag-header-cell-filter-button" aria-hidden="true"></span>
+    <div data-ref="eLabel" class="ag-header-cell-label" role="presentation">
+        <span data-ref="eText" class="ag-header-cell-text"></span>
+        <span data-ref="eFilter" class="ag-header-icon ag-header-label-icon ag-filter-icon" aria-hidden="true"></span>
+        <span data-ref="eSortOrder" class="ag-header-icon ag-header-label-icon ag-sort-order" aria-hidden="true"></span>
+        <span data-ref="eSortAsc" class="ag-header-icon ag-header-label-icon ag-sort-ascending-icon" aria-hidden="true"></span>
+        <span data-ref="eSortDesc" class="ag-header-icon ag-header-label-icon ag-sort-descending-icon" aria-hidden="true"></span>
+        <span data-ref="eSortAbsoluteAsc" class="ag-header-icon ag-header-label-icon ag-sort-absolute-ascending-icon ag-hidden"></span>
+        <span data-ref="eSortAbsoluteDesc" class="ag-header-icon ag-header-label-icon ag-sort-absolute-descending-icon ag-hidden"></span>
+        <span data-ref="eSortNone" class="ag-header-icon ag-header-label-icon ag-sort-none-icon" aria-hidden="true"></span>
+    </div>
+</div>
+```
+
+当您提供自己的模板时，只要重用相同的 `data-ref` 属性名称，一切都应该按预期工作。
+
+| Ref                 | 描述                                                                                                                                                    |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `eMenu`             | 列菜单图标将出现的容器，以启用打开列菜单（在 AG Grid Community 中，仅当 `columnMenu = 'legacy'` 时使用）。 |
+| `eFilterButton`     | 列过滤图标将出现的容器，以启用打开过滤器（当 `columnMenu = 'legacy'` 时不使用）。                                   |
+| `eLabel`            | 将有 onClick 鼠标监听器来触发排序的容器。                                                                        |
+| `eText`             | 列上显示的文本。                                                                                                                              |
+| `eFilter`           | 如果用户过滤此列，将出现的带有图标的容器（仅当 `columnMenu = 'legacy'` 或 `suppressHeaderFilterButton = true` 时使用）。  |
+| `eSortOrder`        | 如果多列排序，这将显示代表此列在顺序中位置的索引。                                                 |
+| `eSortAsc`          | 如果列升序排序，这将显示升序图标。                                                                                              |
+| `eSortDesc`         | 如果列降序排序，这将显示降序图标。                                                                                            |
+| `eSortAbsoluteAsc`  | 如果列绝对值升序排序，这将显示绝对值升序图标。                                                                            |
+| `eSortAbsoluteDesc` | 如果列绝对值降序排序，这将显示绝对值降序图标。                                                                            |
+| `eSortNone`         | 如果未应用排序，这将显示无排序图标。请注意，此图标默认为空。                                                                        |
+
+表格使用 `data-ref` 参数来识别要添加功能的元素。如果您在模板中省略某个元素，则不会添加该功能。例如，如果您不指定 `eLabel`，则列将不会响应排序的点击事件。
+
+{% note %}
+模板不是用来让您配置图标的。如果您想更改图标，请参阅[自定义图标](./custom-icons/)获取更多信息。
+{% /note %}
+
+## 内部标题组件
+
+使用标题组件时，`agColumnHeader` 组件将显示标题名称，
+紧邻任何配置的菜单、过滤器和复选框。
+
+可以通过在 `headerComponentParams` 属性上设置 `innerHeaderComponent` 和 `innerHeaderComponentParams` 属性来使用[自定义组件](./components/)覆盖此文本值。当您只需要实现一个组件来自定义 **列名称** 而不必重新实现整个标题功能（排序、过滤、菜单等）时，这很有用。
+
+{% if isFramework("javascript", "angular", "react") %}
+
+```js
+colDef = {
+    ...
+    headerComponentParams : {
+        innerHeaderComponent: MyInnerHeaderComponent,
+        innerHeaderComponentParams: {
+            currencySymbol: '£' // 英镑符号将被放入 params
+        }
+    }
+}
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+```js
+colDef = {
+    ...
+        headerComponentParams : {
+        innerHeaderComponent: 'MyInnerHeaderComponent',
+        innerHeaderComponentParams: {
+            currencySymbol: '£' // 英镑符号将被放入 params
+        }
+    }
+}
+```
+
+{% /if %}
+
+{% gridExampleRunner title="自定义内部标题组件" name="inner-header-component" /%}
+
+{% if isFramework("javascript", "angular") %}
+实现此接口以提供自定义内部标题组件。
+{% /if %}
+{% if isFramework("javascript") %}
+
+### IInnerHeaderComponent
+
+{% interfaceDocumentation interfaceName="IInnerHeaderComponent" config={"asCode":true } /%}
+{% /if %}
+{% if isFramework("angular") %}
+
+### IInnerHeaderAngularComp
+
+{% interfaceDocumentation interfaceName="IInnerHeaderAngularComp" config={"asCode":true } /%}
+{% /if %}
+{% if isFramework("javascript", "angular") %}
+
+### IHeaderParams
+
+{% interfaceDocumentation interfaceName="IHeaderParams" exclude=["template"] config={ "description": "" } /%}
+{% /if %}
+{% if isFramework("react") %}
+
+```ts
+const CustomInnerHeaderComponent = (props: CustomInnerHeaderProps) => {
+    return <div>{props.displayName}</div>;
+};
+```
+
+以下 props 传递给自定义组件（`CustomInnerHeaderProps` 接口）。
+
+### CustomInnerHeaderProps
+
+{% interfaceDocumentation interfaceName="CustomInnerHeaderProps" config={ "description": "" } /%}
+{% /if %}
+{% if isFramework("vue") %}
+任何有效的 Vue 组件都可以是自定义内部标题组件，但是它必须实现 `IHeader` 接口：
+
+### IHeader
+
+{% interfaceDocumentation interfaceName="IHeader" config={"asCode":true } /%}
+{% /if %}
+
+## 自定义组件
+
+要使用完全自定义的标题组件，请在列定义上将 `headerComponent` 设置为自定义组件。有关概述，请参阅[注册组件](./components/)。
+
+{% partial file="./_column-def-javascript.mdoc" /%}
+{% partial file="./_column-def-vue.mdoc" /%}
+
+-   列移动和调整大小无需自定义逻辑即可工作。
+-   `suppressHeaderFilterButton=true` 用于禁止过滤器菜单。
+-   `sortable=false` 用于禁止排序。
+-   菜单图标是可配置的。
+
+{% gridExampleRunner title="标题组件" name="header-component" /%}
+
+{% if isFramework("javascript", "angular", "vue") %}
+自定义标题组件的接口是：
+{% /if %}
+
+{% partial file="./_component-interface-javascript.mdoc" /%}
+{% partial file="./_component-interface-angular.mdoc" /%}
+{% partial file="./_component-interface-vue.mdoc" /%}
+
+{% if isFramework("javascript") %}
+`init(params)` 方法接受一个包含以下项目的参数对象。
+{% /if %}
+
+{% if isFramework("angular") %}
+`agInit(params)` 方法接受一个包含以下项目的参数对象。
+{% /if %}
+
+{% if isFramework("vue") %}
+当 Vue 组件实例化时，表格将通过 `this.params` 使表格 API、许多实用方法以及单元格和行值可用 - 提供的内容的接口记录在下面。
+{% /if %}
+
+{% if isFramework("react") %}
+以下 props 传递给自定义组件（`CustomHeaderProps` 接口）。
+{% /if %}
+
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="IHeaderParams" exclude=["template"] config={ "description": "" } /%}
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="CustomHeaderProps" exclude=["template"] config={ "description": "" } /%}
+{% /if %}
+
+### 职责
+
+表格提供以下功能，自定义标题组件不应实现这些功能：
+
+-   [**调整大小：**](./column-sizing/) 启用时，表格将放置一个不可见的小部件供鼠标抓取以进行大小调整。
+-   [**标题复选框选择：**](./row-selection-multi-row/#selecting-all-rows) 启用时，表格在标题中显示"全选"复选框。
+-   **列移动** 表格将响应列拖动以重新排序列。
+
+自定义标题组件负责以下内容：
+
+-   **排序：** 您需要处理用户交互以进行排序。默认表格组件在用户用鼠标点击标题时排序。您可能还需要在列的排序状态更改时显示图标。
+-   **过滤：** 您不通过列进行过滤（您从菜单内部过滤），但是您可能需要在列的过滤状态更改时显示图标。
+-   **菜单：** 如果您希望用户能够打开列菜单，您需要管理此用户交互。默认表格组件提供一个按钮供用户点击以显示菜单。
+-   **其他任何内容：** 无论您想要什么，您可能正在创建自定义标题以添加自己的功能。
+
+### 排序
+
+您如何与用户交互进行排序（例如监听鼠标点击）取决于您。表格通过提供列状态和事件来帮助您获取和设置排序。
+
+用户请求排序后，您应该调用以下之一：
+
+{% if isFramework("javascript", "angular", "vue") %}
+
+1. `params.progressSort(multiSort)`：调用此方法将列上的排序推进到下一阶段。这使用表格逻辑确定下一个排序状态（例如"降序"通常跟随"升序"）。
+1. `params.setSort(direction, multiSort)`：如果您不想使用表格的逻辑来确定下一个排序状态，请使用此方法将排序设置为特定状态。
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+1. `props.progressSort(multiSort)`：调用此方法将列上的排序推进到下一阶段。这使用表格逻辑确定下一个排序状态（例如"降序"通常跟随"升序"）。
+1. `props.setSort(direction, multiSort)`：如果您不想使用表格的逻辑来确定下一个排序状态，请使用此方法将排序设置为特定状态。
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+
+```js
+// 选项 1) 当您想要推进排序时告诉表格
+myHeaderElement.addEventListener('click', function(event) {
+    // 在此示例中，如果按下 Shift 键，我们进行多列排序
+    params.progressSort(event.shiftKey);
+});
+
+// 或选项 2) 当您想要显式设置排序时告诉表格
+// 始终升序排序的按钮
+mySortAscButton.addEventListener('click', function(event) {
+    params.setSort('asc', event.shiftKey);
+});
+
+// 始终降序排序的按钮
+mySortDescButton.addEventListener('click', function(event) {
+    params.setSort('desc', event.shiftKey);
+});
+```
+
+{% /if %}
+
+{% if isFramework("angular", "vue") %}
+
+```js
+// 选项 1) 当您想要推进排序时告诉表格
+onSortClicked(event) {
+     // 在此示例中，如果按下 Shift 键，我们进行多列排序
+    this.params.progressSort(event.shiftKey);
+};
+
+// 或选项 2) 当您想要显式设置排序时告诉表格
+// 始终升序排序的按钮
+onSortAscClicked(event) {
+    this.params.setSort('asc', event.shiftKey);
+};
+
+// 始终降序排序的按钮
+onSortDescClicked(event) {
+    this.params.setSort('desc', event.shiftKey);
+};
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+```js
+// 选项 1) 当您想要推进排序时告诉表格
+onSortClicked(event) {
+     // 在此示例中，如果按下 Shift 键，我们进行多列排序
+    props.progressSort(event.shiftKey);
+};
+
+// 或选项 2) 当您想要显式设置排序时告诉表格
+// 始终升序排序的按钮
+onSortAscClicked(event) {
+    props.setSort('asc', event.shiftKey);
+};
+
+// 始终降序排序的按钮
+onSortDescClicked(event) {
+    props.setSort('desc', event.shiftKey);
+};
+```
+
+{% /if %}
+
+要知道列的排序状态何时更改（例如何时更新图标），您应该监听列上的 `sortChanged` 事件。
+
+```js
+// 监听列的排序事件
+column.addEventListener('sortChanged', function() {
+
+    // 从列获取排序状态
+    var sort = column.getSortDef()?.direction;
+    console.log('列的排序状态是 ' + sort); // 打印 ['asc',desc',null] 之一
+
+    // 然后做您需要的事情，例如设置相关图标可见
+    var sortingAscending = sort==='asc';
+    var sortingDescending = sort==='desc';
+    var notSorting = !sortingAscending && !sortingDescending;
+    // 如何相应地更新 GUI 取决于您
+});
+
+// 不要忘记在您的销毁代码中删除监听器
+```
+
+### 过滤
+
+标题通常不会启动过滤。如果启动，请使用标准表格 API 设置过滤器。标题通常在应用过滤器时显示图标。要知道何时显示过滤器图标，请监听列的 `filterChanged` 事件。
+
+```js
+// 监听列的过滤事件
+column.addEventListener('filterChanged', function() {
+    // 当列上的过滤器更改时，这将打印 [true,false] 之一
+    console.log('列的过滤器是 ' + column.isFilterActive());
+});
+
+// 不要忘记在您的销毁代码中删除监听器
+```
+
+### 菜单
+
+您如何让用户请求列菜单取决于您。当您想要显示菜单时，调用 `params.showColumnMenu()` 回调。回调接受按钮的 HTML 元素，以便它可以将菜单放置在按钮上（这样菜单看起来像是从按钮下拉的）。
+
+{% if isFramework("javascript") %}
+
+```js
+myMenuButton.addEventListener('click', function() {
+    params.showColumnMenu(myMenuButton);
+});
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+```js
+onMenuClicked() {
+    this.params.showColumnMenu(this.$refs.menuButton);
+});
+```
+
+{% /if %}
+
+{% if isFramework("angular") %}
+
+```js
+onMenuClicked() {
+    this.params.showColumnMenu(this.menuButton.nativeElement);
+});
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+```js
+onMenuClicked() {
+    props.showColumnMenu(refButton.current);
+});
+```
+
+{% /if %}
+
+### 刷新标题
+
+如果您正在创建自己的[标题组件](./column-headers/)，那么您需要了解标题组件如何刷新。
+
+应用新列定义后仍然存在的所有标题组件（换句话说，更新后列仍然存在，它没有被删除）{% if isFramework("react") %}将被重新渲染。{% else/ %}将调用其 `refresh` 方法。{% /if %}
+
+{% if isFramework("react") %}
+标题组件有责任根据它在列定义中发现的任何更改进行更新。
+{% else/ %}
+标题组件有责任检查列定义中的相关更改，并在需要时更新自己。如果刷新成功，则应返回 `true`。如果刷新不成功，则应返回 `false`。如果返回 `false`，则表格将销毁并重新创建组件。此模式与单元格渲染器的 `refresh` 方法一致。
+{% /if %}
+
+下面的示例演示标题的刷新。请注意以下几点：
+
+-   每列都配置为使用自定义标题组件。
+-   标题组件在其生命周期方法/函数被调用时记录到控制台。
+-   在"大写标题名称"和"小写标题名称"之间切换会导致标题组件刷新。
+-   在"过滤器开启"和"过滤器关闭"之间切换会导致标题组件刷新。{% if not(isFramework("react")) %}标题组件返回 `false`，这导致组件被销毁并重新创建。{% /if %}
+-   在"调整大小开启"和"调整大小关闭"之间切换会导致标题组件刷新。但是标题组件没有更改，因为它不依赖于调整大小 - 调整大小 UI 由表格提供。
+
+{% gridExampleRunner title="刷新标题" name="refresh-headers" /%}
+
+### 自定义 Props
+
+除了表格提供的 props 之外，您还可以提供自己的参数。
+如果您想允许配置标题组件，这很有用。例如，您可能有一个用于格式化货币的标题组件，它还需要提供货币符号。
+
+{% if isFramework("javascript", "angular", "react") %}
+
+```js
+colDef = {
+    ...
+    headerComponent: MyHeaderComponent;
+    headerComponentParams : {
+        currencySymbol: '£' // 英镑符号将被放入 params
+    }
+}
+```
+
+{% /if %}

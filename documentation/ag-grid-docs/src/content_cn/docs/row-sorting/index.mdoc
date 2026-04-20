@@ -1,0 +1,143 @@
+---
+title: "行排序"
+description: "在 $framework 数据表格中对行数据进行排序。使用自定义比较器自定义行排序。按多列排序并应用后排序以进行额外控制。"
+---
+
+本页面描述如何在表格中对行数据进行排序，以及如何自定义排序以满足您的要求。
+
+## 排序
+
+默认情况下，所有列都启用排序。您可以通过点击列标题对列进行排序。要启用/禁用每列的排序，请使用 `sortable` 列定义属性。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'name' },
+        { field: 'age' },
+        // 禁用按地址排序
+        { field: 'address', sortable: false },
+    ],
+}
+```
+
+要禁用所有列的排序，请在[默认列定义](./column-definitions/)中设置排序。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    // 禁用所有列的排序
+    defaultColDef: {
+        sortable: false
+    },
+    columnDefs: [
+        // 覆盖默认值以启用按名称排序
+        { field: 'name', sortable: true },
+        { field: 'age' },
+        { field: 'address' },
+    ],
+}
+```
+
+## 自定义排序
+
+通过在列定义上配置比较器，在列级别提供自定义排序。
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'age',
+            // 简单数字比较器
+            comparator: (valueA, valueB, nodeA, nodeB, isDescending) => valueA - valueB
+        },
+        {
+            field: 'name',
+            // 简单字符串比较器
+            comparator: (valueA, valueB, nodeA, nodeB, isDescending) => {
+                if (valueA == valueB) return 0;
+                return (valueA > valueB) ? 1 : -1;
+            }
+        }
+    ]
+}
+```
+
+{% apiDocumentation source="column-properties/properties.json" section="sort" names=["comparator"] /%}
+
+下面的示例显示以下内容：
+
+-   **运动员**列在加载时按降序排序。
+-   当**年份**列未排序时，它显示自定义图标（上/下箭头）。
+-   **日期**列的行数据是字符串，但有一个自定义比较器，因此当您对此列进行排序时，它按日期而不是字符串排序。
+
+{% gridExampleRunner title="自定义排序" name="custom-sorting" /%}
+
+{% note %}
+如果您使用自定义列标题组件，请参阅[自定义组件](./column-headers-components/#custom-component)了解如何实现排序。
+{% /note %}
+
+## 多列排序
+
+可以按多列排序。多列排序的默认操作是用户在点击列标题时按住 {% kbd "⇧ Shift" /%}。要将默认操作更改为使用 {% kbd "^ Ctrl" /%} 键（或 Apple 上的 {% kbd "Command" /%} 键），请设置属性 `multiSortKey='ctrl'`。
+
+下面的示例演示以下内容：
+
+-   表格默认按**国家**然后按**运动员**排序。
+-   设置属性 `multiSortKey='ctrl'`，因此通过按住 {% kbd "^ Ctrl" /%}（或 Apple 上的 {% kbd "Command" /%}）并选择多列来实现多列排序。
+
+{% gridExampleRunner title="多列排序" name="multi-column" /%}
+
+{% note %}
+您可以通过启用 `suppressMultiSort` 选项来抑制多排序行为，或者通过启用 `alwaysMultiSort` 选项在不按键的情况下强制执行该行为。
+{% /note %}
+
+## 排序动画
+
+默认情况下，行在排序后会动画显示。如果您希望抑制此动画，请设置表格属性 `animateRows=false`。
+
+## 排序顺序
+
+默认情况下，排序顺序如下：
+
+**升序 -> 降序 -> 无**。
+
+换句话说，当您点击未排序的列时，它将按升序排序。下一次点击将使其按降序排序。再次点击将移除排序。
+
+可以通过在 `colDef` 上提供自己的 `sortingOrder` 来覆盖此行为。
+
+{% apiDocumentation source="column-properties/properties.json" section="sort" names=["sortingOrder"] /%}
+
+下面的示例显示不同的排序顺序组合，如下所示：
+
+-   **运动员列：** 升序 -> 降序
+-   **年龄列：** 降序 -> 升序
+-   **国家列：** 降序 -> 无排序
+-   **年份列：** 仅升序
+-   **默认列：** 降序 -> 升序 -> 无排序
+
+{% gridExampleRunner title="排序顺序和动画" name="sorting-order-and-animation" /%}
+
+## 绝对排序
+
+绝对排序允许根据数值的大小进行排序，忽略其符号。这可用于按值的大小排名，忽略值是正数还是负数。
+
+在以下示例中，列 `rankingChange` 使用绝对排序：
+
+```{% frameworkTransform=true %}
+
+const gridOptions = {
+    columnDefs: [
+        // ... 其他列
+        {
+            field: 'rankingChange',
+            sort: { direction: 'asc', type: 'absolute' },
+            sortingOrder: [
+                { direction: 'asc', type: 'absolute' },
+                { direction: 'desc', type: 'absolute' },
+                null,
+            ],
+        },
+    ],
+};
+```
+
+{% apiDocumentation source="column-properties/properties.json" section="sort" names=["sort", "sortingOrder"] /%}

@@ -1,0 +1,108 @@
+---
+title: "聚合 - 配置列"
+enterprise: true
+---
+
+可以将列配置为为每个级别的行分组或树形数据聚合数据。
+
+{% gridExampleRunner title="启用聚合" name="enable-aggregation" /%}
+
+## 启用聚合
+
+可以通过将 `aggFunc` 表格选项设置为以下之一来将聚合函数应用于列：`"sum"`、`"min"`、`"max"`、`"first"`、`"last"`、`"count"` 或 `"avg"`。
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'total', aggFunc: 'sum' },
+        { field: 'total', aggFunc: 'avg' },
+        { field: 'total', aggFunc: 'count' },
+        { field: 'total', aggFunc: 'min' },
+        { field: 'total', aggFunc: 'max' },
+        { field: 'total', aggFunc: 'first' },
+        { field: 'total', aggFunc: 'last' },
+        // ... 其他列定义
+    ],
+};
+```
+
+{% note %}
+如果您的数据中有 `bigint` 值，内置函数将支持它们，但 `avg` 函数会失去精度，因为如果使用 `bigint`，它只能使用整数算术。
+{% /note %}
+
+## 通过 UI 配置
+
+通过将 `enableValue` 列定义属性设置为 `true`，使用户能够使用[列工具面板](./tool-panel-columns/)和[列菜单](./column-menu/)在列上配置聚合函数。
+
+{% gridExampleRunner title="直接提供的聚合函数" name="user-configured" /%}
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'bronze', enableValue: true },
+        { field: 'silver', enableValue: true },
+        { field: 'gold', enableValue: true },
+        { field: 'total', enableValue: true },
+        // ... 其他列定义
+    ],
+    sideBar: 'columns',
+};
+```
+
+### 允许的函数
+
+要限制可以应用于列的聚合函数，请将 `allowedAggFuncs` 列定义属性设置为允许的聚合函数名称数组。
+
+{% gridExampleRunner title="允许的聚合" name="user-configured-allowed-aggregations" /%}
+
+以下配置是一个示例，演示如何将列限制为仅允许 `"first"` 和 `"last"` 聚合函数：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'total', enableValue: true, allowedAggFuncs: ['first', 'last'] },
+        // ... 其他列定义
+    ],
+};
+```
+
+### 默认函数
+
+当在[列工具面板](./tool-panel-columns/)中右键单击或拖动到聚合面板时，`"sum"` 聚合函数将应用于列。可以通过设置 `defaultAggFunc` 列定义属性来更改此默认值。
+
+{% gridExampleRunner title="默认聚合" name="user-configured-default-aggregations" /%}
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'total', enableValue: true, defaultAggFunc: 'avg' },
+        // ... 其他列定义
+    ],
+};
+```
+
+## 编辑聚合列
+
+聚合列可以在组行级别设置为可编辑，允许用户编辑组总计并将更改分发到后代行。在列上设置 `groupRowEditable` 并配置 `groupRowValueSetter` 以控制编辑值的分发方式。内置分发自动处理所有标准聚合函数。
+
+有关完整详细信息，请参阅[编辑组行](./grouping-edit/)。
+
+## 在标题中省略函数名称
+
+要从列标题中省略聚合函数名称，请将 `suppressAggFuncInHeader` 表格选项设置为 `true`。
+
+{% gridExampleRunner title="在标题中隐藏聚合函数" name="suppress-func-name" /%}
+
+上面的示例演示了以下配置：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    suppressAggFuncInHeader: true,
+};
+```

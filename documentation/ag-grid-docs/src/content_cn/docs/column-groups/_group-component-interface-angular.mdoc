@@ -1,0 +1,19 @@
+{% if isFramework("angular") %}
+标题组组件接口如下：
+{% /if %}
+
+{% if isFramework("angular") %}
+
+```ts
+interface IHeaderAngularComp {
+    // agInit(params) 方法在组标题组件上调用一次。
+    // 参数详情见下文。
+    agInit(params: IHeaderGroupParams): void;
+}
+```
+
+{% /if %}
+
+{% if isFramework("angular") %}
+传递给 `agInit(params)` 的参数如下：
+{% /if %}

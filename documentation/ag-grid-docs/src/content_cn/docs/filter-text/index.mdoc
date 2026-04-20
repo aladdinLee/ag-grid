@@ -1,0 +1,59 @@
+---
+title: "文本过滤器"
+---
+
+文本过滤器允许您过滤字符串数据。
+
+{% imageCaption imagePath="resources/text-filter.png" alt="文本过滤器" centered=true /%}
+
+## 启用文本过滤器
+
+{% gridExampleRunner title="文本过滤器" name="text-filter" /%}
+
+文本过滤器是 AG Grid Community 中使用的默认过滤器，但也可以显式配置，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'athlete',
+            // Community 版本中默认使用文本过滤器
+            filter: true,
+            filterParams: {
+                // 向文本过滤器传递其他参数
+            },
+        },
+        {
+            field: 'country',
+            // 显式配置列使用文本过滤器
+            filter: 'agTextColumnFilter',
+            filterParams: {
+                // 向文本过滤器传递其他参数
+            },
+        },
+    ],
+}
+```
+
+## 文本过滤器参数
+
+文本过滤器通过列定义的 `filterParams` 属性配置（`ITextFilterParams` 接口）：
+
+{% interfaceDocumentation interfaceName="ITextFilterParams" overrideSrc="filter-text/text-filter-params.json" config={"description":"", "sortAlphabetically":true} /%}
+
+以下示例演示了配置不同的文本过滤器参数：
+
+-   对于 **Athlete** 列：
+    -   过滤器具有 200ms 的防抖（`debounceMs = 200`）。
+    -   只允许一个过滤条件（`maxNumConditions = 1`）
+-   对于 **Country** 列：
+    -   应用过滤器时将修剪过滤器输入（`trimInput = true`）
+    -   有 1000ms 的防抖（`debounceMs = 1000`）
+-   对于 **Sport** 列：
+    -   过滤器区分大小写（`caseSensitive = true`）
+
+{% gridExampleRunner title="文本过滤器参数" name="text-filter-parameters" /%}
+
+## 文本格式化器
+
+默认情况下，网格以不区分大小写的方式将文本过滤器与值进行比较，方法是将过滤文本和值都转换为小写并进行比较；例如，`'o'` 将匹配 `'Olivia'` 和 `'Salmon'`。如果您想要区分大小写的匹配，可以在 `filterParams` 中设置 `caseSensitive = true`，这样就不会执行小写转换。在这种情况下，`'o'` 将不再匹配 `'Olivia'`。

@@ -1,0 +1,60 @@
+---
+title: "多重过滤器"
+enterprise: true
+---
+
+多重过滤器允许在同一列上使用多个[提供的过滤器](./filtering/#column-filter-types)或[自定义过滤器](./component-filter/)。这为网格中的数据过滤提供了更大的灵活性。
+
+{% imageCaption imagePath="resources/multi-filter.png" alt="多重过滤器" centered=true /%}
+
+## 启用多重过滤器
+
+{% gridExampleRunner title="多重过滤器" name="multi-filter"  exampleHeight=602 /%}
+
+要使用多重过滤器，请在列定义中指定以下内容：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        // 使用具有默认文本过滤器和集合过滤器的多重过滤器
+        { field: 'athlete', filter: 'agMultiColumnFilter' },
+        // 使用具有数字过滤器和集合过滤器的多重过滤器
+        {
+            field: 'year',
+            filter: 'agMultiColumnFilter',
+            filterParams: {
+                filters: [
+                    {
+                        filter: 'agNumberColumnFilter',
+                    },
+                    {
+                        filter: 'agSetColumnFilter',
+                    },
+                ],
+            },
+        },
+    ]
+}
+```
+
+默认情况下，多重过滤器将显示[文本过滤器](./filter-text/)和[集合过滤器](./filter-set/)，但您可以在 `filters` 数组中指定要使用的过滤器。过滤器将按照指定的顺序显示。
+
+上面的示例显示了多重过滤器的操作。请注意以下内容：
+
+-   **Athlete** 列具有默认行为的多重过滤器。
+-   **Country** 列具有显式配置子过滤器以匹配默认行为的多重过滤器。
+-   **Year** 和 **Age** 列具有显式配置子过滤器以使用[数字过滤器](./filter-number/)和集合过滤器的多重过滤器。
+
+## 向子过滤器传递参数
+
+可以通过在多重过滤器参数的 `filters` 数组中指定 `filterParams` 来向子过滤器传递参数：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'athlete',
+            filter: 'agMultiColumnFilter',
+            filterParams: {
+                filters: [
+                    {

@@ -1,0 +1,134 @@
+---
+title: "范围图表"
+enterprise: true
+---
+
+本节介绍如何直接从选定的单元格范围创建图表。
+
+范围图表为用户提供了一种从网格内部创建图表的快速简便的方法。
+
+## 创建图表范围
+
+当从网格中选定的单元格范围创建图表时，或通过图表 API 创建时，底层单元格范围将被图表范围替换。
+
+要了解如何从单元格范围创建图表范围，请使用我们的[演示页面](/example)执行以下操作：
+
+-   通过在单元格范围内拖动鼠标，在网格中选择数值的[单元格范围](./cell-selection/)。
+
+-   调出[上下文菜单](./context-menu/)并从"Chart Range"子菜单中选择所需的图表类型。
+
+{% gif imagePath="resources/range-chart.gif" alt="Charting Ranges" /%}
+
+如上所示，生成的图表范围随后可以通过拖动位于图表范围右下角的图表范围手柄进行修改。
+
+## 类别和系列范围
+
+有两种类型的图表范围：以绿色突出显示的类别范围和以蓝色突出显示的系列范围。
+
+类别范围只能包含单个列中的单元格，而系列范围可以包含多个列中的值。
+
+可以通过拖动位于系列范围右下角的图表范围手柄在网格内调整图表范围。类别和系列范围是连接的，因此当图表范围向上或向下拖动时，它们将一起更新。
+
+{% note %}
+图表范围手柄仅在所有系列列连续时才会出现。但是，可以在网格中移动列以连接系列范围。
+{% /note %}
+
+## 定义类别和系列
+
+有几种方法可以将列分类为图表类别或系列。列可以显式配置，也可以让网格根据单元格中包含的数据推断类型。
+
+### ColDef.chartDataType
+
+在定义列定义时，可以使用 `ColDef.chartDataType` 属性定义列在图表上下文中应如何被考虑。
+
+{% apiDocumentation source="column-properties/properties.json" section="charts" names=["chartDataType"] /%}
+
+定义为 `excluded` 的列将不会包含在图表或图表范围中。
+
+{% warning %}
+建议指定 `ColDef.chartDataType` 或 `ColDef.cellDataType`，而不是依赖网格推断图表数据类型，因为 `null` 和 `undefined` 值可能会产生意外结果或缺失图表数据系列。另请参阅[单元格数据类型](./cell-data-types/)以获取更多信息。
+{% /warning %}
+
+以下列定义显示了如何应用不同的 `ColDef.chartDataType` 值：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        // 'category' 列
+        { field: 'athlete', chartDataType: 'category' },
+        { field: 'age', chartDataType: 'category' },
+        { field: 'country' },
+
+        // 从图表中 'excluded' 排除
+        { field: 'date', chartDataType: 'excluded' },
+
+        // 'series' 列
+        { field: 'gold', chartDataType: 'series' },
+        { field: 'silver' }
+    ]
+}
+```
+
+请注意，上面的代码片段中 `age` 列包含数字但显式定义为类别，但是，由于 `country` 列包含字符串，它可以正确推断为类别列，而无需指定 `chartDataType`。
+
+有关 `'time'` 图表数据类型的详细信息，请参阅[时间序列](./integrated-charts-time-series/)部分。
+
+### 由网格推断
+
+如果上述 `ColDef` 属性都不存在，则网格将根据第一行单元格中包含的数据推断图表列类型。包含 `number` 值的列将映射到 `'series'` 图表列，包含其他任何内容的列将映射到 `'category'`。
+
+### 示例：定义类别和系列
+
+下面的示例演示了为图表定义列的不同方式：
+
+-   **Athlete**：定义为"类别"，因为 `chartType='category'`。
+-   **Age**：定义为"类别"，因为 `chartType='category'`。
+-   **Sport**：被视为"类别"，因为数据是 `string`。
+-   **Year**：定义为从图表中"排除"，因为数据类型为 `chartType='excluded'`。
+-   **Gold**：定义为"系列"，因为 `chartType='series'`。
+-   **Silver**：定义为"系列"，因为 `chartType='series'`。
+-   **Bronze**：被视为"系列"，因为数据是 `number`。
+
+{% gridExampleRunner title="定义类别和系列" name="defining-categories-and-series"  exampleHeight=710 /%}
+
+从中获取类别和数据的单元格范围将在网格上突出显示。可以使用 `--ag-range-selection-chart-category-background-color` 和 `--ag-range-selection-chart-background-color` CSS 变量自定义突出显示颜色。请参阅上面示例中的 `style.css`。
+
+### 切换类别和系列
+
+可以切换类别和系列。这可以通过[设置工具面板](./integrated-charts-chart-tool-panels/#set-up-tool-panel)或[范围图表 API](./integrated-charts-api-range-chart/) 完成。完成此操作后，类别列中的值将成为系列，系列列将成为类别中的值。
+
+下面的示例演示切换类别和系列：
+
+{% gridExampleRunner title="切换类别和系列" name="switching-categories-and-series"  exampleHeight=710 /%}
+
+## 行分组
+
+在图表中显示分组数据的最佳方法是使用[透视图表](./integrated-charts-pivot-chart/)。但是，也可以将范围图表与[行分组](./grouping/)一起使用。
+
+启用行分组后，图表可以以三种方式之一显示：
+
+-   不带组列
+-   作为分组类别
+-   带聚合值
+
+### 不带组列
+
+如果单元格范围中不包含组列，图表将扁平显示，就像禁用分组一样。
+
+如果图表范围跨越组并且组级别没有值，图表将有空白值。
+
+### 分组类别
+
+如果单元格范围中包含组列，默认情况下将显示分组类别。为了正确显示组类别，需要在网格中[向叶节点添加值](./grouping-single-group-column/#configuration)。
+
+以下示例通过在[组列配置](./grouping-single-group-column/#configuration)上定义 `field` **Resource** 来演示这一点：
+
+{% gridExampleRunner title="分组类别" name="grouped-category"  exampleHeight=850 /%}
+
+### 聚合值
+
+组值也可以聚合显示。这是通过在[设置工具面板](./integrated-charts-chart-tool-panels/#set-up-tool-panel)中启用聚合或向[范围图表 API](./integrated-charts-api-range-chart/) 提供聚合函数来完成的。
+
+以下示例演示了这一点：
+
+{% gridExampleRunner title="聚合值" name="aggregated-values"  exampleHeight=710 /%}

@@ -1,0 +1,44 @@
+---
+title: "工具面板组件"
+enterprise: true
+---
+
+自定义工具面板组件可以包含在网格的侧边栏中。当您需要更多工具面板来满足应用程序需求时，请实现这些组件。
+
+下面的示例提供了一个"自定义统计"工具面板，演示了如何创建和注册自定义工具面板组件并将其包含在侧边栏中：
+
+{% gridExampleRunner title="自定义统计" name="custom-stats" /%}
+
+## 实现工具面板组件
+
+{% partial file="./_component-interface-javascript.mdoc" /%}
+{% partial file="./_component-interface-angular.mdoc" /%}
+{% partial file="./_component-interface-react.mdoc" /%}
+{% partial file="./_component-interface-vue.mdoc" /%}
+
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="IToolPanelParams" /%}
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="CustomToolPanelProps" /%}
+{% /if %}
+
+{% if isFramework("react") %}
+{% note %}
+在以前版本的网格中，自定义组件是以命令式方式声明的。有关如何迁移到当前格式的详细信息，请参阅[迁移到使用 reactiveCustomComponents](./upgrading-to-ag-grid-31-1/#migrating-custom-components-to-use-reactivecustomcomponents-option)。
+{% /note %}
+{% /if %}
+
+## 注册工具面板组件
+
+注册工具面板组件遵循与网格中任何其他自定义组件相同的方法。有关更多详细信息，请参阅：[注册自定义组件](./components/#registering-custom-components)。
+
+工具面板组件注册到网格后，需要将其包含在侧边栏中。以下代码片段演示了这一点：
+
+{% partial file="./_configure-javascript.mdoc" /%}
+{% partial file="./_configure-angular.mdoc" /%}
+{% partial file="./_configure-react.mdoc" /%}
+{% partial file="./_configure-vue.mdoc" /%}
+
+有关上述配置属性的更多详细信息，请参阅[侧边栏配置](./side-bar/#sidebardef-configuration)部分。

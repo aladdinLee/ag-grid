@@ -1,0 +1,101 @@
+---
+title: "覆盖层"
+---
+
+覆盖层用于在网格顶部显示消息。有两个内置覆盖层：加载和无行。
+
+{% warning %}
+此页面记录了处理覆盖层的旧版方法。有关最新文档，请参见[覆盖层概述](./overlays-overview/)。
+{% /warning %}
+
+## 加载覆盖层
+
+通过将 `loading` 属性设置为 `true` 或 `false` 来显示或隐藏加载覆盖层。
+
+{% apiDocumentation source="grid-options/properties.json" section="overlays" names=["loading"] /%}
+
+加载覆盖层优先于无行覆盖层，并且不依赖于 `rowData` 的状态。
+
+{% gridExampleRunner title="加载覆盖层" name="loading-overlay"  exampleHeight=350 /%}
+
+## 无行覆盖层
+
+当 `rowData` 设置为空数组 `[]` 时，网格自动显示无行覆盖层。无行覆盖层也可以通过网格 API 以编程方式显示/隐藏。
+
+{% warning %}
+建议使用[活动覆盖层](./overlays-active/)手动显示覆盖层。
+{% /warning %}
+
+{% apiDocumentation source="grid-api/api.json" section="overlays" names=["showNoRowsOverlay", "hideOverlay"] /%}
+
+可以通过将 `suppressNoRowsOverlay` 设置为 `true` 来禁止自动显示无行覆盖层。
+
+{% gridExampleRunner title="无行覆盖层" name="no-rows-overlay"  exampleHeight=350 /%}
+
+## 初始加载覆盖层
+
+如果未明确定义 `loading`，网格将自动显示加载覆盖层，直到第一次为 `rowData` 和 `columnDefs` 提供非空值。可以通过使用适当的 `loading` 状态初始化网格来禁止此行为。
+
+## 自定义
+
+可以通过网格属性提供 HTML 字符串或自定义组件来自定义覆盖层。
+
+### 自定义加载覆盖层
+
+可以通过网格属性 `overlayLoadingTemplate` 或 `loadingOverlayComponent` 和 `loadingOverlayComponentParams` 自定义加载覆盖层。
+
+{% apiDocumentation source="grid-options/properties.json" section="overlays" names=["overlayLoadingTemplate", "loadingOverlayComponent", "loadingOverlayComponentParams"] /%}
+
+{% if isFramework("javascript", "angular") %}
+实现此接口以在数据加载时提供自定义覆盖层。
+{% /if %}
+
+{% if isFramework("vue") %}
+任何有效的 Vue 组件都可以是加载覆盖层组件，但是也可以实现以下可选方法：
+{% /if %}
+
+{% if isFramework("angular") %}
+{% interfaceDocumentation interfaceName="ILoadingOverlayAngularComp" config={"asCode":true } /%}
+{% /if %}
+
+{% if isFramework("javascript") %}
+{% interfaceDocumentation interfaceName="ILoadingOverlayComp" config={"asCode":true } /%}
+{% /if %}
+
+{% if isFramework("vue") %}
+{% interfaceDocumentation interfaceName="ILoadingOverlay" config={"asCode":true } /%}
+{% /if %}
+
+此示例演示如何提供通过参数自定义的自定义加载覆盖层组件。
+
+{% gridExampleRunner title="自定义加载覆盖层组件" name="custom-overlay-loading" /%}
+
+### 自定义无行覆盖层
+
+可以通过网格属性 `overlayNoRowsTemplate` 或 `noRowsOverlayComponent` 和 `noRowsOverlayComponentParams` 自定义无行覆盖层。
+
+{% apiDocumentation source="grid-options/properties.json" section="overlays" names=["overlayNoRowsTemplate", "noRowsOverlayComponent", "noRowsOverlayComponentParams"] /%}
+
+{% if isFramework("javascript", "angular") %}
+实现此接口以在加载无行时提供自定义覆盖层。
+{% /if %}
+
+{% if isFramework("vue") %}
+任何有效的 Vue 组件都可以是无行覆盖层组件，但是也可以实现以下可选方法：
+{% /if %}
+
+{% if isFramework("angular") %}
+{% interfaceDocumentation interfaceName="INoRowsOverlayAngularComp" config={"asCode":true } /%}
+{% /if %}
+
+{% if isFramework("javascript") %}
+{% interfaceDocumentation interfaceName="INoRowsOverlayComp" config={"asCode":true } /%}
+{% /if %}
+
+{% if isFramework("vue") %}
+{% interfaceDocumentation interfaceName="INoRowsOverlay" config={"asCode":true } /%}
+{% /if %}
+
+此示例演示如何提供通过参数自定义的自定义无行覆盖层组件。
+
+{% gridExampleRunner title="自定义无行覆盖层组件" name="custom-overlay-no-rows" /%}

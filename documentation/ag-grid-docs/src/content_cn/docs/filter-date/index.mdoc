@@ -1,0 +1,60 @@
+---
+title: "日期过滤器"
+---
+
+日期过滤器允许您过滤日期数据。
+
+{% imageCaption imagePath="resources/date-filter.png" alt="日期过滤器" centered=true /%}
+
+## 启用日期过滤器
+
+{% gridExampleRunner title="日期过滤器" name="date-filter" /%}
+
+日期过滤器是 AG Grid Community 中具有日期[单元格数据类型](./cell-data-types/)的列的默认过滤器，但也可以显式配置，如下所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'startDate',
+            // Community 版本中日期列默认使用日期过滤器
+            filter: true,
+            filterParams: {
+                // 向日期过滤器传递其他参数
+            },
+        },
+        {
+            field: 'endDate',
+            // 显式配置列使用日期过滤器
+            filter: 'agDateColumnFilter',
+            filterParams: {
+                // 向日期过滤器传递其他参数
+            },
+        },
+    ],
+}
+```
+
+## 日期过滤器参数
+
+日期过滤器通过列定义的 `filterParams` 属性配置（`IDateFilterParams` 接口）：
+
+{% interfaceDocumentation interfaceName="IDateFilterParams" overrideSrc="filter-date/date-filter-params.json" config={"description":"", "sortAlphabetically":true} /%}
+
+## 日期范围
+
+下面的示例演示了在日期过滤器中配置具有最小和最大验证日期的日期范围过滤：
+
+-   对于 **Start Date** 列：
+    -   `minValidDate` 参数使用字符串设置为 `'2000-01-01'`。
+    -   `maxValidDate` 使用 `Date` 对象动态设置为明天的日期。
+-   对于 **End Date** 列：
+    -   `minValidYear` 参数设置为 `2010`。
+    -   `maxValidYear` 参数设置为 `2030`。
+-   有效范围之外的日期将无效。
+
+{% gridExampleRunner title="为过滤器设置日期范围" name="range-for-date-filter"  exampleHeight=520 /%}
+
+## 过滤比较器
+
+日期可以在您的数据中以多种方式表示，例如作为 JavaScript `Date` 对象、作为特定格式的字符串（如 `'26-MAR-2020'`）或其他方式。您如何表示日期将特定于您的应用程序。

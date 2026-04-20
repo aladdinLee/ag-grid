@@ -1,0 +1,9 @@
+{% if isFramework("vue") %}
+当实例化 Vue 组件时，网格将通过 `this.params` 使网格 API、许多实用方法以及单元格和行值可用。
+
+自定义日期组件的接口如下：
+{% /if %}
+
+{% if isFramework("vue") %}
+{% interfaceDocumentation interfaceName="IDate" config={"asCode":true } /%}
+{% /if %}

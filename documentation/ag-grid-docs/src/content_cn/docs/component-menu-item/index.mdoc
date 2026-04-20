@@ -1,0 +1,204 @@
+---
+title: "菜单项组件"
+enterprise: true
+---
+
+菜单项组件允许您自定义[列菜单](./column-menu/)和[上下文菜单](./context-menu/)中显示的菜单项。当提供的菜单项不能满足您的需求时，请使用这些组件。
+
+以下示例演示了在列菜单和上下文菜单中的自定义菜单项组件。点击自定义菜单项中的按钮将在开发者控制台中记录日志。
+
+{% gridExampleRunner title="自定义菜单项组件" name="custom-menu-item" /%}
+
+{% if isFramework("javascript", "angular", "vue") %}
+实现此接口以提供自定义菜单项。
+{% /if %}
+
+{% if isFramework("angular") %}
+
+```ts
+interface extends IMenuItemAngularComp {
+    // 必需方法
+
+    // agInit(params) 方法在菜单项上调用一次。
+    agInit(params: IMenuItemParams);
+
+    // 可选方法
+
+    // 配置此项的默认网格行为，包括样式、鼠标和键盘交互。
+    // 返回 `true` 使用所有默认行为，返回 `false` 不使用默认行为
+    // （等同于未定义 `configureDefaults`），
+    // 或返回 `IMenuConfigParams` 来选择要使用的默认行为。
+    configureDefaults(): boolean | IMenuConfigParams;
+
+    // 当项目被激活/停用时调用，通过鼠标悬停或键盘导航触发。
+    setActive(active: boolean): void;
+
+    // 如果项目有子菜单，当子菜单打开/关闭时调用。
+    setExpanded(expanded: boolean): void;
+
+    // 当项目被选中时调用，例如点击或按下 Enter 键。
+    select(): void;
+}
+```
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+
+```ts
+interface IMenuItemComp {
+    // 必需方法
+
+    // 返回此菜单项的 DOM 元素
+    getGui(): HTMLElement;
+
+    // 可选方法
+
+    // init(params) 方法在菜单项上调用一次。有关参数的详细信息，请参见下文。
+    init(params: IMenuItemParams): void;
+
+    // 配置此项的默认网格行为，包括样式、鼠标和键盘交互。
+    // 返回 `true` 使用所有默认行为，返回 `false` 不使用默认行为
+    // （等同于未定义 `configureDefaults`），
+    // 或返回 `IMenuConfigParams` 来选择要使用的默认行为。
+    configureDefaults(): boolean | IMenuConfigParams;
+
+    // 当项目被激活/停用时调用，通过鼠标悬停或键盘导航触发。
+    setActive(active: boolean): void;
+
+    // 如果项目有子菜单，当子菜单打开/关闭时调用。
+    setExpanded(expanded: boolean): void;
+
+    // 当项目被选中时调用，例如点击或按下 Enter 键。
+    select(): void;
+}
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+```ts
+interface IMenuItem {
+    // 可选方法
+
+    // 配置此项的默认网格行为，包括样式、鼠标和键盘交互。
+    // 返回 `true` 使用所有默认行为，返回 `false` 不使用默认行为
+    // （等同于未定义 `configureDefaults`），
+    // 或返回 `IMenuConfigParams` 来选择要使用的默认行为。
+    configureDefaults(): boolean | IMenuConfigParams;
+
+    // 当项目被激活/停用时调用，通过鼠标悬停或键盘导航触发。
+    setActive(active: boolean): void;
+
+    // 如果项目有子菜单，当子菜单打开/关闭时调用。
+    setExpanded(expanded: boolean): void;
+
+    // 当项目被选中时调用，例如点击或按下 Enter 键。
+    select(): void;
+}
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+```jsx
+export default ({ name, icon, shortcut, subMenu }) => {
+    useGridMenuItem(() => {
+        configureDefaults: () => true;
+    });
+    return (
+        <div>
+            <span className="ag-menu-option-part ag-menu-option-icon">{icon}</span>
+            <span className="ag-menu-option-part ag-menu-option-text">{name}</span>
+            <span className="ag-menu-option-part ag-menu-option-shortcut">{shortcut}</span>
+            <span className="ag-menu-option-part ag-menu-option-popup-pointer">{subMenu ? '>': ''}</span>
+        </div>
+    );
+};
+```
+
+{% /if %}
+
+{% if isFramework("react") %}
+{% note %}
+在以前版本的网格中，自定义组件是以命令式方式声明的。有关如何迁移到当前格式的详细信息，请参阅[迁移到使用 reactiveCustomComponents](./upgrading-to-ag-grid-31-1/#migrating-custom-components-to-use-reactivecustomcomponents-option)。
+{% /note %}
+{% /if %}
+
+{% if isFramework("javascript", "angular", "vue") %}
+要启用默认菜单项行为，请实现 `configureDefaults` 方法并返回 `true`（参见[提供自定义行为](./component-menu-item/#providing-custom-behaviour)）。
+{% /if %}
+
+{% if isFramework("react") %}
+要启用默认菜单项行为，请将回调 `configureDefaults` 传递给 `useGridMenuItem` 钩子并返回 `true`（参见[提供自定义行为](./component-menu-item/#providing-custom-behaviour)）。
+{% /if %}
+
+{% if isFramework("angular") %}
+`agInit(params)` 方法接受一个包含以下项目的参数对象：
+{% /if %}
+
+{% if isFramework("javascript") %}
+菜单项参数的接口如下：
+{% /if %}
+
+{% if isFramework("vue") %}
+当菜单项被实例化时，以下内容将在 `this.params` 上可用：
+{% /if %}
+
+{% if isFramework("javascript", "angular", "vue") %}
+{% interfaceDocumentation interfaceName="IMenuItemParams" /%}
+{% /if %}
+
+{% if isFramework("react") %}
+
+## 自定义菜单项参数
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+### 菜单项属性
+
+以下属性传递给自定义菜单项组件（`CustomMenuItemProps` 接口）。
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="CustomMenuItemProps" config={ "description": "" } /%}
+{% /if %}
+
+{% if isFramework("react") %}
+
+### 菜单项回调
+
+以下回调可以传递给 `useGridMenuItem` 钩子（`CustomMenuItemCallbacks` 接口）。所有回调都是可选的，只有在提供回调时才需要使用该钩子。
+{% /if %}
+
+{% if isFramework("react") %}
+{% interfaceDocumentation interfaceName="CustomMenuItemCallbacks" config={ "description": "" } /%}
+{% /if %}
+
+## 默认样式
+
+为了使菜单能够动态调整大小，默认样式通过 `display: table` 提供。这意味着，如果自定义菜单项组件与网格提供的菜单项一起使用，它们必须遵循特定的结构，否则必须覆盖网格样式。
+
+默认结构由一个具有 `display: table-row` 的父元素和四个具有 `display: table-cell` 的子元素组成。这可以在上面的示例中看到。如果使用 `configureDefaults` 且不禁止根样式，网格将自动向父元素添加正确的样式。
+
+可以通过[样式化菜单](./theming-popups/)来覆盖此格式，特别是 `ag-menu-list`、`ag-menu-option`、`ag-menu-option-part`、`ag-menu-separator` 和 `ag-menu-separator-part`。这在下面的[提供自定义行为](./component-menu-item/#providing-custom-behaviour)示例中进行了演示。
+
+## 提供自定义行为
+
+如上所述，配置自定义菜单项行为的最简单方法是从 `configureDefaults` 返回 `true`。
+
+如果不这样做，自定义菜单项将需要自己实现所有必需的行为。
+
+也可以通过从 `configureDefaults` 返回 `IMenuConfigParams` 类型的对象来禁用某些行为：
+
+{% interfaceDocumentation interfaceName="IMenuConfigParams" config={ "description": "" } /%}
+
+以下示例演示了通过在菜单项中包含过滤器来提供自定义行为（仅在列菜单中）。为了允许全宽自定义菜单项与网格提供的菜单项并存，覆盖了默认菜单样式（参见[默认样式](./component-menu-item/#default-styling)）。
+
+{% gridExampleRunner title="无默认值的菜单项组件" name="menu-item-without-defaults" /%}
+
+注意，这只是在自定义菜单项中显示列过滤器作为如何添加复杂项目的示例。它并不意味着作为完整的解决方案使用。

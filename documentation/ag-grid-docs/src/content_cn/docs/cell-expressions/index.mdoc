@@ -1,0 +1,117 @@
+---
+title: "表达式"
+---
+
+表达式可以以两种不同的方式使用：
+
+1. **列定义表达式：** 在列定义内部，用于 `valueGetter`、`valueSetter`、`valueFormatter` 和 `valueParser`，代替函数。
+
+1. **单元格表达式：** 在表格内的单元格中，类似于在 Excel 的单元格中放置表达式。
+
+## 列定义表达式
+
+表达式可以在列定义内部使用，代替 getter、setter、formatter 和 parser 的函数。要使用表达式而不是函数，只需将函数体放入字符串中。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        // 使用标准函数的列定义
+        {
+            field: 'employee',
+            valueGetter: params => params.data.firstName,
+            valueFormatter: params => params.value.toUpperCase(),
+        },
+        // 使用表达式的列定义
+        {
+            field: 'manager',
+            valueGetter: 'data.firstName',
+            valueFormatter: 'value.toUpperCase()'
+        }
+    ]
+}
+```
+
+## 列定义表达式示例
+
+在此示例中，字符串表达式代替函数用于 `valueGetter`、`valueSetter`、`valueFormatter` 和 `valueParser`。
+
+{% gridExampleRunner title="列定义表达式" name="column-definition-expressions"  exampleHeight=560 /%}
+
+## 表达式变量
+
+以下变量可用于表达式，具有以下参数映射：
+
+-   `x` => params.value
+-   `value` => params.value
+-   `oldValue` => params.oldValue
+-   `newValue` => params.newValue
+-   `node` => params.node
+-   `data` => params.data
+-   `colDef` => params.colDef
+-   `column` => params.column
+-   `columnGroup` => params.columnGroup
+-   `getValue` => params.getValue
+-   `api` => params.api
+-   `ctx` => params.context
+
+例如，对于 `valueFormatter`，您可以通过 'x' 和 'value' 属性访问值。但是在 `valueGetter` 中，'x' 和 'value' 将是 undefined，因为它们不是 `valueGetter` 参数的一部分。
+
+## 列定义表达式与函数
+
+表达式和函数是实现相同结果的两种方法。那么为什么有两种方法呢？
+
+函数的优点是它们更容易为您工作。函数将被您的 IDE 视为函数，因此受益于编译时检查、调试等。
+
+表达式的优点是它们更紧凑，并且使您的列定义保持为简单的 JSON 对象（只有字符串，没有函数），这使它们成为保存在离线存储中的候选者（例如在数据库中存储报告定义）。
+
+{% note %}
+基于字符串的表达式被解析并评估为 JavaScript。使用这种形式的表达式可能需要配置您的[内容安全策略](./security/#content-security-policy-csp)。
+
+对于大多数用例，推荐使用函数，除非有特定需要基于字符串的表达式。
+{% /note %}
+
+## 单元格表达式
+
+上面我们看到了如何使用 `expressions` 代替 `valueGetters`。这种方法的一个缺点是表达式属于列，不能作为数据的一部分定义，换句话说，表达式是针对整个列的，不能设置为特定单元格。
+
+单元格表达式将表达式能力带到单元格级别，因此您的表格可以类似于电子表格的工作方式。
+
+{% note %}
+虽然您可以像 Excel 一样将表达式放入单元格，但意图是您的应用程序决定表达式是什么。并不打算将此权力赋予您的用户并使单元格可编辑。这是因为 AG Grid 并不试图向用户提供 Excel 表达式，而是为您提供开发人员设计报告的能力，并在单元格内包含 JavaScript 逻辑。
+{% /note %}
+
+要启用单元格表达式，在 gridOptions 中设置 `enableCellExpressions=true`。然后，每当表格遇到以 '=' 开头的值时，它将把它视为表达式。
+
+单元格表达式具有与值 getter 表达式相同的参数。
+
+因为您可以在表达式中访问上下文（ctx），所以您可以将函数添加到上下文中以在表达式中使用。这使您在可以为表达式计算什么方面拥有无限的权力。例如，您可以提供一个从表格外部获取值的函数。
+
+## 单元格表达式示例
+
+此示例演示单元格表达式。左侧网格的第二列值都有表达式。可以注意到以下几点：
+
+-   "数字平方"和"数字 x 2"都将标题中的数字作为输入。
+-   "今天的日期"打印日期。
+-   "总和 A"和"总和 B"都调用附加到上下文的用户提供的函数（注意"总和 A"和"总和 B"正在使用右侧网格的值）。
+
+{% gridExampleRunner title="单元格表达式" name="cell-expressions" typescriptOnly=true exampleHeight=455 /%}
+
+## 表达式如何工作
+
+当您向表格提供表达式时，表格会将表达式转换为函数，然后执行该函数。考虑下面的示例，该示例提供 `data.firstName` 作为表达式。这段代码然后被包装成一个函数，所有参数属性作为函数属性。
+
+```js
+// 这是列定义上的简单表达式
+colDef.valueGetter = 'data.firstName';
+
+// 表格然后将上面的代码编译成这样：
+___compiledValueGetter = (node, data, colDef, column, api, ctx, getValue) => {
+    return data.firstName;
+}
+```
+
+如果您的表达式中有单词 `return`，则表格将假定它是多行表达式，不会包装它。
+
+如果您的值 getter 中没有单词 `return`，则表格将为您插入 `return` 语句和 `;`。
+
+如果您的表达式有多行，则需要在每行末尾提供 `;` 并提供 `return` 语句。

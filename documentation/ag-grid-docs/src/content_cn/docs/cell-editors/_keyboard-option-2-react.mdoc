@@ -1,0 +1,38 @@
+{% if isFramework("react") %}
+
+```jsx
+const KEY_UP = 'ArrowUp';
+const KEY_DOWN = 'ArrowDown';
+
+const GridExample = () => {
+    // 组件的其余部分
+
+    const columnDefs = [
+        {
+            field: 'value',
+            suppressKeyboardEvent: params => {
+                console.log('单元格正在编辑: ' + params.editing);
+                console.log('键盘事件:', params.event);
+
+                // 如果正在编辑且用户按下上/下键，则返回 true（禁止）
+                const key = params.event.key;
+                const gridShouldDoNothing = params.editing && (key === KEY_UP || key === KEY_DOWN);
+                return gridShouldDoNothing;
+            }
+        }
+    ];
+
+    return (
+        <div
+            style={{
+                height: '100%',
+                width: '100%'
+            }}
+            className="test-grid">
+            <AgGridReact columnDefs={columnDefs} {/* ...定义的其余部分... */} />
+        </div>
+    );
+};
+```
+
+{% /if %}

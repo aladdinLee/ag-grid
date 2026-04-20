@@ -1,0 +1,95 @@
+---
+title: "行分组 - 行组面板"
+enterprise: true
+---
+
+使用行组面板使用户能够修改配置的行组列。
+
+{% gridExampleRunner title="启用行组面板" name="row-group-panel" /%}
+
+## 启用行组面板
+
+行组面板允许用户通过拖放修改分组的列。可以通过将 `rowGroupPanelShow` 网格选项设置为 `"always"` 或 `"onlyWhenGrouping"` 来启用面板。
+
+列还需要在其列定义中将 `enableRowGroup` 设置为 `true` 才能拖入面板。
+
+上面的示例启用面板并配置 `country` 和 `year` 列可由面板控制：
+
+```{% frameworkTransform=true spaceBetweenProperties=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroup: true, enableRowGroup: true },
+        { field: 'year', rowGroup: true, enableRowGroup: true },
+        // ...其他列定义
+    ],
+    // 可能的选项：'never', 'always', 'onlyWhenGrouping'
+    rowGroupPanelShow: 'always',
+}
+```
+
+## 侧边栏中的行组面板
+
+行组面板也作为[侧边栏](./side-bar/)中[列工具面板](./tool-panel-columns/)的一部分显示。
+
+{% gridExampleRunner title="侧边栏行组面板" name="side-bar-row-group-panel" /%}
+
+上面的示例使用以下配置启用[列工具面板](./tool-panel-columns/)：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    sideBar: 'columns',
+}
+```
+
+有关更多配置选项，请参阅[侧边栏](./side-bar/)文档。
+
+## 防止用户分组隐藏列
+
+用户对列应用行分组后，该列将被隐藏。如果用户删除行分组，该列将再次可见。
+
+可以通过将 `suppressGroupChangesColumnVisibility` 网格选项属性设置为 `true`、`"suppressHideOnGroup"` 或 `"suppressShowOnUngroup"` 来配置此行为。
+
+{% gridExampleRunner title="保持列可见" name="keep-columns-visible" /%}
+
+{% note %}
+将列拖动到行组面板上时，该列被视为网格外部，因此将被隐藏。可以通过将 `suppressDragLeaveHidesColumns` 设置为 `true` 来防止此行为。
+{% /note %}
+
+以下配置可用于防止用户更改行组列时影响列可见性：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    suppressGroupChangesColumnVisibility: true,
+
+    // 防止列拖动到行组面板上时被隐藏
+    suppressDragLeaveHidesColumns: true,
+}
+```
+
+## 防止排序
+
+面板显示排序指示器，列药丸可以单击以更改其排序。可以通过将 `rowGroupPanelSuppressSort` 属性设置为 `true` 来防止此行为。
+
+{% gridExampleRunner title="防止面板排序" name="prevent-panel-sorting" /%}
+
+前面的示例演示了以下配置，用于防止行组面板对列进行排序：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowGroupPanelSuppressSort: true,
+}
+```
+
+## 防止对组顺序的更改
+
+面板可用于重新排序或从列中删除行分组。要防止这种情况，可以设置 `groupLockGroupColumns` 以防止删除或重新排序列。提供 `-1` 将锁定所有列，或提供表示要锁定的列数的数字。
+
+{% gridExampleRunner title="防止组顺序更改" name="prevent-group-order-changes" /%}
+
+上面的示例演示了锁定列的分组被移动或删除：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupLockGroupColumns: -1,
+}
+```

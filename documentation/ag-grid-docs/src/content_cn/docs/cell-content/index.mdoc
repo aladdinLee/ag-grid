@@ -1,0 +1,18 @@
+---
+title: "单元格内容"
+---
+
+在单元格内提供和显示值的方法。
+
+表格中与单元格值相关的不同部分如下：
+
+-   [值获取器](./value-getters/)：除了指定 `colDef.field`，您可以使用 `colDef.valueGetter` 提供获取单元格值的函数。这比为特定单元格提供字段值更灵活。
+-   [值格式化器](./value-formatters/)：使用格式化器格式化值。
+-   [单元格组件](./component-cell-renderer/)：在单元格内包含图像、链接和按钮。
+-   [引用数据](./reference-data/)：引用数据用于显示与数据中不同的替代值，例如您的数据可能是 'USA'，但您想显示 'America'。
+
+## 渲染流程
+
+了解值获取器、格式化器和单元格渲染器如何协同工作以提供最终结果是有帮助的。
+
+{% imageCaption imagePath="resources/valueGetterFlow.svg" alt="值获取器流程" centered=true width="46rem" enableDarkModeFilter=true /%}

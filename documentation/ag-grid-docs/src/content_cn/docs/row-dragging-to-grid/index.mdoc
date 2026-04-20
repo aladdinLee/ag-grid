@@ -1,0 +1,52 @@
+---
+title: "网格之间的行拖动"
+---
+
+网格间行拖动涉及不同网格之间的无缝集成，允许将记录从一个网格拖动并放置到另一个网格的特定索引处。
+
+{% apiDocumentation source="grid-api/api.json" section="rowDrag" names=["addRowDropZone", "removeRowDropZone", "getRowDropZoneParams"] /%}
+
+## 将网格添加为目标
+
+要将网格添加为放置区，应在目标网格中使用 `getRowDropZoneParams` API 方法，在源网格中使用 `addRowDropZone`。
+
+```js
+const dropZoneParams = targetGridApi.getRowDropZoneParams({
+    onDragStop: function() {
+        alert('Record Dropped!');
+    }
+});
+
+sourceGridApi.addRowDropZone(dropZoneParams);
+
+// 当不再需要上述放置区时
+sourceGridApi.removeRowDropZone(dropZoneParams);
+```
+
+在下面的示例中，请注意以下几点：
+
+- 当您从一个网格拖动到另一个网格时，会出现一条线指示行将被放置的位置。
+
+- 行可以从一个网格拖动到另一个网格。当接收到行时，它**不会**从第一个网格中删除。这是示例的选择。示例同样可以从另一个网格中删除。
+
+- 可以通过将行拖动到"垃圾箱"放置区从两个网格中删除行。
+
+- 可以通过单击红色、绿色和蓝色按钮创建新行。
+
+{% gridExampleRunner title="两个带有放置位置的网格" name="two-grids-with-drop-position" /%}
+
+## 在网格之间拖动多条记录
+
+可以一次从网格拖动多条记录到另一个网格。
+
+在下面的示例中，请注意以下几点：
+
+- 此示例使用 `rowDragMultiRow` 在网格之间启用[多行拖动](./row-dragging-managed/#multi-row-dragging)。
+
+- 选中"Remove Source Rows"后，行将从**Athletes**网格中删除，一旦它们被放置到**Selected Athletes**网格上。
+
+- 如果选中"Only Deselect Source Rows"，所有复制的选中行将被取消选中，但不会被删除。{% br /%}注意：如果某些行被选中，并且复制了一行未选中的行，选中的行将保持选中状态。
+
+- 如果选中"None"，行将从网格复制到另一个网格，源网格保持不变。
+
+{% gridExampleRunner title="多条带有放置位置的记录" name="two-grids-with-multiple-records" /%}

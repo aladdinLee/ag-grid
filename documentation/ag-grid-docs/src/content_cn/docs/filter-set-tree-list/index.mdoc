@@ -1,0 +1,60 @@
+---
+title: "集合过滤器 - 树列表"
+enterprise: true
+---
+
+本节描述集合过滤器树列表的行为，并展示如何配置它。
+
+树列表允许用户在过滤器列表中显示按树结构分组的值。
+
+{% imageCaption imagePath="resources/set-filter-tree-list.png" alt="过滤器树列表" centered=true constrained=true width="18rem" /%}
+
+## 启用树列表
+
+通过设置 `filterParams.treeList = true` 启用树列表。可以通过四种不同的方式创建树结构：
+
+-   列值的类型为 `Date`，在这种情况下树将为年 -> 月 -> 日。请注意，如果 `Date` 对象定义了时间，则还必须提供键创建器以生成不带时间的唯一键。
+-   启用了树数据模式，并且列是组列。过滤器列表将匹配树结构。必须提供键创建器来转换键数组。
+-   启用了分组，并且列是组列。过滤器列表将匹配组结构。必须提供键创建器来转换键数组。
+-   提供了 `filterParams.treeListPathGetter` 以获取列值的自定义树路径。每行必须映射到树中的叶值。如果列值是[复杂对象](./filter-set-filter-list/#complex-objects)，还需要键创建器。
+
+{% interfaceDocumentation interfaceName="ISetFilterParams" names=["treeListPathGetter","keyCreator"] config={"description":""} /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'date',
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                treeList: true,
+            }
+        }
+    ],
+    autoGroupColumnDef: {
+        field: 'athlete',
+        filter: 'agSetColumnFilter',
+        filterParams: {
+            treeList: true,
+            keyCreator: params => params.value.join('#')
+        },
+    },
+}
+```
+
+以下示例演示了在集合过滤器中启用不同类型的树列表。请注意以下内容：
+
+-   **Group**、**Date** 和 **Gold** 列都具有 `filterParams.treeList = true`。
+-   **Group** 列过滤器列表匹配行分组的格式。指定了键创建器以将路径转换为字符串。
+-   **Date** 列按年 -> 月 -> 日分组。
+-   **Gold** 列提供了 `filterParams.treeListPathGetter`，它将值分组为 >2 和 <=2 的树。
+
+{% gridExampleRunner title="过滤器树列表" name="filter-tree-list" /%}
+
+{% note %}
+如果使用[单元格数据类型](./cell-data-types/)，则对于包含日期值的列会自动启用树列表。
+{% /note %}
+
+## 排序树列表
+
+树列表的值排序类似于[排序过滤器列表](./filter-set-filter-list/#sorting-filter-lists)，但如果列值的类型为 `Date`，它们将基于原始日期值进行排序。

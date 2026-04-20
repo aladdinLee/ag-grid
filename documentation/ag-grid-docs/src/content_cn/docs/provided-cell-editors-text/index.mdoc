@@ -1,0 +1,28 @@
+---
+title: "文本单元格编辑器"
+---
+
+使用标准 HTML `input` 的简单文本编辑器。如果未指定其他编辑器，则此编辑器是默认编辑器。
+
+## 启用文本单元格编辑器
+
+编辑下面网格中的任何单元格以查看文本单元格编辑器：
+
+{% gridExampleRunner title="文本编辑器" name="text-editor" /%}
+
+使用 `agTextCellEditor` 启用，并使用 `ITextCellEditorParams` 配置。
+
+```js
+columnDefs: [
+    {
+        cellEditor: 'agTextCellEditor',
+        cellEditorParams: {
+            maxLength: 20
+        },
+    },
+]
+```
+
+## API 参考
+
+{% interfaceDocumentation interfaceName="ITextCellEditorParams" names=["useFormatter","maxLength"] /%}

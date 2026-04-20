@@ -1,0 +1,125 @@
+---
+title: "上下文菜单"
+enterprise: true
+---
+
+用户可以通过右键单击单元格来调出上下文菜单。默认情况下，上下文菜单显示[剪贴板](./clipboard/)、[CSV 导出](./csv-export/)、[Excel 导出](./excel-export/)和[集成图表](./integrated-charts/)菜单项（如果加载了相关的[模块](./modules/)）。
+
+{% gridExampleRunner title="默认上下文菜单" name="default-context-menu" /%}
+
+## 配置上下文菜单
+
+您可以通过以下两种方式之一自定义上下文菜单：
+
+1. 设置 `colDef.contextMenuItems`。这可以是菜单项列表，或者是传递默认菜单项列表的回调。
+1. 设置网格选项 `getContextMenuItems()`。此回调将传递默认菜单项列表以及列。
+
+请注意，`colDef.contextMenuItems` 将优先于 `getContextMenuItems()`。
+
+菜单项列表应该是一个列表，其中每个项目要么是 a) 字符串，要么是 b) `MenuItemDef` 描述。使用 'string' 从内置菜单项（如下所列）中选择，使用 `MenuItemDef` 描述来创建您自己的菜单项。
+
+{% apiDocumentation source="column-properties/properties.json" section="columns" names=["contextMenuItems"] /%}
+
+{% apiDocumentation source="grid-options/properties.json" section="accessories" names=["getContextMenuItems"] /%}
+
+您还可以提供自己的[自定义菜单项组件](./component-menu-item/)。
+
+如果要访问底层数据项，可以通过 rowNode 作为 `node.data` 访问。
+
+注意：如果设置 `checked=true`，则图标将被忽略 - 这些选项是互斥的。
+
+如果要完全关闭上下文菜单，请设置网格属性 `suppressContextMenu=true`。
+
+## 内置菜单项
+
+以下是所有默认内置菜单项的列表，以及它们何时显示的规则。
+
+-   `autoSizeAll`：自动调整所有列的大小。默认不显示。
+-   `expandAll`：设置时，仅在按至少一列分组时显示。默认不显示。
+-   `contractAll`：折叠所有组。设置时，仅在按至少一列分组时显示。默认不显示。
+-   `copy`：将选定的值复制到剪贴板。默认显示。
+-   `copyWithHeaders`：将选定的值与表头一起复制到剪贴板。默认显示。
+-   `copyWithGroupHeaders`：将选定的值与表头和表头组一起复制到剪贴板。默认显示。
+-   `cut`：将选定的值剪切到剪贴板。默认不显示。
+-   `paste`：将剪贴板值粘贴到选定的单元格（见下面的注释）。默认显示。
+-   `resetColumns`：重置所有列。默认不显示。
+-   `export`：导出子菜单（包含 csvExport 和 excelExport）。默认显示。
+-   `csvExport`：使用所有默认导出值导出为 CSV。默认显示。
+-   `excelExport`：使用所有默认导出值导出为 Excel (.xlsx)。默认显示。
+-   `chartRange`：绘制选定单元格的范围图表。仅在启用图表时显示。通过 [chartToolPanelsDef](./integrated-charts-chart-tool-panels) 配置。
+-   `pivotChart`：绘制网格中所有分组和透视数据的图表。仅在启用图表且处于[透视模式](./integrated-charts-pivot-chart/)时显示。通过 [chartToolPanelsDef](./integrated-charts-chart-tool-panels) 配置。
+-   `pinRowSubMenu`：行固定子菜单（包含 `pinTop`、`pinBottom` 和 `unpinRow`）。启用[行固定](./row-pinning)时显示。
+-   `pinTop`：将行固定到网格顶部。启用[行固定](./row-pinning)时显示。
+-   `pinBottom`：将行固定到网格底部。启用[行固定](./row-pinning)时显示。
+-   `unpinRow`：从网格顶部或底部取消固定行。启用[行固定](./row-pinning)时为固定行显示。
+
+菜单项还需要加载相关的[模块](./modules/)才能显示。
+
+{% note %}
+上下文菜单中的"粘贴"操作使用[剪贴板 API](https://developer.mozilla.org/en-US/docs/Web/API/Clipboard_API)。这意味着
+如果您的应用程序在 iframe 内运行，或者剪贴板 API 被阻止，则只会将**空白数据**粘贴到单元格中。
+
+当剪贴板 API 不可用时，浏览器安全限制阻止 JavaScript 在用户没有明确执行粘贴操作的情况下读取剪贴板数据（例如 {% kbd "^ Ctrl" /%}+{% kbd "V" /%} 或从浏览器菜单中选择粘贴）。
+这些限制的存在是为了防止恶意网站窃取剪贴板数据。
+
+如果 suppressClipboardApi={true} 或目标单元格不可编辑，此粘贴选项将被禁用。
+{% /note %}
+
+## 默认上下文菜单
+
+使用 AG Grid 上下文菜单的一个缺点是，您可能希望在调试时显示浏览器的上下文菜单，例如为了访问浏览器的开发工具。如果您希望网格什么都不做（从而允许浏览器显示其上下文菜单），请在单击上下文菜单时按住 {% kbd "^ Ctrl" /%} 键。如果您总是希望显示网格的上下文菜单，即使在按下 {% kbd "^ Ctrl" /%} 时也是如此，请设置 `allowContextMenuWithControlKey=true`。
+
+## 隐藏上下文菜单
+
+使用网格 API `hidePopupMenu()` 隐藏上下文菜单，这将隐藏上下文菜单或[列菜单](./column-menu/)，无论显示哪个。
+
+## 上下文菜单示例
+
+下面显示了一个配置的上下文菜单的实际操作，演示了带有自定义项混合的自定义菜单。您应该注意以下内容：
+
+-   使用了内置项和自定义项的混合。
+-   第一个项目使用单元格的内容显示其值。单击它会将单元格数据记录到开发者控制台。
+-   **Country** 列使用 Promise 异步返回菜单项。
+-   Country 和 Person 是子菜单。country 子菜单包含图标。
+-   顶部菜单项应用了 CSS 类。
+-   'Always Disabled' 菜单项有一个工具提示。
+
+{% gridExampleRunner title="上下文菜单示例" name="context-menu" /%}
+
+## 弹出父元素
+
+在大多数情况下，菜单将适合网格内部。但是，如果网格很小和/或菜单很大，则菜单将不适合网格内部，并且会被裁剪。
+
+这将导致糟糕的用户体验，在以下示例中演示：
+
+-   在网格中打开上下文菜单或列菜单
+-   注意菜单将不完全可见（即被裁剪）
+
+{% gridExampleRunner title="小网格问题" name="popup-parent-problem"  exampleHeight=400 /%}
+
+解决方案是设置 `popupParent` 元素：
+
+{% apiDocumentation source="grid-options/properties.json" section="accessories" names=["popupParent"] config={"overrideBottomMargin":"0rem"} /%}
+
+每种机制都允许您将弹出父元素设置为任何 HTML DOM 元素。该元素必须：
+
+1. 存在于 DOM 中。
+1. 覆盖与网格相同的区域（或者只是网格的父元素），以便在定位弹出窗口时，可以将其定位在网格上。
+
+大多数情况下，您只需将弹出父元素设置为文档正文。
+
+下面的示例与前一个示例相同，只是它将弹出父元素设置为文档正文。
+
+{% gridExampleRunner title="小网格解决方案" name="popup-parent-solution"  exampleHeight=400 /%}
+
+## 上下文菜单 API / 事件
+
+`gridApi` 具有以下可用于与上下文菜单交互的方法：
+
+{% apiDocumentation source="grid-api/api.json" section="accessories" names=["showContextMenu", "hidePopupMenu"] /%}
+
+{% br /%}
+
+网格发出以下上下文菜单事件：
+
+{% apiDocumentation source="grid-events/events.json" section="accessories" names=["contextMenuVisibleChanged"] /%}

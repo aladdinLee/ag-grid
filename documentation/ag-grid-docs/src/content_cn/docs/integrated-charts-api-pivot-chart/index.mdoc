@@ -1,0 +1,33 @@
+---
+title: "透视图表 API"
+enterprise: true
+---
+
+本节展示如何通过网格 API 创建透视图表。
+
+## 创建透视图表
+
+可以通过 `gridApi.createPivotChart()` 创建透视图表，如下所示：
+
+```{% frameworkTransform=true %}
+api.createPivotChart({
+    chartType: 'groupedColumn',
+    // 其他选项...
+});
+```
+
+上面的代码片段创建了一个 `groupedColumn` 图表类型的透视图表。有关选项的完整列表，请参阅[透视图表 API](./integrated-charts-api-pivot-chart/#pivot-chart-api)。
+
+以下示例演示如何通过 `gridApi.createPivotChart()` 以编程方式创建透视图表：
+
+{% gridExampleRunner title="透视图表" name="pivot-chart-api"  exampleHeight=900 /%}
+
+## 透视图表 API
+
+可以使用以下方法以编程方式创建透视图表：
+
+{% apiDocumentation source="grid-api/api.json" section="charts" names=["createPivotChart"] /%}
+
+{% interfaceDocumentation interfaceName="CreatePivotChartParams" overrideSrc="integrated-charts-api-pivot-chart/chart-api.json" /%}
+
+当提供 `chartContainer` 时，API 返回 `ChartRef` 对象。这与提供给 `createChartContainer(chartRef)` 回调的结构相同。`ChartRef` 为应用程序提供了 `destroyChart()` 方法，当应用程序想要处理图表时需要该方法。

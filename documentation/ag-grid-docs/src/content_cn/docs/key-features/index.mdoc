@@ -1,0 +1,515 @@
+---
+title: "核心功能"
+description: "AG Grid 热门功能概述及代码片段。学习如何使用核心社区功能、自定义主题并探索高级企业功能。"
+---
+
+{% if isFramework("vue") %}
+本页面提供 AG Grid 可用热门功能的概述和介绍。学习如何使用社区功能、配置和自定义主题，以及探索高级企业功能。
+{% /if %}
+
+{% if isFramework("react") %}
+{% videoSection id="6hxbPqziELk" title="React 数据表格快速入门视频教程" playlist="PLsZlhayVgqNwHNHeqpCkSgdRV08xrKtzW" showHeader=true %}
+本页面提供 AG Grid 可用热门功能的概述和介绍。学习如何使用社区功能、配置和自定义主题，以及探索高级企业功能。
+{% /videoSection %}
+{% /if %}
+
+{% if isFramework("angular") %}
+{% videoSection id="X_Ip_jGDtho" title="Angular 数据表格快速入门视频教程" playlist="PLsZlhayVgqNw6VHFn4j6FcJM5vLACsf0x" showHeader=true %}
+本页面提供 AG Grid 可用热门功能的概述和介绍。学习如何使用社区功能、配置和自定义主题，以及探索高级企业功能。
+{% /videoSection %}
+{% /if %}
+
+{% if isFramework("javascript") %}
+{% videoSection id="Ww7-LC6rU6U" title="JavaScript 数据表格快速入门视频教程" playlist="PLsZlhayVgqNxijfRQxg5Mc6W4MzZHQ9MK" showHeader=true %}
+本页面提供 AG Grid 可用热门功能的概述和介绍。学习如何使用社区功能、配置和自定义主题，以及探索高级企业功能。
+{% /videoSection %}
+{% /if %}
+
+{% note %}
+以下部分假设您对常见的数据表格概念有一定了解。如果您是 {% getFrameworkCapitalised() %} 数据表格的新手，我们建议您从我们的[入门教程](./deep-dive/)开始。
+{% /note %}
+
+## 显示数据
+
+### 映射值
+
+`field` 或 `valueGetter` 属性将[数据映射到列](./column-definitions)。field 映射到数据中的字段。[Value Getter](./value-getters/) 是一个返回单元格值的函数回调。
+
+`headerName` 提供标题。如果缺失，标题将从 `field` 派生。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { headerName: "品牌和型号", valueGetter: p => p.make + ' ' + p.model},
+        { field: "price" },
+    ],
+};
+```
+
+### 文本格式化
+
+使用 [Value Formatter](./value-formatters/) 为单元格内容格式化文本。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: "price", valueFormatter: p => '£' + p.value.toLocaleString() },
+    ],
+};
+```
+
+### 单元格组件
+
+使用 [单元格组件](./component-cell-renderer/) 向单元格添加按钮、复选框或图像。
+
+{% if isFramework("react") %}
+
+```jsx
+const CustomButtonComponent = (props) => {
+    return <button onClick={() => window.alert('clicked') }>点我！</button>;
+};
+
+const [colDefs, setColDefs] = useState([
+    { field: "button", cellRenderer: CustomButtonComponent },
+    // ...
+]);
+```
+
+{% /if %}
+
+{% if isFramework("javascript") %}
+
+```js
+class CustomButtonComponent {
+    eGui;
+    eButton;
+    eventListener;
+
+    init(params) {
+        this.eGui = document.createElement("div");
+        let button = document.createElement("button");
+        button.className = "btn-simple";
+        button.textContent = "点我！";
+        this.eventListener = () => alert("点击了");
+        button.addEventListener("click", this.eventListener);
+        this.eGui.appendChild(button);
+    }
+
+    getGui() {
+        return this.eGui;
+    }
+
+    refresh(params) {
+        return true;
+    }
+
+    destroy() {
+        if (button) {
+            button.removeEventListener("click", this.eventListener);
+        }
+    }
+}
+
+
+const columnDefs = [
+    { field: "button", cellRenderer: CustomButtonComponent },
+    // ...
+];
+```
+
+{% /if %}
+
+{% if isFramework("angular") %}
+
+```js
+@Component({
+    standalone: true,
+    template: `<button (click)="buttonClicked()">点我！</button>`,
+})
+export class CustomButtonComponent implements ICellRendererAngularComp {
+    agInit(params: ICellRendererParams): void {}
+    refresh(params: ICellRendererParams) {
+        return true;
+    }
+    buttonClicked() {
+        alert("点击了");
+    }
+}
+
+columnDefs: ColDef[] = [
+    { field: "button", cellRenderer: CustomButtonComponent },
+    // ...
+];
+```
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+```js
+// ...
+    components: {
+        "ag-grid-vue": AgGridVue,
+        CustomButtonComponent: {
+            template: `
+                <button @click="buttonClicked()">点我！</button>
+            `,
+            methods: {
+            buttonClicked() {
+                alert("点击了");
+            },
+            },
+        },
+    },
+    data: function () {
+        return {
+        columnDefs: [
+            { field: "button", cellRenderer: CustomButtonComponent },
+            // ...
+        ],
+    };
+},
+// ...
+```
+
+{% /if %}
+
+### 调整列大小
+
+通过拖动列标题边缘来[调整列大小](./column-sizing/)。此外，分配 `flex` 值以允许列适应表格宽度。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: "make", flex: 2 }, // 此列将是其他列的两倍宽
+        { field: "model", flex: 1 },
+        { field: "price", flex: 1 },
+        { field: "electric", flex: 1 }
+    ],
+};
+```
+
+### 示例
+
+此示例演示了映射和格式化值、单元格组件以及调整列大小。按钮将日志输出到开发者控制台。
+
+{% gridExampleRunner title="显示数据示例" name="showing-data-example" exampleHeight=303 /%}
+
+## 处理数据
+
+默认情况下，行数据用于推断[单元格数据类型](./cell-data-types/)。单元格数据类型允许表格功能（如筛选和编辑）无需额外配置即可工作。
+
+### 筛选
+
+[列筛选器](./filtering/)嵌入在每个列菜单中。使用 `filter` 属性启用这些功能。筛选器类型从单元格数据类型推断。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: "make", filter: true },
+    ],
+};
+```
+
+有 5 个[内置筛选器](./filtering/)可以通过此属性设置。
+您也可以创建自己的[自定义筛选器](./component-filter/)。
+
+[浮动筛选器](./floating-filters/)将列筛选器嵌入到标题中以便访问。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: "make", filter: true, floatingFilter: true },
+    ],
+};
+```
+
+### 编辑
+
+通过将 `editable` 属性设置为 `true` 来启用[编辑](./cell-editing/)。单元格编辑器从单元格数据类型推断。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: "make", editable: true },
+    ],
+};
+```
+
+使用 `cellEditor` 属性设置单元格编辑器类型。有 7 个[内置单元格编辑器](./provided-cell-editors/)可以通过此属性设置。
+您也可以创建自己的[自定义编辑器](./cell-editors/)。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        {
+            field: "make",
+            editable: true,
+            cellEditor: 'agSelectCellEditor',
+            cellEditorParams: {
+                values: ['Tesla', 'Ford', 'Toyota'],
+            },
+        },
+    ],
+};
+```
+
+### 排序
+
+通过点击列标题对数据进行[排序](./row-sorting/)。默认启用排序。
+
+### 行选择
+
+使用 `rowSelection` 属性启用[行选择](./row-selection/)。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    // Column Definitions：定义要显示的列。
+    columnDefs: [
+        { field: "make" },
+    ],
+    rowSelection: {
+        mode: 'multiRow',
+    },
+};
+```
+
+### 分页
+
+通过将 `pagination` 设置为 true 来启用[分页](./row-pagination/)。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    pagination: true,
+    paginationPageSize: 500,
+    paginationPageSizeSelector: [200, 500, 1000],
+};
+```
+
+### 示例
+
+此示例演示了筛选、编辑、排序、行选择和分页。
+
+{% gridExampleRunner title="处理数据示例" name="working-with-data-example" exampleHeight=500 /%}
+
+## 主题和样式
+
+### 主题
+
+[表格主题](./theming/)定义表格的外观（颜色、字体、间距等）。默认主题称为 Quartz。您可以选择[不同的主题](./themes/)，或通过更改参数来自定义内置主题。这里我们创建一个基于 Quartz 的新主题：
+
+```js
+import { themeQuartz } from "ag-grid-community"; // 或 themeBalham, themeAlpine
+
+const myTheme = themeQuartz.withParams({
+    /* 低间距 = 非常紧凑 */
+    spacing: 2,
+    /* 更改表格文本颜色 */
+    foregroundColor: 'rgb(14, 68, 145)',
+    /* 更改表格背景颜色 */
+    backgroundColor: 'rgb(241, 247, 255)',
+    /* 更改顶行的标题颜色 */
+    headerBackgroundColor: 'rgb(228, 237, 250)',
+    /* 更改行的悬停颜色 */
+    rowHoverColor: 'rgb(216, 226, 255)',
+});
+
+{% if isFramework("react") %}
+...
+return (
+    <div>
+        <AgGridReact theme={myTheme} rowData={...} columnDefs={...} />
+    </div>
+)
+{% /if %}
+{% if isFramework("javascript") %}
+const gridOptions = {
+    theme: myTheme,
+    ...
+}
+{% /if %}
+{% if isFramework("angular") %}
+// ...
+    template: `<div style="height: 100%; box-sizing: border-box;">
+        <ag-grid-angular
+            // ...
+            [theme]="theme"
+            />
+    </div>`,
+// ...
+public theme = myTheme;
+{% /if %}
+{% if isFramework("vue") %}
+const VueExample = {
+    template: `
+        <div style="height: 100%">
+            <div style="height: 100%; box-sizing: border-box;">
+                <ag-grid-vue
+                // ...
+                :theme="theme"></ag-grid-vue>
+            </div>
+        </div>
+    `,
+// ...
+ data: function () {
+    return {
+        // ...
+        theme: myTheme,
+    };
+ },
+// ...
+{% /if %}
+```
+
+{% gridExampleRunner title="自定义 Quartz 主题" name="custom-quartz-theme" suppressDarkMode=true /%}
+
+### 主题构建器
+
+使用[主题构建器](/theme-builder/)通过我们的可视化编辑器创建自定义主题。浏览和自定义数百个主题参数并实时预览更改。自动生成主题代码以复制粘贴到您的应用程序中。
+
+{% video videoSrc="resources/theme-builder-demo.mp4" centered=true /%}
+
+### Figma
+
+如果您在 Figma 中进行设计，可以使用 [AG Grid 设计系统](./ag-grid-design-system/)在 Figma 中复制 Quartz 和 Alpine AG Grid 主题。这些默认主题可以使用 Figma 变量进行扩展，以匹配任何现有的视觉设计或创建全新的 AG Grid 主题。然后可以将这些导出并生成为新的 AG Grid 主题。
+
+{% figmaCommunityButton /%}
+
+### 单元格样式
+
+使用 `cellClassRules` 定义规则以将[样式应用于单元格](./cell-styles)。例如，这可以用于根据单元格值设置单元格背景颜色。
+
+```css
+.rag-green {
+    background-color: #33cc3344;
+}
+```
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [{
+        field: 'electric',
+        cellClassRules: {
+            // 将绿色应用于电动汽车
+            'rag-green': params => params.value === true,
+        }
+    }],
+};
+```
+
+### 行样式
+
+使用 `rowClassRules` 定义规则以将[样式应用于行](./row-styles)。这允许根据行值更改样式（例如行颜色）。
+
+```css
+.rag-red {
+    background-color: #cc222244;
+}
+```
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowClassRules: {
+        // 将红色应用于 Ford 汽车
+        'rag-red': params => params.data.make === 'Ford',
+    },
+};
+```
+
+### 示例
+
+此示例演示了单元格样式和行样式。
+
+{% gridExampleRunner title="单元格和行样式" name="cell-row-style" /%}
+
+## 企业功能 {% enterpriseIcon /%}
+
+AG Grid 有两种形式：
+
+-   **AG Grid 社区版**：对所有人免费，包括生产使用 - 无需许可证。
+-   **AG Grid 企业版**：需要在生产中使用许可证。可在本地免费测试，或申请[试用](./community-vs-enterprise/#request-a-30-day-enterprise-bundle-trial-licence)以在生产中测试。
+
+要了解 AG Grid 社区版和企业版之间的差异、何时使用每个版本以及如何访问我们的[免费试用](./community-vs-enterprise/#request-a-30-day-enterprise-bundle-trial-licence)或购买许可证，请参阅[社区版与企业版对比](./community-vs-enterprise/)文档。
+
+### 集成图表 {% enterpriseIcon /%}
+
+[集成图表](./integrated-charts/)允许用户直接在表格内构建和自定义图表。
+
+通过将 `enableCharts` 设置为 `true` 来启用集成图表。将 `cellSelection` 设置为 `true` 以允许用户通过选择单元格范围来创建图表：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    enableCharts: true,
+    cellSelection: true,
+}
+```
+
+### 行分组 {% enterpriseIcon /%}
+
+通过将 `rowGroup` 设置为 `true` 来启用[行分组](./grouping/)：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroup: true },
+        // ...
+    ],
+}
+```
+
+### 行聚合 {% enterpriseIcon /%}
+
+通过将 `aggFunc` 设置为 `sum`、`min`、`max`、`count`、`avg`、`first` 或 `last` 之一来启用[聚合](./aggregation/)：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'gold', aggFunc: 'sum' },
+        // ...
+    ],
+}
+```
+
+### 透视行 {% enterpriseIcon /%}
+
+通过将 `pivotMode` 设置为 `true` 来启用[透视](./pivoting/)。通过将 `pivot` 设置为 `true` 来定义透视列：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'sport', pivot: true },
+    ],
+    pivotMode: true,
+};
+```
+
+### 显示树形数据 {% enterpriseIcon /%}
+
+树形数据提供了一种向表格提供结构化层次数据的方法。
+
+通过将 `treeData` 设置为 `true` 来启用树形数据。提供 `getDataPath` 回调以配置[行层次结构](./tree-data-paths/#providing-hierarchy)：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    treeData: true,
+    getDataPath: data => data.path,
+}
+```
+
+### 显示工具面板 {% enterpriseIcon /%}
+
+表格提供用于[列](./tool-panel-columns/)和[筛选器](./tool-panel-filters/)的[工具面板](./tool-panel/)。您也可以提供[自定义工具面板](./component-tool-panel/)。
+
+要启用列和筛选器工具面板，将 `sideBar` 设置为 `true`。要仅显示列或筛选器工具面板，将 `sideBar` 设置为 `'columns'` 或 `'filters'`：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    sideBar: true, // 或 'columns' 或 'filters'
+}
+```
+
+### 示例
+
+此示例演示了集成图表、行分组、透视、聚合和工具面板：
+
+{% gridExampleRunner title="企业功能" name="enterprise-features-example" /%}

@@ -1,0 +1,33 @@
+---
+title: "外部筛选器"
+---
+
+外部筛选允许您将自己的筛选逻辑与网格的内置筛选混合使用，而无需创建基于列的筛选器组件。
+
+{% warning %}
+这种筛选形式仅与客户端行模型兼容，有关更多详细信息，请参阅[行模型](./row-models/)。
+{% /warning %}
+
+## 实现外部筛选
+
+下面的示例显示了外部筛选器的实际操作。您需要在 `gridOptions` 上实现两个方法：`isExternalFilterPresent` 和 `doesExternalFilterPass`。
+
+{% apiDocumentation source="grid-options/properties.json" section="filter" names=["isExternalFilterPresent", "doesExternalFilterPass"] /%}
+
+### isExternalFilterPresent
+
+每次网格检测到筛选更改时，都会准确调用一次 `isExternalFilterPresent`。如果外部筛选处于活动状态，它应返回 `true`，否则返回 `false`。如果返回 `true`，则在筛选时将调用 `doesExternalFilterPass`，否则不会调用 `doesExternalFilterPass`。
+
+### doesExternalFilterPass
+
+为网格中的每个行节点调用一次 `doesExternalFilterPass`。如果返回 `false`，该节点将从最终集合中排除。
+
+{% note %}
+如果外部筛选器更改，您需要调用 `api.onFilterChanged()` 来通知网格。
+{% /note %}
+
+## 示例
+
+下面的示例显示了外部筛选器的实际操作。
+
+{% gridExampleRunner title="外部筛选器" name="external-filter"  exampleHeight=565 /%}

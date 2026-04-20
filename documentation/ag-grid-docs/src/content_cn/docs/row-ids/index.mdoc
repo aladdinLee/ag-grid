@@ -1,0 +1,50 @@
+---
+title: "行数据"
+description: "通过 rowData 属性向 $framework 数据表提供行数据数组。探索更新行数据、提供行 ID 和行节点。"
+---
+
+通过 `rowData` 属性向网格提供数据数组，为数组中的每个项渲染一行。
+
+## 行数据
+
+使用默认行模型时 - [客户端](./row-models/#client-side)数据通过 `rowData` 属性提供给网格。
+
+{% gridExampleRunner title="行数据" name="row-data" exampleHeight=275 /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    rowData: [
+        { make: "Toyota", model: "Celica", price: 35000 },
+        { make: "Ford", model: "Mondeo", price: 32000 },
+        { make: "Porsche", model: "Boxster", price: 72000 },
+    ],
+};
+```
+
+{% note %}
+如果您使用 TypeScript，您可能希望向网格提供行数据类型以获得更好的开发体验。有关更多详细信息，请参阅 [TypeScript 泛型](./typescript-generics/)。
+{% /note %}
+
+## 更新行数据
+
+更新 `rowData` 的最简单方法是向网格传递新的数据数组。有关更新行数据的完整详细信息，包括事务，请参阅[更新数据](./data-update/)。
+
+## 行 ID
+
+为每行提供唯一 ID 使网格能够在各种功能中最佳地工作。强烈建议通过向 `getRowId` 网格选项传递返回字符串的函数来提供行 ID。此函数应始终为给定行返回相同的字符串，并且没有两行应共享相同的 ID。
+
+{% apiDocumentation source="grid-options/properties.json" section="rowModels" names=["getRowId"] /%}
+
+{% gridExampleRunner title="获取行 ID" name="get-row-id" exampleHeight=300 /%}
+
+## 行节点
+
+网格中显示的每一行都由一个[行节点](./row-interface/)表示，该节点公开有状态属性和用于直接与行交互的方法。
+
+行节点通过 [Grid API](./grid-api/) 方法访问，并作为 [单元格组件](./component-cell-renderer/) 等项的属性提供。
+
+以下按钮将数据记录到开发者控制台。
+
+{% gridExampleRunner title="行节点" name="row-node" exampleHeight=350 /%}
+
+查看[行参考](./row-object/)和[行事件](./row-events/)以获取[行节点](./row-interface/)上可用的所有项。

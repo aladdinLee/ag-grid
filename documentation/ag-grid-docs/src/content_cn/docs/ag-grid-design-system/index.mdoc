@@ -1,0 +1,66 @@
+---
+title: "AG Grid 设计系统"
+description: "使用 AG Grid Figma 设计系统自定义 AG Grid 主题和原型 $framework 数据表格应用程序。"
+---
+
+我们的 Figma 设计系统允许设计师轻松原型设计和自定义 AG Grid 应用程序。
+
+{% imageCaption imagePath="resources/AG-Grid-Figma-Design-System.png" alt="AG Grid Figma 设计系统" centered=true constrained=false /%}
+
+[AG Grid 设计系统](https://www.figma.com/community/file/1360600846643230092)在 Figma 中复制了 [Quartz](/example?theme=quartz) 和 [Alpine](/example?theme=alpine) AG Grid 主题。这些默认主题可以通过 Figma 变量扩展以匹配任何现有的视觉设计，或创建全新的 AG Grid 主题。
+
+设计系统从头开始构建，与 JavaScript 库保持一致，有助于设计师-开发人员交接过程。
+
+## 入门
+
+要开始使用 AG Grid Figma 设计系统，请访问我们的 [Figma 社区页面](https://www.figma.com/community/file/1360600846643230092)并点击"在 Figma 中打开"。AG Grid 设计系统将直接在 Figma 中打开，您就可以开始为 AG Grid 应用程序进行设计了。
+
+{% note %}
+我们将 AG Grid 设计系统作为 [Figma 社区文件](https://www.figma.com/community/file/1360600846643230092)提供。您将通过将其复制到您的 Figma 工作区来使用该文件。虽然我们会定期更新 AG Grid 设计系统，但您复制的文件不会自动接收任何更新。
+
+有关 Figma 社区文件如何工作的更多信息，请查看[Figma 社区文件帮助页面](https://help.figma.com/hc/en-us/articles/360038510873-Duplicate-Community-files)。
+{% /note %}
+
+{% figmaCommunityButton /%}
+
+## 视频介绍和 Figma 文档
+
+您可以在 Figma 文件中找到设计系统的完整文档。我们有入门指南和预制表格模板。有关每个表格组件如何工作的详细信息也在 Figma 文件中。
+
+{% videoSection id="Ymmm7wxLy7Y" title="介绍 AG Grid Figma 设计系统" %}
+在 YouTube 上观看我们的[简短介绍视频](https://youtu.be/Ymmm7wxLy7Y)。您将学习如何开始使用设计系统、在哪里找到完整的表格模板，以及如何从头开始构建自己的表格。在掌握了基础知识后，我们还有一个[深入视频播放列表](https://www.youtube.com/watch?v=Ymmm7wxLy7Y&list=PLsZlhayVgqNzE9G1yLLHQCRYSgDvx7Zo1&pp=gAQB)，深入探讨如何使用 AG Grid 设计系统。
+{% /videoSection %}
+
+## 自定义设计系统
+
+AG Grid 设计系统利用 [Figma 的原生变量功能](https://help.figma.com/hc/en-us/articles/15339657135383-Guide-to-variables-in-Figma)来实现所有可自定义属性。Quartz 和 Alpine 主题使用的大多数[主题参数](./theming-parameters/)都在 Figma 中引用，并可以扩展到您自己的主题。
+
+您可以在 Figma 文件中的**创建您自己的主题**页面下找到有关如何在 Figma 文件中创建和管理主题的更多信息。
+
+{% imageCaption imagePath="resources/FDS-themes.png" alt="Figma 变量主题" centered=true constrained=false /%}
+
+## 从 Figma 变量生成 AG Grid 主题
+
+如果您使用变量功能在 Figma 中创建了自己的主题，您可以导出这些变量并使用 [Style Dictionary](https://styledictionary.com/) NPM 包创建 [AG Grid 主题](./theming-parameters/#setting-theme-parameters)。我们的[设计系统 GitHub 仓库](https://github.com/ag-grid/ag-grid-figma-design-system/)中包含一个示例 Style Dictionary 项目和完整说明。
+
+要将 Figma 变量导出为 JSON...
+
+1. 在资源面板中转到插件选项卡。
+2. 搜索 [Design Tokens](https://www.figma.com/community/plugin/888356646278934516/design-tokens) Figma 插件。
+3. 在 [Design Tokens](https://www.figma.com/community/plugin/888356646278934516/design-tokens) 插件设置中启用选项"**将模式添加到设计令牌名称（如果有2个或更多模式）**"和"**将模式添加到设计令牌值**"。
+4. 点击运行 [Design Tokens](https://www.figma.com/community/plugin/888356646278934516/design-tokens) 并选择"导出设计令牌文件"选项。
+5. 取消选择所有"包含类型..."，除了"Figma Variables"
+6. 点击"保存并导出"按钮并保存 json 文件。
+
+{% imageCaption imagePath="resources/FDS-export-variables.png" alt="导出 Figma 变量" centered=true constrained=false /%}
+
+## 支持
+
+AG Grid 企业客户可以通过 [Zendesk](https://ag-grid.zendesk.com/hc/en-us) 请求支持或建议功能和改进。社区用户可以通过我们的设计系统 [GitHub 仓库问题](https://github.com/ag-grid/ag-grid-figma-design-system/issues)提交错误报告。
+
+{% br /%}
+
+{% figmaCommunityButton /%}
+
+{% br /%}
+{% br /%}

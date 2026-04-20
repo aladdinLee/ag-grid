@@ -1,0 +1,31 @@
+{% if isFramework("react") %}
+自定义浮动筛选器组件是受控组件，它们作为 props 的一部分接收筛选器模型，并通过 `onModelChange` 回调将模型更新传递回网格。筛选器模型为 `null` 意味着未应用筛选器（筛选器显示为非活动状态）。请注意，当调用 `onModelChange` 时，筛选器会立即应用。
+
+```jsx
+export default ({ model, onModelChange }) => {
+    return (
+        <div>
+            <input
+                type="text"
+                value={model || ''}
+                onChange={({ target: { value }}) => onModelChange(value === '' ? null : value)}
+            />
+        </div>
+    );
+}
+```
+
+## 自定义浮动筛选器参数
+
+### 浮动筛选器 Props
+
+以下 props 传递给自定义浮动筛选器组件（`CustomFloatingFilterDisplayProps` 接口）。如果通过 `colDef.floatingFilterComponentParams` 属性提供了自定义 props，这些 props 将额外添加到 props 对象中，如果存在名称冲突，将覆盖同名项目。
+
+{% interfaceDocumentation interfaceName="CustomFloatingFilterDisplayProps" config={ "description": "" } /%}
+
+### 浮动筛选器回调
+
+以下回调可以传递给 `useGridFloatingFilter` 钩子（`CustomFloatingFilterCallbacks` 接口）。所有回调都是可选的，只有在提供回调时才需要使用该钩子。
+
+{% interfaceDocumentation interfaceName="CustomFloatingFilterCallbacks" config={ "description": "" } /%}
+{% /if %}

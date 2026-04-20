@@ -1,0 +1,33 @@
+{% if isFramework("angular") %}
+实现此接口以创建工具面板组件。
+{% /if %}
+
+{% if isFramework("angular") %}
+
+```ts
+interface IToolPanelAngularComp {
+    // 必需方法
+
+    // agInit(params) 方法在工具面板组件上调用一次。
+    // 有关参数的详细信息，请参见下文。
+    agInit(params: IToolPanelParams): void;
+
+    // 可选方法
+
+    // 当调用 `api.refreshToolPanel()` 时调用（使用当前参数）。
+    // 当更新 `sideBar` 网格选项时也会调用（使用更新后的参数）。
+    // 当更新 `sideBar` 时，如果此方法返回 `true`，
+    // 则网格不会采取进一步操作。
+    // 否则，工具面板将被销毁并重新创建。
+    refresh(params: IToolPanelParams): boolean | void;
+
+    // 如果保存和恢复状态，此方法应返回当前状态
+    getState(): any;
+}
+```
+
+{% /if %}
+
+{% if isFramework("angular") %}
+`agInit(params)` 方法接受一个包含以下项目的参数对象：
+{% /if %}

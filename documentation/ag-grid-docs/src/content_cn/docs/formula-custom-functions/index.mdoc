@@ -1,0 +1,62 @@
+---
+title: "自定义函数"
+enterprise: true
+---
+
+自定义公式函数允许您使用特定领域的逻辑和可重用的计算扩展引擎。
+
+## 公式函数 API
+
+通过 `formulaFuncs` 网格选项提供自定义函数。
+
+{% apiDocumentation source="grid-options/properties.json" section="formulas" names=["formulaFuncs"] /%}
+
+## 简单示例
+
+下面的示例注册 `CUSTOMSUM`，它迭代传递给函数的所有值（包括范围）并返回它们的总和。
+
+{% gridExampleRunner title="简单迭代器" name="formulas-simple-iterator" exampleHeight=390 /%}
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    columnDefs: [
+        { field: 'sales' },
+        { field: 'calculated', allowFormula: true },
+    ],
+    formulaFuncs: {
+        CUSTOMSUM: {
+            func: (params) => {
+                let total = 0;
+                for (const value of params.values) {
+                    total += value;
+                }
+                return total;
+            },
+        },
+    },
+};
+```
+
+## 错误处理
+
+当参数无效时，您的函数应抛出错误。错误会在网格中显示并传播到依赖公式。
+
+{% gridExampleRunner title="自定义错误" name="formulas-custom-errors" exampleHeight=430 /%}
+
+{% note %}
+当函数（或引用的单元格）抛出错误时，单元格显示 `#ERROR!`，将鼠标悬停在单元格上会显示抛出的错误消息。错误也会传播到依赖公式单元格。
+{% /note %}
+
+## 复杂示例
+
+此示例显示 `COUNTEQ`，它接收一个范围和一个值并计算匹配项。它使用 `params.args` 验证参数类型并显式处理范围。
+
+{% gridExampleRunner title="上下文迭代器" name="formulas-context-iterator" exampleHeight=390 /%}
+
+## 最佳实践
+
+-   尽早验证参数数量和类型。
+-   对于大范围，优先使用迭代器（`params.values`）以避免不必要的分配。
+-   保持函数纯净和快速，以避免大型网格上的性能问题。
+
+有关可以启发自定义实现的内置函数，请参阅[公式参考](./formula-reference/)。

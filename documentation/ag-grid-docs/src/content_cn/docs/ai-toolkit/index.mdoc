@@ -1,0 +1,277 @@
+---
+title: 'AI 工具包'
+description: '轻松将您的 LLM 集成到 AG Grid 中，通过利用新的 AI 工具包 API 生成结构化输出，通过自然语言控制表格状态。'
+enterprise: true
+---
+
+轻松将 AG Grid 与您自己的 LLM 集成，使最终用户能够通过自然语言查询和操作表格状态。
+
+下面的示例演示了一个聊天应用程序，使用 AI 工具包 API 构建并与 ChatGPT 的 `gpt-5-mini` 模型集成，允许通过自然语言操作表格状态。
+
+此示例不维护对话状态。如果 LLM 回答问题，请更新您的初始查询，而不是仅回答问题。
+
+建议的提示：
+
+-   "显示美国赢得的所有金牌"
+-   "按年龄从小到大排序参赛者"
+-   "按国家分组并显示赢得的奖牌总数"
+
+{% gridExampleRunner title="自然语言表格状态管理" name="natural-language-grid-state" exampleHeight=600 /%}
+
+## 工作原理
+
+[结构化输出](https://platform.openai.com/docs/guides/structured-outputs)是一个 LLM 功能，确保模型响应遵守提供的 [JSON Schema](https://json-schema.org/)。许多 LLM 都支持结构化输出，包括 ChatGPT 和 Gemini。
+
+AI 工具包提供了一个 `getStructuredSchema` API，它基于[表格状态](./grid-state/)生成结构化模式。这些输出可以传递给 LLM，然后 LLM 可以生成有效的响应，这些响应可以直接传递给 `setState` API 方法。这确保了基于自然语言输入更新或操作表格的可靠、模式对齐的指令。
+
+该模式由一系列"功能"组成，每个功能代表表格可以操作的不同方面。目前支持以下功能：
+
+-   [筛选](./filtering/)
+-   [排序](./row-sorting/)
+-   [聚合](./aggregation/)
+-   [透视](./pivoting/)
+-   [行分组](./grouping/)
+-   [列可见性](./column-properties/#reference-display-hide/)
+-   [列大小调整](./column-sizing/)
+
+### 架构
+
+在高层次上，AI 工具包的工作方式如下：
+
+1. **用户输入捕获：** 最终用户输入自然语言查询。
+
+2. **提示构建（客户端/服务器）：** 应用程序收集三个元素：
+
+    1. 用户查询
+    2. 当前表格状态，通过 `gridApi.getState()`
+    3. 表格状态的结构化模式，通过 `gridApi.getStructuredSchema()`
+
+3. **LLM 服务请求：** 完整的提示（包括结构化模式）发送到 LLM 端点（例如 OpenAI、Gemini）。
+
+4. **响应处理和验证：** LLM 返回符合模式的 JSON 对象。
+
+5. **状态应用：** 验证的 JSON 传递给 `gridApi.setState()`。
+
+{% imageCaption imagePath="resources/ai-toolkit-sequence-diagram.svg" alt="高对比度主题" constrained=true maxWidth="50rem" enableDarkModeFilter=true /%}
+
+{% note %}
+如果您希望与原生不支持结构化数据的 LLM 集成，您仍然可以使用该模式在将响应传递给 `setState` 之前验证和解析 LLM 的响应。有多个库可以为您完成此操作，例如 [ajv](https://ajv.js.org/)。
+{% /note %}
+
+## 入门
+
+要开始，您需要：
+
+-   您选择的 LLM 的 API 密钥
+-   现有的 AG Grid 实现
+-   用户查询的输入
+-   向 LLM 发送请求的知识
+
+### 创建模式
+
+`getStructuredSchema` API 返回[表格状态](./grid-state/)的结构化 [JSON Schema](https://json-schema.org/) 表示，然后可用于创建 LLM 兼容的模式：
+
+```ts
+// 生成的表格状态结构化模式表示
+const gridStateStructuredSchema = gridApi.getStructuredSchema();
+
+// 使用表格状态结构化模式创建 LLM 兼容的 JSON Schema
+const schema = {
+    type: 'object',
+    properties: {
+        gridState: gridStateStructuredSchema,
+        propertiesToIgnore: {
+            type: 'array',
+            items: {
+                type: 'string',
+                enum: ['aggregation', 'filter', 'sort', 'pivot', 'columnVisibility', 'columnSizing', 'rowGroup'],
+            },
+            description: '应用新状态时要忽略的表格状态属性列表',
+        },
+        explanation: {
+            type: 'string',
+            description: '对表格状态所做更改的人类可读解释',
+        },
+    },
+    required: ['gridState', 'propertiesToIgnore', 'explanation'],
+    additionalProperties: false,
+};
+```
+
+`getStructuredSchema()` API 返回可以使用表格 API 实现的功能的精确表示。例如，如果列不可排序，则模式将不会在可排序列列表中包含该列。这确保 LLM 只能为表格生成有效的状态更改。
+
+`schema` 包含几个供 LLM 填充的属性：
+
+-   `gridState` 表格状态的结构化输出表示。
+-   `propertiesToIgnore` 未更改的表格状态属性列表，以确保在更新表格状态时不会覆盖它们（可选，但建议）。
+-   `explanation` LLM 可以用来向用户提供有关已应用更改的上下文的字符串（可选，但建议）。
+
+### 使用任何 LLM 修改状态
+
+为了向 LLM 提供足够的上下文，我们建议将用户的请求、当前表格状态和模式发送给 LLM：
+
+```ts
+// 获取用户的请求，例如从输入元素
+const userRequest = inputElement.value.trim();
+
+// 获取当前表格状态
+const gridState = gridApi.getState();
+
+// 将用户请求和模式发送给 LLM
+const response = await callLLM(userRequest, gridState, schema)
+```
+
+`callLLM` 函数需要根据您选择的 LLM 实现。请参阅我们上面的示例，了解使用 [ChatGPT 的 Completions API](https://platform.openai.com/docs/api-reference/chat?api-mode=chat) 的[参考实现](https://github.com/ag-grid/ag-grid/blob/9399cd046793a702ef0b0924f0203a5cc27b96c6/documentation/ag-grid-docs/src/content/docs/ai-toolkit/_examples/natural-language-grid-state/chatgptApi.ts#L10)和[提示](#prompting)部分，了解有关创建系统提示的更多信息。
+
+### 更新表格状态
+
+一旦 LLM 提供了响应，就应该根据您的顶级模式进行验证。当使用不支持结构化输出的 LLM 时，这尤其重要。
+
+在此示例中，我们使用 `ajv` 验证 LLM 的响应，然后调用 `setState` 更新表格：
+
+```ts
+// 从 LLM 响应中提取表格状态和要忽略的属性
+const { newGridState, propertiesToIgnore } = response;
+
+// 使用模式初始化 ajv 验证器
+const ajv = new ajv7();
+const ajvValidator = ajv.compile(schema);
+
+// 使用 ajv 验证 LLM 响应
+if (!ajvValidator(newGridState)) {
+    console.error("无效模式")
+    return;
+}
+
+// 使用 LLM 响应更新表格状态
+gridApi.setState(newGridState, propertiesToIgnore);
+```
+
+将 `propertiesToIgnore`（LLM 未更改的属性）传递给 `setState` 可确保在表格状态更新后不会覆盖这些属性。
+
+## 排除功能
+
+默认情况下，所有功能都已启用并包含在模式中。如果您希望限制模式中返回的功能，可以通过向 `getStructuredSchema` 方法提供功能名称列表来实现。
+
+例如，如果您不想允许用户操作列可见性和排序，可以这样调用 `getStructuredSchema`：
+
+```ts
+const gridStateStructuredSchema = gridApi.getStructuredSchema(
+    {
+         exclude: ['columnVisibility', 'sorting']
+    }
+);
+```
+
+## 提供额外上下文
+
+有时 LLM 需要比表格单独提供的更多信息。因此，您可以为每列传入定义额外上下文的选项。
+
+-   `description` - 这向 LLM 提供了模式中列包含内容的描述。这可能包括数据的类型或格式等详细信息，以帮助它进行筛选或聚合。
+-   `includeSetValues` - 使用集合筛选器时，必须向 LLM 提供允许的值，以便正确设置它希望筛选的值。但是，某些集合筛选器包含许多值，导致模式太大，您的 LLM 无法处理。默认情况下，我们不包含集合筛选器值，但如果您将此属性设置为 true，则会包含它们。有关更多信息，请参阅[处理模式大小限制](#handling-schema-size-limits)。
+
+```ts
+const gridStateStructuredSchema = gridApi.getStructuredSchema({ columns: {
+    sport: {
+        description: "运动员赢得奖牌的运动项目",
+        includeSetValues: true
+    },
+    gold: {
+        description: "该运动员在此运动会上赢得的金牌数量"
+    }
+}});
+```
+
+{% warning %}
+在包含列描述或集合筛选器值等数据之前，您应该了解您的 LLM 提供商的数据安全策略。
+{% /warning %}
+
+## 提示
+
+AI 工具包不包含任何提示逻辑，因为这将根据您使用的 LLM 和您的特定用例而有所不同。这使您能够灵活地制定适合您的用户和表格中数据的提示。
+
+在我们的测试中，我们发现以下几点有助于从 LLM 获得最佳结果：
+
+-   在提示中包含表格的当前状态。这有助于 LLM 了解表格当前的样子，以及正在请求哪些更改。
+-   请求 LLM 仅返回表格状态更改，不返回其他任何内容。这有助于确保响应可以直接传递给 `setState()`。
+-   您可能希望向 LLM 提供表格中的几行数据，以帮助它了解正在处理的数据。如果您的表格包含 LLM 可能不熟悉的领域特定数据，这尤其有用。如果您有小型数据集，甚至可以通过使用 `exportToCsv()` 在提示中包含整个数据集。
+-   如果您有任何希望 LLM 了解的领域特定知识或术语，也请在提示中包含。例如，"在此数据集中，'奖牌'指的是在奥运会上赢得的金牌、银牌或铜牌中的任何一种"。
+-   包含可用功能列表也有助于 LLM 了解它可以做什么和不能做什么。
+
+以下是您可以作为起点的示例提示：
+
+```ts
+const prompt = `
+    您是一位专业的数据分析师，正在处理数据表格。
+    该表格包含有关奥林匹克运动员及其成就的数据。
+
+    您应该通过生成一个 JSON 对象来回应用户请求，
+    该对象表示他们对表格状态的请求更改。响应应
+    包含他们请求的所有更改，以及已应用于表格但
+    他们未请求更改的任何功能。
+
+    以下是数据表格的当前状态，表示为
+    JSON 对象。该表格包含有关奥林匹克运动员及其成就的数据。
+
+    当前表格状态：
+    ${JSON.stringify(gridApi.getState(), null, 2)}
+
+    该表格具有以下可操作的功能：
+    - 列可见性
+    - 列大小调整
+    - 行分组
+    - 排序
+    - 聚合
+    - 透视
+    - 筛选
+`
+```
+
+## 修改模式
+
+您可以修改结构化模式以精确更改选项或添加额外功能。例如，您可能希望为自定义筛选器添加模式，或限制 LLM 可以隐藏哪些列：
+
+```ts
+// 生成基础模式
+const baseSchema = gridApi.getStructuredSchema();
+
+// 使用自定义约束增强
+function applyCustomRules(schema) {
+  return {
+    ...schema,
+    // 自定义模式规则...
+}
+
+const customSchema = applyCustomRules(baseSchema);
+```
+
+如果您选择这样做，请确保结果仍然是有效的 `GridState` 对象，然后再将其传递给 `setState`。请注意，LLM 支持的 JSON 模式是完整 JSON 模式规范的子集，并相应地构建您的模式。
+
+## 处理模式大小限制
+
+当 LLM 必须从显式允许值（例如集合筛选器）中选择时，`includeSetValues: true` 很有用，可实现精确的筛选器构建。但是，大基数可能会使提示膨胀并超出上下文限制。
+
+**建议**：
+
+-   仅在低基数列上有选择地启用 `includeSetValues`。
+
+-   考虑截断为前 N 个最频繁的值加上"其他"提示。
+
+-   监控总提示大小；保持在模型的上下文窗口内，并为模型的响应留出缓冲区。
+
+## 示例：AI 聊天助手
+
+此示例演示了嵌入在表格[侧边栏](./side-bar/)中的 AI 聊天助手作为[自定义工具面板](./component-tool-panel/)。该助手维护对话历史，使用户能够进行多轮交互，在其中可以引用以前的响应并完善他们的请求。
+
+尝试以下提示序列，看看助手如何记住上下文：
+
+1. **"建议3种分析此数据中支出模式的不同方法"**
+2. **"应用建议2"**
+3. **"实际上，撤销那个并尝试建议3"**
+4. **"现在添加一个筛选器，仅显示超过100英镑的交易"**
+
+{% gridExampleRunner title="嵌入在工具面板中的 AI 聊天助手" name="tool-panel-chat-assistant" exampleHeight=600 /%}
+
+## API
+
+{% apiDocumentation source="grid-api/api.json" section="ai-toolkit" names=["getStructuredSchema"] /%}

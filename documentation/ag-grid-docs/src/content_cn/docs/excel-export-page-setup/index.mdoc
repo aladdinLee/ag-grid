@@ -1,0 +1,61 @@
+---
+title: "Excel 导出 - 页面设置"
+enterprise: true
+---
+
+Excel 导出允许您配置导出 Excel 文件的页面设置。
+
+## 页面设置
+
+您可以使用 [Excel Export Params](./excel-export-api/#excelexportparams) 的 `pageSetup` 和 `margins` 配置来自定义 Excel 导出页面设置，例如**页面大小**、**方向**和**边距**。这些设置在打印导出的 Excel 文件或导出为 PDF 时可见。
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    defaultExcelExportParams: {
+        pageSetup: {
+            orientation: 'Landscape',
+            pageSize: 'A3'
+        },
+        margins: {
+            top: 1,
+            right: 1,
+            bottom: 1,
+            left: 1,
+            header: 0.5,
+            footer: 0.5,
+        }
+    }
+}
+```
+
+{% warning %}
+边距值必须以 `英寸` 为单位提供。
+{% /warning %}
+
+请注意以下几点：
+
+-   下面的示例允许您配置页面大小、方向和边距值。
+-   页面大小和方向存储在 `pageSetup` 对象中。
+-   边距值存储在 `margins` 对象中。
+
+{% gridExampleRunner title="Excel 导出 - 页面设置" name="excel-export-page-setup"  exampleHeight=815 /%}
+
+## 接口
+
+### ExcelExportParams
+
+```ts
+interface ExcelExportParams {
+    // ...
+    margins?: ExcelSheetMargin;
+    pageSetup?: ExcelSheetPageSetup
+}
+```
+
+### ExcelSheetMargin
+
+{% interfaceDocumentation interfaceName="ExcelSheetMargin" /%}
+
+### ExcelSheetPageSetup
+
+{% interfaceDocumentation interfaceName="ExcelSheetPageSetup" /%}

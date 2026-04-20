@@ -1,0 +1,28 @@
+---
+title: "行分组 - 显示分组数据"
+enterprise: true
+---
+
+分组层次结构可以以不同的方式显示在网格中。
+
+## 显示类型
+
+行层次结构可以以三种不同的方式显示，由 `groupDisplayType` 网格选项配置：
+
+-   包含所有行组级别的[单一组列](./grouping-single-group-column/)。
+-   [多个组列](./grouping-multiple-group-columns/)，每列代表一个行组级别。
+-   [组行](./grouping-group-rows/)，其中父行显示为全宽行。
+
+{% gridExampleRunner title="分组显示类型" name="group-display-types" /%}
+
+要配置显示类型，请在网格选项中将 `groupDisplayType` 属性设置为 `"singleColumn"`、`"multipleColumns"` 或 `"groupRows"` 之一，如下面的配置所示：
+
+```{% frameworkTransform=true %}
+const gridOptions = {
+    groupDisplayType: 'multipleColumns',
+};
+```
+
+{% note %}
+虽然不建议，但也可以使用[自定义组列](./grouping-custom-group-columns/)配置这些列。
+{% /note %}

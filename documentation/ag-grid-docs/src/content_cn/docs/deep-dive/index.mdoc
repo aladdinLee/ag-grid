@@ -1,0 +1,99 @@
+---
+title: "创建基本网格"
+description: "学习从头开始创建和配置 AG Grid，涵盖行数据、列定义、网格选项、格式化和自定义组件。"
+---
+
+学习如何从头开始创建和配置 AG Grid 实例。本指南介绍了构建交互式网格所需的基本概念，包括设置行数据、定义列、应用网格选项、格式化单元格值和添加自定义组件。
+
+## 概述
+
+在本教程中，您将：
+
+1. [创建基本网格](./deep-dive/#create-a-basic-grid)
+1. [将外部数据加载到网格中](./deep-dive/#load-new-data)
+1. [配置列](./deep-dive/#configure-columns)
+1. [配置网格功能](./deep-dive/#configure-the-grid)
+1. [格式化单元格值](./deep-dive/#format-cell-values)
+1. [向单元格添加自定义组件](./deep-dive/#custom-cell-components)
+1. [挂钩到网格事件](./deep-dive/#handle-grid-events)
+
+完成后，您将拥有一个交互式网格，其中包含自定义组件和格式化数据 - 通过**排序**、**过滤**、**调整大小**、**选择**或**编辑**网格中的数据来亲自尝试：
+
+{% gridExampleRunner title="测试示例" name="testing-example"  exampleHeight=550 /%}
+
+## 创建基本网格
+
+{% if isFramework("javascript") %}
+
+<!-- 创建基本网格 -->
+
+完成我们的[快速入门](./getting-started/)（或在 CodeSandbox / Plunker 中打开下面的示例）以从基本网格开始，包括：
+
+1. **网格选项**：保存网格所有选项的对象，例如行数据和列定义。
+1. **行数据**：要显示的数据。
+1. **列定义**：定义和控制网格列。
+1. **容器**：包含并定义网格尺寸的 div。
+1. **网格 API**：提供对网格 API 方法的访问。在创建新网格时初始化。
+
+{% gridExampleRunner title="基本示例" name="basic-example"  exampleHeight=220 /%}
+
+{% /if %}
+
+{% if isFramework("react") %}
+
+<!-- 创建基本网格 -->
+
+完成我们的[快速入门](./getting-started/)（或在 CodeSandbox / Plunker 中打开下面的示例）以从基本网格开始，包括：
+
+1. **行数据**：要显示的数据。
+1. **列定义**：定义和控制网格列。
+1. **容器**：包含网格并定义其尺寸的 div。
+1. **网格组件**：具有**行数据**和**列定义**属性的 `AgGridReact` 组件。
+
+{% gridExampleRunner title="基本示例" name="basic-example"  exampleHeight=220 /%}
+
+_注意：`rowData` 和 `columnDefs` 数组使用 `useState` 钩子。如果数据是可变的，我们建议使用 `useState`，否则 `useMemo` 更可取。阅读我们的[最佳实践](./react-hooks/)指南，了解有关在 AG Grid 中使用 React 钩子的更多信息。_
+
+{% /if %}
+
+{% if isFramework("angular") %}
+
+<!-- 创建基本网格 -->
+
+完成我们的[快速入门](./getting-started/)（或在 CodeSandbox / Plunker 中打开下面的示例）以从基本网格开始，包括：
+
+1. **行数据**：要显示的数据。
+1. **列定义**：定义和控制网格列。
+1. **网格组件**：`ag-grid-angular` 组件，具有尺寸、行数据和列定义属性
+
+{% gridExampleRunner title="基本示例" name="basic-example"  exampleHeight=220 /%}
+
+{% /if %}
+
+{% if isFramework("vue") %}
+
+<!-- 创建基本网格 -->
+
+完成我们的[快速入门](./getting-started/)（或在 CodeSandbox / Plunker 中打开下面的示例）以从基本网格开始，包括：
+
+1. **行数据**：要显示的数据。
+1. **列定义**：定义和控制网格列。
+1. **网格组件**：`ag-grid-vue` 组件，具有尺寸、行数据和列定义属性
+
+{% gridExampleRunner title="基本示例" name="basic-example"  exampleHeight=220 /%}
+
+{% /if %}
+
+## 加载新数据
+
+{% if isFramework("javascript") %}
+
+<!-- 加载新数据 -->
+
+网格 API 提供了一种与网格交互的方式。要更新网格中的数据，我们可以使用 `setGridOption` API。让我们通过获取一些数据并使用响应更新网格来测试这一点：
+
+```jsx
+fetch('https://www.ag-grid.com/example-assets/space-mission-data.json')
+    .then(response => response.json())
+    .then((data: any) => gridApi.setGridOption('rowData', data))
+```

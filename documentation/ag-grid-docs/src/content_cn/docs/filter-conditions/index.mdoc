@@ -1,0 +1,59 @@
+---
+title: "过滤条件"
+---
+
+本节描述网格提供的简单过滤器共享的过滤条件 - [文本过滤器](./filter-text/)、[数字过滤器](./filter-number/)、[BigInt 过滤器](./filter-bigint/)和[日期过滤器](./filter-date/)。
+
+每个简单过滤器都遵循相同的布局。过滤器由一个或多个过滤条件组成，由零个或多个连接运算符分隔。
+
+唯一的布局差异是呈现给用户的输入字段类型：文本过滤器为文本字段，数字过滤器为数字字段，日期过滤器为日期选择器字段。
+
+{% imageCaption imagePath="resources/filter-panel-components.png" alt="过滤器面板组件" centered=true /%}
+
+## 过滤选项
+
+每个过滤器提供一个过滤选项下拉列表供选择。每个过滤选项代表一种过滤策略，例如"等于"、"不等于"等。
+
+每个过滤器的默认过滤选项可以在各自的页面上找到：
+
+-   [文本过滤器选项](./filter-text/#text-filter-options)
+-   [数字过滤器选项](./filter-number/#number-filter-options)
+-   [日期过滤器选项](./filter-date/#filter-options)
+
+有关定义[自定义过滤选项](#custom-filter-options)的信息可以在下面找到。
+
+## 过滤值
+
+每个过滤选项接受零（自定义选项的可能性）、一个（大多数）或两个（'inRange'）值。值类型取决于过滤器类型，例如日期过滤器接受日期值。
+
+## 条件数量
+
+默认情况下，每个过滤器最初只显示一个过滤条件。当用户完成所有可见的过滤条件时，另一个过滤条件变得可见。当用户清除最后一个完成的过滤条件时，如果需要，两侧的任何空过滤条件都会被隐藏。此外，当过滤器关闭时，如果需要，将删除不在末尾的任何空过滤条件。
+
+可以通过设置过滤器参数 `maxNumConditions` 控制过滤条件的最大数量（默认值为两个）。
+
+也可以通过设置过滤器参数 `numAlwaysVisibleConditions` 始终显示一定数量的过滤条件。在这种情况下，末尾的过滤条件将被禁用，直到完成前一个过滤条件。
+
+{% interfaceDocumentation interfaceName="ISimpleFilterParams" names=["maxNumConditions", "numAlwaysVisibleConditions"] config={"description":""} /%}
+
+## 连接运算符
+
+连接运算符决定如何连接过滤条件，使用 `AND` 或 `OR`。所有连接运算符具有相同的值，当有多个时，只有第一个可编辑。
+
+## 示例：简单过滤条件
+
+以下示例演示了可以应用于任何简单过滤器的过滤条件配置。
+
+-   **Athlete** 列显示具有所有选项默认行为的文本过滤器。
+-   **Country** 列显示具有 `filterOptions` 设置以显示不同可用选项列表的文本过滤器，以及 `defaultOption` 设置以更改选择的默认选项。
+-   **Sport** 列显示具有 `maxNumConditions` 设置为 `10` 的文本过滤器，以便可以输入多达十个条件。
+-   **Age** 列具有 `numAlwaysVisibleConditions` 设置为 `2` 的数字过滤器，以便始终显示两个条件。`defaultJoinOperator` 也设置为 `'OR'` 而不是默认值（`'AND'`）。
+-   **Date** 列具有 `maxNumConditions` 设置为 `1` 的日期过滤器，以便只显示第一个条件。
+
+{% gridExampleRunner title="简单过滤条件" name="simple-filter-options"  exampleHeight=560 /%}
+
+## 自定义过滤选项
+
+对于具有特殊过滤要求的应用程序，还可以向数字、文本和日期过滤器添加新的自定义过滤选项。例如，可以包含"Not Equal (with Nulls)"过滤选项以及内置的"Not Equal"选项。
+
+自定义过滤选项通过 `filterParams.filterOptions` 提供给网格，必须符合 `IFilterOptionDef` 接口：

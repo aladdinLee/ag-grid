@@ -1,0 +1,110 @@
+---
+title: "范围图表 API"
+enterprise: true
+---
+
+本节展示如何通过网格 API 创建范围图表。
+
+## 创建范围图表
+
+可以通过 `gridApi.createRangeChart()` 创建范围图表，如下所示：
+
+```{% frameworkTransform=true %}
+api.createRangeChart({
+    chartType: 'groupedColumn',
+    cellRange: {
+        rowStartIndex: 0,
+        rowEndIndex: 4,
+        columns: ['country', 'gold', 'silver'],
+    },
+    // 其他选项...
+});
+```
+
+上面的代码片段使用前 4 行和 `country`、`gold`、`silver` 列的数据创建了一个 `groupedColumn` 图表类型的范围图表。有关选项的完整列表，请参阅[范围图表 API](./integrated-charts-api-range-chart/#range-chart-api)。
+
+以下示例演示如何通过 `gridApi.createRangeChart()` 以编程方式创建范围图表。请注意以下几点：
+
+- 单击 **'Top 5 Medal Winners'** 将按国家绘制前五行金牌和银牌的图表。
+- 单击 **'Bronze Medals by Country'** 将使用所有行按国家绘制铜牌图表（提供的单元格范围未指定行）。
+- 请注意 **'Bronze Medals by Country'** 图表与网格取消链接，因为 `unlinkChart=true`。请注意，网格中的排序不影响图表，网格中没有图表范围。
+
+{% gridExampleRunner title="网格弹出窗口中的图表" name="chart-api" /%}
+
+## 范围图表仪表板
+
+以下示例将[图表容器](./integrated-charts-container/)传递给 API，以将图表放置在网格弹出窗口以外的位置。请注意以下几点：
+
+- 图表放置在网格外的 `div` 元素中。
+- 两个饼图显示聚合而不是绘制单个行。
+- 条形图对行中的更改敏感。例如，如果排序，图表会更新以始终绘制前五行。
+- 所有数据都可在网格中编辑。对网格数据的更改会反映在图表中。
+- 饼图的图例位于右侧。这是在 `chartThemeOverrides` 中配置的。
+- 在下面的示例中，图表菜单已被[隐藏](./integrated-charts-menu/#hiding-the-chart-menu)。
+
+{% gridExampleRunner title="仪表板中的图表" name="dashboard"  exampleHeight=700 /%}
+
+## 隐藏图表范围
+
+在某些情况下，可能希望隐藏网格中的图表范围，请参见[组合图表](./integrated-charts-api-range-chart/#combination-charts)。
+
+要隐藏图表范围，只需在 `ChartRangeParams` 上启用 `suppressChartRanges=true`。
+
+有关更多详细信息，请参阅[范围图表 API](./integrated-charts-api-range-chart/#range-chart-api)。
+
+## 组合图表
+
+可以通过 `gridApi.createRangeChart()` 创建以下组合图表类型：
+
+- 列和线（`chartType: 'columnLineCombo'`）
+- 面积和列（`chartType: 'areaColumnCombo'`）
+- 自定义组合（`chartType: 'customCombo'`）
+
+当指定 `customCombo` 图表类型时，还必须提供新的 `CreateRangeChartParams.seriesChartTypes`。
+还要注意，当存在 `seriesChartTypes` 时，无论提供哪个 `chartType`，都假定为 `customCombo` 图表类型。
+
+`seriesChartTypes` 属性接受 `SeriesChartType` 对象数组，如下所示：
+
+```{% frameworkTransform=true %}
+api.createRangeChart({
+    chartType: 'customCombo',
+    cellRange: {
+      columns: ['month', 'rain', 'pressure', 'temp'],
+    },
+    seriesChartTypes: [
+      { colId: 'rain', chartType: 'groupedColumn', secondaryAxis: false },
+      { colId: 'pressure', chartType: 'line', secondaryAxis: true },
+      { colId: 'temp', chartType: 'line', secondaryAxis: true }
+    ],
+    aggFunc: 'sum',
+});
+```
+
+组合图表支持以下系列图表类型：
+
+- 线（`chartType: 'line'`）
+- 面积（`chartType: 'Area'`）
+- 堆叠面积（`chartType: 'stackedArea'`）
+- 分组列（`chartType: 'groupedColumn'`）
+- 堆叠列（`chartType: 'stackedColumn'`）
+
+请注意，只有 `line` 和 `area` 系列图表类型可以针对辅助轴绘制。
+
+以下示例演示了上述配置，请注意以下几点：
+
+- 'Rain' 系列使用 `groupedColumn` 图表类型，并针对主 Y 轴绘制（`secondaryAxis=false`）
+- 'Pressure' 和 'Temp' 使用 `line` 图表类型，并针对单独的辅助 Y 轴绘制（`secondaryAxis=true`）
+- 通过设置 `aggFunc: 'sum'` 按 'Month' 类别聚合值
+- 使用 `suppressChartRanges=true` 隐藏图表范围
+
+{% gridExampleRunner title="组合图表" name="combination-chart"  exampleHeight=790 /%}
+
+## 范围图表 API
+
+可以使用以下方式以编程方式创建范围图表：
+
+{% apiDocumentation source="grid-api/api.json" section="charts" names=["createRangeChart"] /%}
+
+{% interfaceDocumentation interfaceName="CreateRangeChartParams" overrideSrc="integrated-charts-api-range-chart/chart-api.json" /%}
+
+当提供 `chartContainer` 时，API 返回 `ChartRef` 对象。这与提供给 `createChartContainer(chartRef)` 回调的结构相同。`ChartRef` 为应用程序提供了应用程序想要释放图表时所需的 `destroyChart()` 方法。

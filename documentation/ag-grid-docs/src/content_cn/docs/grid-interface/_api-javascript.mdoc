@@ -1,0 +1,26 @@
+{% if isFramework("javascript") %}
+
+您可以通过存储从 `createGrid` 返回的 `api` 引用来访问网格 API。
+
+```js
+// 创建网格
+const api = createGrid(div, gridOptions);
+
+// 调用 API 方法
+const cell = api.getFocusedCell();
+```
+
+### 事件和回调中的 API
+
+或者，所有网格[回调](./grid-options/)和[事件](./grid-events/)都包括 `api` 作为其参数的一部分。
+
+```js
+const gridOptions: GridOptions = {
+    onGridReady: (event: GridReadyEvent) => {
+        // 从事件中使用 API
+        event.api.ensureIndexVisible(10);
+    }
+}
+```
+
+{% /if %}

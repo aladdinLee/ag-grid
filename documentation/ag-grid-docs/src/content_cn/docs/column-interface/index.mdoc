@@ -1,0 +1,62 @@
+---
+title: "列概述"
+---
+
+列是控制数据在表格内如何显示和交互的关键配置点。
+
+## 列选项
+
+列选项，也称为列定义，实现 `ColDef<TData, TValue>` 或 `ColGroupDef<TData>` 接口，并控制列在表格中的行为方式的所有方面。
+
+有关配置选项的完整列表，请参阅[列选项](./column-properties/)。
+
+### 初始列选项
+
+少量列选项 **不** 支持更新其值。它们的值仅在列的初始创建期间读取。这些选项在[选项参考](./column-properties)中标记为 `Initial`。有关更多信息，请参阅[更改列状态](./column-updating-definitions/#changing-column-state)。
+
+{% note %}
+并非所有列选项都支持更新。这些标记为 Initial。
+{% /note %}
+
+## 列
+
+表格中的每列由 `Column` 实例表示，该实例具有对底层列定义的引用。`Column` 具有用于与特定列交互的属性、方法和事件，例如 `column.isVisible()`。
+
+有关与列关联的属性/方法的完整列表，请参阅[列](./column-object/)。
+
+## 列组
+
+如果使用列组，则每个组由 `ColumnGroup` 或 `ProvidedColumnGroup` 实例表示。两者都有用于与列组交互的方法，例如 `column.isExpanded()`。
+
+`ColumnGroup` 和 `ProvidedColumnGroup` 之间有许多重叠的方法，因为它们是相似的对象。关键区别在于 `ColumnGroups` 与表格中可见的列对齐，而 `ProvidedColumnGroups` 与提供给表格的列对齐。例如，组可以通过移动列被拆分，这将导致新的 `ColumnGroup`，但 `ProvidedColumnGroup` 将保持不变。
+
+有关与列组关联的方法的完整列表，请参阅[列组](./column-object-group/)。
+
+## 列事件
+
+列在更新时触发事件，这使得可以在应用程序中触发逻辑。
+
+{% note %}
+大多数用户不需要使用列事件，但它们可用于高级用例。请考虑以下指导。
+{% /note %}
+
+### 列事件指导
+
+列触发的所有事件都是同步的（事件通常是异步的）。表格内部也在监听这些事件。这意味着当您收到事件时，表格可能仍有一些工作要做（例如，如果排序已更改，表格 UI 可能仍需要进行排序）。
+
+建议在从 `column` 接收事件时 **不** 调用任何表格 API 函数。相反，最好将您的逻辑放入超时中，并在另一个 VM tick 中调用表格。
+
+向列添加事件监听器时，它们将随列保留，直到列被销毁。当您向表格添加新列时，列会被销毁。当列从 DOM 中移除时，列对象不会被销毁（例如，由于水平滚动，列虚拟化移除了列，或通过 API 使列不可见）。
+
+如果在自定义标题组件中向列添加监听器，请确保在标题组件销毁时删除监听器。
+
+```js
+// 向 'country' 列添加可见性监听器
+const listener = event => console.log('列可见性已更改', event);
+
+const column = api.getColumn('country');
+column.addEventListener('visibleChanged', listener);
+
+// 稍后，删除监听器
+column.removeEventListener('visibleChanged', listener);
+```
