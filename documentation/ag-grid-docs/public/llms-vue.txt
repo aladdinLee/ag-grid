@@ -1,0 +1,789 @@
+# AG Grid Vue 3 Data Grid
+
+> AG Grid Vue 3 component for building high-performance Vue tables. See [llms-core.txt](llms-core.txt) for core concepts shared across all frameworks.
+
+## Installation
+
+```bash
+npm install ag-grid-vue3
+```
+
+This installs `ag-grid-vue3` and `ag-grid-community`.
+
+For Enterprise features:
+```bash
+npm install ag-grid-enterprise
+```
+
+## Module Registration
+
+Register modules globally before grid instantiation.
+
+### Bundle Approach
+
+```javascript
+import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+
+// Register in main.js or App.vue
+ModuleRegistry.registerModules([AllCommunityModule]);
+```
+
+### Enterprise Bundle
+
+```javascript
+import { ModuleRegistry } from 'ag-grid-community';
+import { AllEnterpriseModule } from 'ag-grid-enterprise';
+
+ModuleRegistry.registerModules([AllEnterpriseModule]);
+```
+
+### Individual Modules
+
+```javascript
+import { ModuleRegistry, ClientSideRowModelModule, CsvExportModule } from 'ag-grid-community';
+import { ExcelExportModule, SetFilterModule, RowGroupingModule } from 'ag-grid-enterprise';
+
+ModuleRegistry.registerModules([
+    ClientSideRowModelModule,
+    CsvExportModule,
+    ExcelExportModule,
+    SetFilterModule,
+    RowGroupingModule
+]);
+```
+
+### Per-Grid Modules
+
+```vue
+<template>
+    <ag-grid-vue
+        :modules="modules"
+        :rowData="rowData"
+        :columnDefs="columnDefs"
+    />
+</template>
+
+<script setup>
+import { AgGridVue } from 'ag-grid-vue3';
+import { ClientSideRowModelModule, CsvExportModule } from 'ag-grid-community';
+
+const modules = [ClientSideRowModelModule, CsvExportModule];
+</script>
+```
+
+## Basic Grid
+
+### Composition API with `<script setup>` (Recommended)
+
+```vue
+<template>
+    <ag-grid-vue
+        class="ag-theme-quartz"
+        style="height: 500px"
+        :rowData="rowData"
+        :columnDefs="columnDefs"
+    />
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { AgGridVue } from 'ag-grid-vue3';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-quartz.css';
+
+const rowData = ref([
+    { make: "Tesla", model: "Model Y", price: 64950, electric: true },
+    { make: "Ford", model: "F-Series", price: 33850, electric: false },
+    { make: "Toyota", model: "Corolla", price: 29600, electric: false }
+]);
+
+const columnDefs = ref([
+    { field: "make" },
+    { field: "model" },
+    { field: "price" },
+    { field: "electric" }
+]);
+</script>
+
+<style scoped>
+/* Component-specific styles */
+</style>
+```
+
+### Options API (Legacy)
+
+```vue
+<template>
+    <ag-grid-vue
+        class="ag-theme-quartz"
+        style="height: 500px"
+        :rowData="rowData"
+        :columnDefs="columnDefs"
+    />
+</template>
+
+<script>
+import { AgGridVue } from 'ag-grid-vue3';
+
+export default {
+    name: 'GridComponent',
+    components: { AgGridVue },
+    data() {
+        return {
+            rowData: [
+                { make: "Tesla", model: "Model Y", price: 64950 }
+            ],
+            columnDefs: [
+                { field: "make" },
+                { field: "model" },
+                { field: "price" }
+            ]
+        };
+    }
+};
+</script>
+```
+
+## Grid Options as Props
+
+All grid options are bound using Vue's `:prop` syntax:
+
+```vue
+<template>
+    <ag-grid-vue
+        :rowData="rowData"
+        :columnDefs="columnDefs"
+        :defaultColDef="defaultColDef"
+        :rowSelection="rowSelection"
+        :editType="'fullRow'"
+        :pagination="true"
+        :paginationPageSize="50"
+        :theme="theme"
+        @grid-ready="onGridReady"
+        @cell-value-changed="onCellValueChanged"
+        @selection-changed="onSelectionChanged"
+    />
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const rowData = ref([]);
+const columnDefs = ref([...]);
+
+const defaultColDef = ref({
+    sortable: true,
+    filter: true,
+    resizable: true
+});
+
+const rowSelection = ref({ mode: 'multiRow' });
+</script>
+```
+
+## Accessing Grid API
+
+Use `@grid-ready` event to access the API:
+
+```vue
+<template>
+    <button @click="exportCsv">Export CSV</button>
+    <ag-grid-vue
+        @grid-ready="onGridReady"
+        :rowData="rowData"
+        :columnDefs="columnDefs"
+    />
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { AgGridVue } from 'ag-grid-vue3';
+
+const api = ref(null);
+
+const onGridReady = (params) => {
+    api.value = params.api;
+};
+
+const exportCsv = () => {
+    api.value?.exportDataAsCsv();
+};
+</script>
+```
+
+## Row IDs
+
+Critical for maintaining state across updates:
+
+```vue
+<template>
+    <ag-grid-vue
+        :getRowId="getRowId"
+        :rowData="rowData"
+    />
+</template>
+
+<script setup>
+const rowData = ref([
+    { id: '1', make: 'Tesla' },
+    { id: '2', make: 'Ford' }
+]);
+
+const getRowId = (params) => params.data.id;
+</script>
+```
+
+## Cell Renderers
+
+### Inline Function Renderer
+
+```vue
+<script setup>
+const columnDefs = ref([
+    {
+        field: 'price',
+        cellRenderer: (params) => `$${params.value}`
+    }
+]);
+</script>
+```
+
+### Vue Component Renderer
+
+```vue
+<!-- PriceRenderer.vue -->
+<template>
+    <span class="price">${{ value }}</span>
+</template>
+
+<script setup>
+import { ref, watch } from 'vue';
+
+const props = defineProps({
+    value: Number
+});
+
+const value = ref(props.value);
+
+watch(() => props.value, (newValue) => {
+    value.value = newValue;
+});
+</script>
+
+<!-- GridComponent.vue -->
+<template>
+    <ag-grid-vue
+        :rowData="rowData"
+        :columnDefs="columnDefs"
+    />
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { AgGridVue } from 'ag-grid-vue3';
+import PriceRenderer from './PriceRenderer.vue';
+
+const columnDefs = ref([
+    { field: 'price', cellRenderer: PriceRenderer }
+]);
+</script>
+```
+
+### Renderer with Parameters
+
+```vue
+<script setup>
+import PriceRenderer from './PriceRenderer.vue';
+
+const columnDefs = ref([
+    {
+        field: 'price',
+        cellRenderer: PriceRenderer,
+        cellRendererParams: {
+            currency: 'EUR',
+            locale: 'de-DE'
+        }
+    }
+]);
+</script>
+```
+
+## Cell Editors
+
+### Vue Component Editor
+
+```vue
+<!-- CustomEditor.vue -->
+<template>
+    <input
+        :value="value"
+        @input="onInput"
+        @keydown="onKeyDown"
+    />
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const props = defineProps({
+    value: String,
+    api: Object,
+    column: Object,
+    node: Object
+});
+
+const emit = defineEmits(['valueChanged']);
+
+const value = ref(props.value);
+
+const onInput = (event) => {
+    value.value = event.target.value;
+};
+
+const onKeyDown = (event) => {
+    if (event.key === 'Enter') {
+        emit('valueChanged', value.value);
+        props.api.stopEditing();
+    }
+};
+
+// Expose getValue method for AG Grid
+const getValue = () => value.value;
+defineExpose({ getValue });
+</script>
+
+<!-- GridComponent.vue -->
+<script setup>
+import CustomEditor from './CustomEditor.vue';
+
+const columnDefs = ref([
+    { field: 'name', cellEditor: CustomEditor }
+]);
+</script>
+```
+
+### Popup Editor
+
+```vue
+<script setup>
+import AddressEditor from './AddressEditor.vue';
+
+const columnDefs = ref([
+    {
+        field: 'address',
+        cellEditor: AddressEditor,
+        cellEditorPopup: true,
+        cellEditorPopupPosition: 'under'
+    }
+]);
+</script>
+```
+
+## Updating Data
+
+### Replace All Data
+
+```vue
+<script setup>
+import { ref } from 'vue';
+
+const rowData = ref([]);
+
+const loadNewData = (newData) => {
+    rowData.value = newData;
+};
+</script>
+```
+
+### Two-Way Binding with v-model
+
+```vue
+<template>
+    <ag-grid-vue
+        v-model="rowData"
+        :columnDefs="columnDefs"
+    />
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { AgGridVue } from 'ag-grid-vue3';
+
+// Updates to rowData automatically reflect in grid
+const rowData = ref([]);
+</script>
+```
+
+### Update via API
+
+```vue
+<script setup>
+import { ref } from 'vue';
+
+const api = ref(null);
+
+const updateRow = (id, newValue) => {
+    const rowNode = api.value.getRowNode(id);
+    rowNode.setDataValue('price', newValue);
+};
+</script>
+```
+
+### Transaction Updates
+
+```vue
+<script setup>
+import { ref } from 'vue';
+
+const api = ref(null);
+
+const addRows = (newRows) => {
+    api.value.applyTransaction({ add: newRows });
+};
+
+const updateRows = (updatedRows) => {
+    api.value.applyTransaction({ update: updatedRows });
+};
+
+const removeRows = (ids) => {
+    const toRemove = ids.map(id => ({ id }));
+    api.value.applyTransaction({ remove: toRemove });
+};
+</script>
+```
+
+## Grid State
+
+### Saving/Restoring State
+
+```vue
+<template>
+    <button @click="saveState">Save</button>
+    <button @click="restoreState">Restore</button>
+    <ag-grid-vue @grid-ready="onGridReady" />
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const api = ref(null);
+const savedState = ref(null);
+
+const onGridReady = (params) => {
+    api.value = params.api;
+};
+
+const saveState = () => {
+    savedState.value = api.value.getState();
+};
+
+const restoreState = () => {
+    if (savedState.value) {
+        api.value.setState(savedState.value);
+    }
+};
+</script>
+```
+
+### Initial State
+
+```vue
+<template>
+    <ag-grid-vue
+        :initialState="initialState"
+        :rowData="rowData"
+    />
+</template>
+
+<script setup>
+const initialState = ref({
+    filter: { filterModel: { country: { values: ['USA'] } } },
+    columnVisibility: { hiddenColIds: ['notes'] }
+});
+</script>
+```
+
+## Theming
+
+### Built-in Theme
+
+```vue
+<template>
+    <ag-grid-vue :theme="theme" />
+</template>
+
+<script setup>
+import { themeQuartz } from 'ag-grid-community';
+
+const theme = themeQuartz;
+</script>
+```
+
+### Custom Theme Parameters
+
+```vue
+<script setup>
+import { themeQuartz } from 'ag-grid-community';
+
+const theme = themeQuartz.withParams({
+    backgroundColor: '#ffffff',
+    foregroundColor: '#333333',
+    accentColor: '#2196f3',
+    spacing: 10
+});
+</script>
+```
+
+### Theme Parts
+
+```vue
+<script setup>
+import { themeQuartz, iconSetMaterial, colorSchemeDark } from 'ag-grid-community';
+
+const theme = themeQuartz
+    .withPart(iconSetMaterial)
+    .withPart(colorSchemeDark)
+    .withParams({ accentColor: 'red' });
+</script>
+```
+
+### Dynamic Dark Mode
+
+```vue
+<template>
+    <button @click="toggleDark">Toggle Dark Mode</button>
+    <ag-grid-vue :theme="currentTheme" />
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+import { themeQuartz, colorSchemeDark } from 'ag-grid-community';
+
+const isDark = ref(false);
+
+const currentTheme = computed(() => {
+    return isDark.value
+        ? themeQuartz.withPart(colorSchemeDark)
+        : themeQuartz;
+});
+
+const toggleDark = () => {
+    isDark.value = !isDark.value;
+};
+</script>
+```
+
+## Master/Detail
+
+```vue
+<template>
+    <ag-grid-vue
+        :masterDetail="true"
+        :rowData="rowData"
+        :columnDefs="columnDefs"
+        :detailCellRendererParams="detailCellRendererParams"
+    />
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const columnDefs = ref([
+    { field: 'name' },
+    { field: 'account' }
+]);
+
+const detailColumnDefs = ref([
+    { field: 'callId' },
+    { field: 'direction' },
+    { field: 'duration' }
+]);
+
+const detailCellRendererParams = ref({
+    detailGridOptions: {
+        columnDefs: detailColumnDefs.value,
+        defaultColDef: { sortable: true, filter: true }
+    },
+    getDetailRowData: (params) => {
+        params.successCallback(params.data.callRecords);
+    }
+});
+</script>
+```
+
+## Full Example
+
+```vue
+<template>
+    <div style="padding: 10px">
+        <button @click="exportCsv">Export CSV</button>
+        <button @click="addRow">Add Row</button>
+    </div>
+    <ag-grid-vue
+        class="ag-theme-quartz"
+        style="height: 500px; width: 100%"
+        :rowData="rowData"
+        :columnDefs="columnDefs"
+        :defaultColDef="defaultColDef"
+        :getRowId="getRowId"
+        :rowSelection="rowSelection"
+        :pagination="true"
+        :paginationPageSize="10"
+        @grid-ready="onGridReady"
+        @cell-value-changed="onCellValueChanged"
+    />
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { AgGridVue } from 'ag-grid-vue3';
+import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-quartz.css';
+
+// Register modules
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+const api = ref(null);
+
+const rowData = ref([
+    { id: '1', make: 'Tesla', model: 'Model Y', price: 64950 },
+    { id: '2', make: 'Ford', model: 'F-Series', price: 33850 },
+    { id: '3', make: 'Toyota', model: 'Corolla', price: 29600 }
+]);
+
+const columnDefs = ref([
+    { field: 'make', sortable: true, filter: true },
+    { field: 'model', sortable: true, filter: true },
+    { field: 'price', sortable: true, filter: 'agNumberColumnFilter' }
+]);
+
+const defaultColDef = ref({
+    resizable: true,
+    minWidth: 100
+});
+
+const rowSelection = ref({ mode: 'multiRow' });
+
+const getRowId = (params) => params.data.id;
+
+const onGridReady = (params) => {
+    api.value = params.api;
+};
+
+const onCellValueChanged = (event) => {
+    console.log(`${event.colDef.field} changed:`, event.newValue);
+};
+
+const exportCsv = () => {
+    api.value?.exportDataAsCsv();
+};
+
+const addRow = () => {
+    const newRow = {
+        id: Date.now().toString(),
+        make: 'New',
+        model: 'Car',
+        price: 0
+    };
+    api.value?.applyTransaction({ add: [newRow] });
+};
+</script>
+
+<style>
+.ag-theme-quartz {
+    --ag-background-color: #fff;
+}
+</style>
+```
+
+## TypeScript
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue';
+import { AgGridVue } from 'ag-grid-vue3';
+import type { ColDef, GridApi, GridReadyEvent, CellValueChangedEvent, GetRowIdParams } from 'ag-grid-community';
+
+interface RowData {
+    id: string;
+    make: string;
+    model: string;
+    price: number;
+}
+
+const api = ref<GridApi<RowData> | null>(null);
+
+const rowData = ref<RowData[]>([
+    { id: '1', make: 'Tesla', model: 'Model Y', price: 64950 }
+]);
+
+const columnDefs = ref<ColDef<RowData>[]>([
+    { field: 'make' },
+    { field: 'model' },
+    { field: 'price', type: 'numericColumn' }
+]);
+
+const getRowId = (params: GetRowIdParams<RowData>): string => {
+    return params.data.id;
+};
+
+const onGridReady = (params: GridReadyEvent<RowData>) => {
+    api.value = params.api;
+};
+
+const onCellValueChanged = (event: CellValueChangedEvent<RowData>) => {
+    console.log(`${event.colDef.field} changed:`, event.newValue);
+};
+</script>
+```
+
+## Vue Reactivity Tips
+
+### Use ref for Reactive State
+
+```vue
+<script setup>
+import { ref } from 'vue';
+
+// Reactive data
+const rowData = ref([]);
+
+// Object refs
+const defaultColDef = ref({
+    sortable: true,
+    filter: true
+});
+</script>
+```
+
+### Use computed for Derived State
+
+```vue
+<script setup>
+import { ref, computed } from 'vue';
+
+const baseColDefs = ref([...]);
+const showExtraColumn = ref(false);
+
+const columnDefs = computed(() => {
+    const defs = [...baseColDefs.value];
+    if (showExtraColumn.value) {
+        defs.push({ field: 'extra' });
+    }
+    return defs;
+});
+</script>
+```
+
+### Event Naming Convention
+
+Vue uses kebab-case for event names, but AG Grid uses camelCase. Vue automatically converts:
+
+```vue
+<!-- AG Grid event: onGridReady -->
+<ag-grid-vue @grid-ready="onGridReady" />
+
+<!-- AG Grid event: onCellValueChanged -->
+<ag-grid-vue @cell-value-changed="onCellValueChanged" />
+```

@@ -1,0 +1,669 @@
+# AG Grid React Data Grid
+
+> AG Grid React component for building high-performance React tables. See [llms-core.txt](llms-core.txt) for core concepts shared across all frameworks.
+
+## Installation
+
+```bash
+npm install ag-grid-react
+```
+
+This installs `ag-grid-react` and `ag-grid-community`.
+
+For Enterprise features:
+```bash
+npm install ag-grid-enterprise
+```
+
+## Module Registration
+
+Since v35.1, React uses `AgGridProvider` for module injection. Modules are provided to all `AgGridReact` components within the provider scope.
+
+### AgGridProvider Approach (Recommended)
+
+```jsx
+import { AllCommunityModule } from 'ag-grid-community';
+import { AgGridProvider, AgGridReact } from 'ag-grid-react';
+
+const modules = [AllCommunityModule];
+
+function App() {
+    return (
+        <AgGridProvider modules={modules}>
+            <AgGridReact rowData={rowData} columnDefs={columnDefs} />
+        </AgGridProvider>
+    );
+}
+```
+
+### Enterprise with Charts
+
+```jsx
+import { AgChartsEnterpriseModule } from 'ag-charts-enterprise';
+import { AllEnterpriseModule } from 'ag-grid-enterprise';
+import { AgGridProvider, AgGridReact } from 'ag-grid-react';
+
+const modules = [AllEnterpriseModule.with(AgChartsEnterpriseModule)];
+
+function App() {
+    return (
+        <AgGridProvider modules={modules}>
+            <AgGridReact rowData={rowData} columnDefs={columnDefs} />
+        </AgGridProvider>
+    );
+}
+```
+
+### Individual Modules
+
+```jsx
+import { ClientSideRowModelModule, CsvExportModule } from 'ag-grid-community';
+import { ExcelExportModule, SetFilterModule } from 'ag-grid-enterprise';
+import { AgGridProvider, AgGridReact } from 'ag-grid-react';
+
+const modules = [
+    ClientSideRowModelModule,
+    CsvExportModule,
+    ExcelExportModule,
+    SetFilterModule
+];
+```
+
+### ModuleRegistry (Global Registration)
+
+```jsx
+import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+
+// Register globally before any grid is instantiated
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+function App() {
+    return <AgGridReact rowData={rowData} columnDefs={columnDefs} />;
+}
+```
+
+### Per-Grid Modules
+
+```jsx
+import { ClientSideRowModelModule, CsvExportModule } from 'ag-grid-community';
+import { AgGridProvider, AgGridReact } from 'ag-grid-react';
+
+const sharedModules = [ClientSideRowModelModule];
+const gridModules = [CsvExportModule];
+
+function App() {
+    return (
+        <AgGridProvider modules={sharedModules}>
+            <AgGridReact
+                modules={gridModules}
+                rowData={rowData}
+                columnDefs={columnDefs}
+            />
+        </AgGridProvider>
+    );
+}
+```
+
+## Basic Grid
+
+```jsx
+import { AgGridReact } from 'ag-grid-react';
+import { useState } from 'react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-quartz.css';
+
+function GridExample() {
+    const [rowData, setRowData] = useState([
+        { make: "Tesla", model: "Model Y", price: 64950, electric: true },
+        { make: "Ford", model: "F-Series", price: 33850, electric: false },
+        { make: "Toyota", model: "Corolla", price: 29600, electric: false }
+    ]);
+
+    const [columnDefs, setColumnDefs] = useState([
+        { field: "make" },
+        { field: "model" },
+        { field: "price" },
+        { field: "electric" }
+    ]);
+
+    return (
+        <div className="ag-theme-quartz" style={{ height: 500 }}>
+            <AgGridReact
+                rowData={rowData}
+                columnDefs={columnDefs}
+            />
+        </div>
+    );
+}
+```
+
+## Grid Options as Props
+
+All grid options are passed as props to `AgGridReact`:
+
+```jsx
+<AgGridReact
+    // Data
+    rowData={rowData}
+    columnDefs={columnDefs}
+    defaultColDef={defaultColDef}
+
+    // Selection
+    rowSelection={{ mode: 'multiRow' }}
+
+    // Editing
+    editType="fullRow"
+
+    // Pagination
+    pagination={true}
+    paginationPageSize={50}
+
+    // Theming
+    theme={themeQuartz}
+
+    // Callbacks
+    onGridReady={onGridReady}
+    onCellValueChanged={onCellValueChanged}
+    onSelectionChanged={onSelectionChanged}
+/>
+```
+
+## Accessing Grid API
+
+Use `onGridReady` to access the API:
+
+```jsx
+function GridExample() {
+    const [api, setApi] = useState(null);
+
+    const onGridReady = (params) => {
+        setApi(params.api);
+    };
+
+    const exportData = () => {
+        if (api) {
+            api.exportDataAsCsv();
+        }
+    };
+
+    return (
+        <>
+            <button onClick={exportData}>Export CSV</button>
+            <div style={{ height: 500 }}>
+                <AgGridReact
+                    rowData={rowData}
+                    columnDefs={columnDefs}
+                    onGridReady={onGridReady}
+                />
+            </div>
+        </>
+    );
+}
+```
+
+## React Hooks Best Practices
+
+### Row Data - Use useState
+
+```jsx
+// GOOD - Stable reference
+const [rowData, setRowData] = useState(data);
+
+// BAD - New array on every render
+const rowData = [{ make: 'Tesla' }];
+
+// GOOD - For immutable data
+const rowData = useMemo(() => data, []);
+```
+
+### Column Definitions - Use useState or useMemo
+
+```jsx
+// GOOD - Use useState for dynamic updates
+const [columnDefs, setColumnDefs] = useState([
+    { field: 'make' },
+    { field: 'model' }
+]);
+
+// GOOD - Use useMemo for static definitions
+const columnDefs = useMemo(() => [
+    { field: 'make' },
+    { field: 'model' }
+], []);
+
+// BAD - New array every render
+const columnDefs = [{ field: 'make' }];
+```
+
+### Object Properties - Use useMemo
+
+```jsx
+// GOOD
+const defaultColDef = useMemo(() => ({
+    sortable: true,
+    filter: true,
+    resizable: true
+}), []);
+
+// BAD - New object every render
+<AgGridReact defaultColDef={{ filter: true }} />
+```
+
+### Callbacks - Use useCallback
+
+```jsx
+// GOOD
+const isRowSelectable = useCallback((node) => {
+    return node.data.active;
+}, []);
+
+const getRowId = useCallback((params) => {
+    return params.data.id;
+}, []);
+
+// BAD - New function every render
+<AgGridReact isRowSelectable={(node) => node.data.active} />
+```
+
+### Event Handlers
+
+Event handlers don't need useCallback, but can use it for consistency:
+
+```jsx
+// GOOD - No hook needed for simple handlers
+const onCellClicked = (event) => {
+    console.log('Cell clicked', event);
+};
+
+// GOOD - useCallback with dependencies
+const onFilterOpened = useCallback((event) => {
+    console.log('Filter opened', someState);
+}, [someState]);
+
+// BAD - Stale closure (missing dependency)
+const onFilterOpened = useCallback((event) => {
+    console.log('State:', someState);  // Always logs initial value
+}, []);
+```
+
+### Immutable Data with getRowId
+
+```jsx
+const getRowId = useCallback((params) => params.data.id, []);
+
+<AgGridReact
+    rowData={rowData}
+    getRowId={getRowId}
+    // Selection, grouping state preserved on updates
+/>
+```
+
+## Cell Renderers
+
+### Inline Function Renderer
+
+```jsx
+const columnDefs = [
+    { field: 'price', cellRenderer: params => `$${params.value}` }
+];
+```
+
+### React Component Renderer
+
+```jsx
+const PriceRenderer = (props) => {
+    return <span className="price">${props.value.toFixed(2)}</span>;
+};
+
+const columnDefs = [
+    { field: 'price', cellRenderer: PriceRenderer }
+];
+```
+
+### Renderer with useMemo
+
+```jsx
+const PriceRenderer = memo((props) => (
+    <span>${props.value.toFixed(2)}</span>
+));
+
+const columnDefs = useMemo(() => [
+    { field: 'price', cellRenderer: PriceRenderer }
+], []);
+```
+
+### Dynamic Renderer Selection
+
+```jsx
+const TextRenderer = (props) => <span>{props.value}</span>;
+const NumberRenderer = (props) => <b>{props.value}</b>;
+
+const columnDefs = [
+    {
+        field: 'value',
+        cellRendererSelector: (params) => {
+            if (params.data.type === 'number') {
+                return { component: NumberRenderer };
+            }
+            return { component: TextRenderer };
+        }
+    }
+];
+```
+
+## Cell Editors
+
+### Inline Editor Component
+
+```jsx
+const columnDefs = [
+    {
+        field: 'name',
+        cellEditor: (props) => {
+            const [value, setValue] = useState(props.value);
+
+            return (
+                <input
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    onBlur={() => props.onValueChange(value)}
+                />
+            );
+        }
+    }
+];
+```
+
+### Popup Editor Component
+
+```jsx
+const PopupEditor = (props) => {
+    return (
+        <div style={{ padding: 10 }}>
+            <input value={props.value} onChange={...} />
+        </div>
+    );
+};
+
+const columnDefs = [
+    {
+        field: 'address',
+        cellEditor: PopupEditor,
+        cellEditorPopup: true,
+        cellEditorPopupPosition: 'under'
+    }
+];
+```
+
+## Updating Data
+
+### Replace All Data
+
+```jsx
+const [rowData, setRowData] = useState(initialData);
+
+// With getRowId, grid maintains state
+setRowData(newData);
+```
+
+### Update via API
+
+```jsx
+const updateRow = (id, newValue) => {
+    const rowNode = api.getRowNode(id);
+    rowNode.setDataValue('price', newValue);
+};
+```
+
+### Transaction Updates
+
+```jsx
+const addRows = (newRows) => {
+    api.applyTransaction({ add: newRows });
+};
+
+const updateRows = (updatedRows) => {
+    api.applyTransaction({ update: updatedRows });
+};
+
+const removeRows = (ids) => {
+    const toRemove = ids.map(id => ({ id }));
+    api.applyTransaction({ remove: toRemove });
+};
+```
+
+## Grid State
+
+### Saving/Restoring State
+
+```jsx
+const [savedState, setSavedState] = useState(null);
+
+const saveState = () => {
+    const state = api.getState();
+    setSavedState(state);
+};
+
+const restoreState = () => {
+    if (savedState) {
+        api.setState(savedState);
+    }
+};
+
+// Initial state on mount
+<AgGridReact
+    initialState={{
+        filter: { filterModel: { country: { values: ['USA'] } } },
+        columnVisibility: { hiddenColIds: ['notes'] }
+    }}
+/>
+```
+
+## Theming
+
+### Built-in Theme
+
+```jsx
+import { themeQuartz } from 'ag-grid-community';
+
+<AgGridReact theme={themeQuartz} rowData={rowData} />
+```
+
+### Custom Theme Parameters
+
+```jsx
+import { themeQuartz } from 'ag-grid-community';
+
+const myTheme = themeQuartz.withParams({
+    backgroundColor: '#ffffff',
+    foregroundColor: '#333333',
+    accentColor: '#2196f3',
+    spacing: 10
+});
+
+<AgGridReact theme={myTheme} />
+```
+
+### Theme Parts
+
+```jsx
+import { themeQuartz, iconSetMaterial, colorSchemeDark } from 'ag-grid-community';
+
+const myTheme = themeQuartz
+    .withPart(iconSetMaterial)
+    .withPart(colorSchemeDark)
+    .withParams({ accentColor: 'red' });
+```
+
+### Dark Mode with State
+
+```jsx
+import { themeQuartz, colorSchemeDark } from 'ag-grid-community';
+import { useState } from 'react';
+
+function GridExample() {
+    const [isDark, setIsDark] = useState(false);
+
+    const theme = isDark
+        ? themeQuartz.withPart(colorSchemeDark)
+        : themeQuartz;
+
+    return (
+        <>
+            <button onClick={() => setIsDark(!isDark)}>
+                Toggle Dark Mode
+            </button>
+            <AgGridReact theme={theme} rowData={rowData} />
+        </>
+    );
+}
+```
+
+## Master/Detail
+
+```jsx
+const detailColumnDefs = [
+    { field: 'callId' },
+    { field: 'direction' },
+    { field: 'duration' }
+];
+
+const columnDefs = [
+    { field: 'name' },
+    { field: 'account' }
+];
+
+<AgGridReact
+    masterDetail={true}
+    rowData={rowData}
+    columnDefs={columnDefs}
+    detailCellRendererParams={{
+        detailGridOptions: {
+            columnDefs: detailColumnDefs,
+            defaultColDef: { sortable: true, filter: true }
+        },
+        getDetailRowData: (params) => {
+            params.successCallback(params.data.callRecords);
+        }
+    }}
+    detailRowHeight={200}
+/>
+```
+
+## Full Example
+
+```jsx
+import { AllCommunityModule } from 'ag-grid-community';
+import { AgGridProvider, AgGridReact } from 'ag-grid-react';
+import { useState, useCallback, useMemo, useRef } from 'react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-quartz.css';
+
+function GridExample() {
+    const apiRef = useRef(null);
+
+    const [rowData, setRowData] = useState([
+        { id: '1', make: 'Tesla', model: 'Model Y', price: 64950 },
+        { id: '2', make: 'Ford', model: 'F-Series', price: 33850 },
+        { id: '3', make: 'Toyota', model: 'Corolla', price: 29600 }
+    ]);
+
+    const [columnDefs, setColumnDefs] = useState([
+        { field: 'make', sortable: true, filter: true },
+        { field: 'model', sortable: true, filter: true },
+        { field: 'price', sortable: true, filter: 'agNumberColumnFilter' }
+    ]);
+
+    const defaultColDef = useMemo(() => ({
+        resizable: true,
+        minWidth: 100
+    }), []);
+
+    const getRowId = useCallback((params) => params.data.id, []);
+
+    const onGridReady = useCallback((params) => {
+        apiRef.current = params.api;
+    }, []);
+
+    const onCellValueChanged = useCallback((event) => {
+        console.log(`${event.colDef.field} changed:`, event.newValue);
+    }, []);
+
+    const exportCsv = useCallback(() => {
+        apiRef.current?.exportDataAsCsv();
+    }, []);
+
+    return (
+        <AgGridProvider modules={[AllCommunityModule]}>
+            <div style={{ padding: 10 }}>
+                <button onClick={exportCsv}>Export CSV</button>
+            </div>
+            <div className="ag-theme-quartz" style={{ height: 500, width: '100%' }}>
+                <AgGridReact
+                    rowData={rowData}
+                    columnDefs={columnDefs}
+                    defaultColDef={defaultColDef}
+                    getRowId={getRowId}
+                    onGridReady={onGridReady}
+                    onCellValueChanged={onCellValueChanged}
+                    rowSelection={{ mode: 'multiRow' }}
+                    pagination={true}
+                    paginationPageSize={10}
+                />
+            </div>
+        </AgGridProvider>
+    );
+}
+
+export default GridExample;
+```
+
+## Debug Mode
+
+Enable debug mode to diagnose unnecessary updates:
+
+```jsx
+<AgGridReact debug />
+
+// Console will show: "AG Grid: Updated property defaultColDef from {...} to {...}"
+```
+
+## TypeScript
+
+```tsx
+import type { ColDef, GridApi, IRowNode } from 'ag-grid-community';
+import { AgGridReact } from 'ag-grid-react';
+
+interface RowData {
+    id: string;
+    make: string;
+    model: string;
+    price: number;
+}
+
+function GridExample() {
+    const [rowData, setRowData] = useState<RowData[]>([]);
+    const [columnDefs, setColumnDefs] = useState<ColDef<RowData>[]>([
+        { field: 'make' },
+        { field: 'model' },
+        { field: 'price', type: 'numericColumn' }
+    ]);
+
+    const getRowId = useCallback((params: GetRowIdParams<RowData>) => {
+        return params.data.id;
+    }, []);
+
+    const onGridReady = useCallback((params: GridReadyEvent<RowData>) => {
+        // params.api is typed GridApi<RowData>
+    }, []);
+
+    return (
+        <AgGridReact<RowData>
+            rowData={rowData}
+            columnDefs={columnDefs}
+            getRowId={getRowId}
+            onGridReady={onGridReady}
+        />
+    );
+}
+```

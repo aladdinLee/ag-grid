@@ -1,0 +1,1219 @@
+# AG Grid Core Concepts
+
+> This document covers core concepts shared across all frameworks (React, Angular, Vue, JavaScript). For framework-specific usage, see the respective llms-{framework}.txt files.
+
+## Module Registration
+
+AG Grid requires module registration for NPM installations. Use bundles for all features or cherry-pick modules for smaller bundles.
+
+### Bundle Approach
+
+```javascript
+// All Community features
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+// All Community + Enterprise features
+import { AllEnterpriseModule } from 'ag-grid-enterprise';
+ModuleRegistry.registerModules([AllEnterpriseModule]);
+```
+
+### Individual Modules
+
+```javascript
+import { ClientSideRowModelModule, CsvExportModule } from 'ag-grid-community';
+import { SetFilterModule, ExcelExportModule, RowGroupingModule } from 'ag-grid-enterprise';
+
+ModuleRegistry.registerModules([
+    ClientSideRowModelModule,  // Required for default row model
+    CsvExportModule,
+    SetFilterModule,
+    ExcelExportModule,
+    RowGroupingModule
+]);
+```
+
+### Validation Module (Development)
+
+```javascript
+import { ValidationModule } from 'ag-grid-community';
+
+if (process.env.NODE_ENV !== 'production') {
+    ModuleRegistry.registerModules([ValidationModule]);
+}
+```
+
+### Check Module Registration
+
+```javascript
+const isRegistered = api.isModuleRegistered('SetFilterModule');
+```
+
+## Column Definitions
+
+Columns are defined via `columnDefs` array. Each column has properties controlling sorting, filtering, editing, rendering, and more.
+
+### Basic Column Definition
+
+```javascript
+const columnDefs = [
+    { field: 'athlete' },                          // Basic - header derived from field
+    { field: 'age', headerName: 'Age (years)' },   // Custom header name
+    { field: 'country', sortable: true, filter: true },
+    { field: 'sport', editable: true },
+    { field: 'id', pinned: 'left' },
+    { field: 'notes', flex: 1, minWidth: 150 },
+];
+```
+
+### Default Column Definition
+
+Apply properties to all columns:
+
+```javascript
+const gridOptions = {
+    defaultColDef: {
+        sortable: true,
+        filter: true,
+        resizable: true,
+        minWidth: 100
+    }
+};
+```
+
+### Column Types
+
+```javascript
+const gridOptions = {
+    columnTypes: {
+        currency: {
+            width: 150,
+            valueFormatter: params => `$${params.value}`
+        },
+        numeric: {
+            type: 'rightAligned',
+            filter: 'agNumberColumnFilter'
+        }
+    },
+    columnDefs: [
+        { field: 'price', type: ['currency', 'numeric'] },
+        { field: 'quantity', type: 'numeric' }
+    ]
+};
+```
+
+### Column Groups
+
+```javascript
+const columnDefs = [
+    {
+        headerName: 'Medals',
+        children: [
+            { field: 'gold' },
+            { field: 'silver' },
+            { field: 'bronze' }
+        ]
+    },
+    {
+        headerName: 'Info',
+        marryChildren: true,  // Columns move together
+        children: [
+            { field: 'name', columnGroupShow: 'open' },
+            { field: 'age', columnGroupShow: 'closed' }
+        ]
+    }
+];
+```
+
+### Column State
+
+```javascript
+// Get all column state
+const state = api.getColumnState();
+
+// Apply column state
+api.applyColumnState({
+    state: [
+        { colId: 'athlete', sort: 'asc', width: 200, pinned: 'left' }
+    ],
+    defaultState: { sort: null }
+});
+
+// Reset column state
+api.resetColumnState();
+```
+
+## Row Models
+
+### Client-Side Row Model (Default)
+
+All data loaded into browser memory. Supports local sorting, filtering, grouping.
+
+```javascript
+const gridOptions = {
+    rowModelType: 'clientSide',  // Default
+    rowData: dataArray
+};
+```
+
+### Server-Side Row Model (Enterprise)
+
+Lazy loading with server-side operations. Ideal for large datasets.
+
+```javascript
+const gridOptions = {
+    rowModelType: 'serverSide',
+    serverSideDatasource: {
+        getRows: (params) => {
+            const { request } = params;
+            // request contains: startRow, endRow, sortModel, filterModel, rowGroupCols, groupKeys
+
+            fetch('/api/data', {
+                method: 'POST',
+                body: JSON.stringify(request)
+            })
+            .then(response => response.json())
+            .then(data => {
+                params.success({
+                    rowData: data.rows,
+                    rowCount: data.lastRow
+                });
+            })
+            .catch(() => params.fail());
+        }
+    },
+    cacheBlockSize: 50,
+    maxBlocksInCache: 10
+};
+```
+
+### Infinite Row Model
+
+Lazy loading for large flat datasets. Server handles sorting/filtering.
+
+```javascript
+const gridOptions = {
+    rowModelType: 'infinite',
+    datasource: {
+        getRows: (params) => {
+            const { startRow, endRow, sortModel, filterModel } = params;
+
+            fetchData(startRow, endRow, sortModel, filterModel)
+                .then(data => params.success(data.rows, data.lastRow))
+                .catch(() => params.fail());
+        }
+    },
+    cacheBlockSize: 100
+};
+```
+
+### Viewport Row Model
+
+Server-driven updates for real-time data streams.
+
+```javascript
+const gridOptions = {
+    rowModelType: 'viewport',
+    viewportDatasource: {
+        init: (params) => { /* Store callbacks */ },
+        setViewportRange: (startRow, endRow) => { /* Fetch range */ },
+        setRowCount: (count) => { /* Set total rows */ }
+    }
+};
+```
+
+## Row IDs
+
+Critical for maintaining state (selection, grouping, animation) across data updates.
+
+```javascript
+const gridOptions = {
+    getRowId: (params) => params.data.id  // Must return unique string
+};
+```
+
+## Data Updates
+
+### Client-Side Updates
+
+```javascript
+// Replace all data
+api.setGridOption('rowData', newData);
+
+// Update single row/cell
+const rowNode = api.getRowNode('row-id');
+rowNode.setDataValue('price', newPrice);    // Single cell
+rowNode.setData(newRowData);                 // Entire row
+rowNode.updateData(partialData);             // Partial update (refreshes only changed cells)
+
+// Transaction updates
+const result = api.applyTransaction({
+    add: [newRow1, newRow2],
+    addIndex: 3,              // Insert position
+    update: [updatedRow],
+    remove: [{ id: 'row-id' }] // Matched by getRowId
+});
+
+// Async transactions for high-frequency updates
+api.applyTransactionAsync({ add: [row] }, (result) => {
+    console.log('Update complete');
+});
+api.flushAsyncTransactions();  // Force immediate flush
+```
+
+### Server-Side Updates
+
+```javascript
+// Refresh all data
+api.refreshServerSide({ purge: true });
+
+// Refresh specific route
+api.refreshServerSide({ route: ['USA', 'Swimming'] });
+
+// Transaction updates
+api.applyServerSideTransaction({
+    update: [{ data: newData }],
+    remove: [{ id: 'row-id' }]
+});
+```
+
+## Row Selection
+
+```javascript
+const gridOptions = {
+    rowSelection: {
+        mode: 'singleRow',     // or 'multiRow'
+        checkboxes: true,
+        enableClickSelection: true,
+        enableRangeSelection: true,  // Enterprise
+        groupSelects: 'self'         // For tree/grouped data
+    }
+};
+
+// Get selection
+const selectedRows = api.getSelectedRows();
+const selectedNodes = api.getSelectedNodes();
+
+// Set selection
+api.setNodesSelected({ nodes: [node1, node2], newValue: true });
+api.selectAll();
+api.clearSelection();
+```
+
+## Sorting
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        { field: 'age', sortable: true, sortingOrder: ['asc', 'desc', null] }
+    ]
+};
+
+// Custom comparator
+const columnDefs = [
+    {
+        field: 'name',
+        comparator: (valueA, valueB, nodeA, nodeB) => {
+            return valueA.toLowerCase().localeCompare(valueB.toLowerCase());
+        }
+    }
+];
+
+// API sorting
+api.applyColumnState({
+    state: [
+        { colId: 'country', sort: 'asc', sortIndex: 0 },
+        { colId: 'age', sort: 'desc', sortIndex: 1 }
+    ]
+});
+```
+
+## Filtering
+
+### Column Filters
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        { field: 'athlete', filter: true },                    // Default text filter
+        { field: 'age', filter: 'agNumberColumnFilter' },
+        { field: 'date', filter: 'agDateColumnFilter' },
+        { field: 'country', filter: 'agSetColumnFilter' },     // Enterprise
+        { field: 'year', filter: 'agMultiColumnFilter' }       // Enterprise
+    ]
+};
+```
+
+### Set Filter (Enterprise)
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'country',
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                values: ['USA', 'UK', 'Canada', 'Australia'],
+                caseSensitive: false,
+                excelMode: 'and',           // Excel-like behavior
+                treeList: true,             // Hierarchical display
+                searchDebounceDelay: 300
+            }
+        }
+    ]
+};
+
+// Async values
+filterParams: {
+    values: (params) => {
+        fetchValues().then(values => params.success(values));
+    }
+}
+```
+
+### Quick Filter
+
+Searches across all columns:
+
+```javascript
+const gridOptions = {
+    quickFilterText: 'search text',
+    cacheQuickFilter: true,
+    quickFilterParser: (text) => text.split(' '),   // Split into words
+    quickFilterMatcher: (parts, rowQuickFilterText) => {
+        return parts.every(part => rowQuickFilterText.includes(part));
+    }
+};
+
+// API update
+api.setGridOption('quickFilterText', 'new search');
+```
+
+### External Filter
+
+```javascript
+let externalFilterActive = false;
+
+const gridOptions = {
+    isExternalFilterPresent: () => externalFilterActive,
+    doesExternalFilterPass: (params) => {
+        return params.data.status === 'active';
+    }
+};
+
+// Activate external filter
+externalFilterActive = true;
+api.onFilterChanged();
+```
+
+### Filter API
+
+```javascript
+// Get/set entire filter model
+const model = api.getFilterModel();
+api.setFilterModel({ country: { values: ['USA'] } });
+
+// Individual filter
+await api.setColumnFilterModel('country', { values: ['USA', 'UK'] });
+api.onFilterChanged();
+
+// Get filter instance
+const filterInstance = api.getColumnFilterInstance('country');
+```
+
+## Cell Editing
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        { field: 'name', editable: true },
+        { field: 'age', editable: params => params.data.canEdit },  // Conditional
+        {
+            field: 'country',
+            editable: true,
+            cellEditor: 'agRichSelectCellEditor',
+            cellEditorParams: { values: ['USA', 'UK'] }
+        }
+    ],
+    editType: 'fullRow',  // Edit entire row at once
+    onCellValueChanged: (event) => {
+        console.log(`${event.colDef.field} changed to ${event.newValue}`);
+    }
+};
+```
+
+### Provided Editors
+
+| Editor | Description |
+|--------|-------------|
+| `agTextCellEditor` | Text input (default for strings) |
+| `agNumberCellEditor` | Numeric input |
+| `agDateCellEditor` | Date picker |
+| `agSelectCellEditor` | HTML select dropdown |
+| `agRichSelectCellEditor` | Enterprise - Enhanced select with search/multi-select |
+| `agLargeTextCellEditor` | Multi-line textarea |
+| `agCheckboxCellEditor` | Checkbox |
+
+### Custom Editor Class
+
+```javascript
+class CustomEditor {
+    agInit(params) {
+        this.params = params;
+        this.value = params.value;
+        // Create DOM element
+    }
+
+    getGui() {
+        return this.element;
+    }
+
+    getValue() {
+        return this.currentValue;
+    }
+
+    isPopup() {
+        return false;  // or true for popup editor
+    }
+
+    destroy() {
+        // Cleanup
+    }
+}
+```
+
+## Cell Data Types
+
+Automatic type inference for proper rendering, editing, filtering.
+
+Built-in types: `text`, `number`, `bigint`, `boolean`, `date`, `dateString`, `dateTime`, `dateTimeString`, `object`
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        { field: 'price', cellDataType: 'number' },
+        { field: 'active', cellDataType: 'boolean' },
+        { field: 'created', cellDataType: 'date' }
+    ],
+    // Custom data type
+    dataTypeDefinitions: {
+        percentage: {
+            extendsDataType: 'number',
+            valueFormatter: params => `${Math.round(params.value * 100)}%`
+        }
+    }
+};
+```
+
+## Cell Styling
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        // Static style
+        { field: 'status', cellStyle: { color: 'red', backgroundColor: '#ffe0e0' } },
+
+        // Dynamic style (function)
+        {
+            field: 'value',
+            cellStyle: params => {
+                if (params.value > 100) return { backgroundColor: 'green' };
+                if (params.value < 0) return { backgroundColor: 'red' };
+                return null;
+            }
+        },
+
+        // CSS classes
+        { field: 'name', cellClass: 'highlight-cell' },
+
+        // Dynamic CSS class rules
+        {
+            field: 'profit',
+            cellClassRules: {
+                'profit-positive': params => params.value > 0,
+                'profit-negative': params => params.value < 0,
+                'profit-zero': params => params.value === 0
+            }
+        }
+    ]
+};
+```
+
+## Value Formatters / Getters / Setters / Parsers
+
+### Value Formatter (Display)
+
+```javascript
+const columnDefs = [
+    { field: 'price', valueFormatter: params => `$${params.value.toFixed(2)}` },
+    { field: 'date', valueFormatter: params => params.value.toLocaleDateString() }
+];
+```
+
+### Value Getter (Retrieve)
+
+```javascript
+const columnDefs = [
+    // Instead of field, use valueGetter
+    { headerName: 'Full Name', valueGetter: params => `${params.data.firstName} ${params.data.lastName}` },
+    { headerName: 'Total', valueGetter: params => params.data.gold + params.data.silver + params.data.bronze }
+];
+```
+
+### Value Setter (Save)
+
+```javascript
+const columnDefs = [
+    {
+        headerName: 'Full Name',
+        valueGetter: params => `${params.data.firstName} ${params.data.lastName}`,
+        valueSetter: params => {
+            const names = params.newValue.split(' ');
+            params.data.firstName = names[0];
+            params.data.lastName = names.slice(1).join(' ');
+            return true;  // Return true if update successful
+        }
+    }
+];
+```
+
+### Value Parser (Parse Input)
+
+```javascript
+const columnDefs = [
+    { field: 'age', valueParser: params => Number(params.newValue) }
+];
+```
+
+## Custom Components
+
+### Cell Renderer
+
+```javascript
+// Function renderer
+const columnDefs = [
+    { field: 'price', cellRenderer: params => `$${params.value}` }
+];
+
+// Class renderer
+class StatusRenderer {
+    agInit(params) { this.params = params; }
+    getGui() {
+        const div = document.createElement('div');
+        div.className = `status-${this.params.value}`;
+        div.textContent = this.params.value;
+        return div;
+    }
+    refresh(params) { return false; }  // Return true to refresh in-place
+}
+
+const columnDefs = [
+    { field: 'status', cellRenderer: StatusRenderer }
+];
+```
+
+### Dynamic Renderer Selection
+
+```javascript
+const columnDefs = [
+    {
+        field: 'value',
+        cellRendererSelector: params => {
+            if (params.data.type === 'currency') {
+                return { component: 'CurrencyRenderer', params: { symbol: '$' } };
+            }
+            return { component: 'TextRenderer' };
+        }
+    }
+];
+```
+
+## Row Grouping (Enterprise)
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroup: true, rowGroupIndex: 0 },
+        { field: 'sport', rowGroup: true, rowGroupIndex: 1 },
+        { field: 'gold', aggFunc: 'sum' }
+    ],
+    groupDisplayType: 'singleColumn',  // 'multipleColumns', 'groupRows'
+    rowGroupPanelShow: 'always',       // 'onlyWhenGrouping', 'never'
+    groupDefaultExpanded: 1            // Expand first level by default
+};
+```
+
+## Pivoting (Enterprise)
+
+```javascript
+const gridOptions = {
+    pivotMode: true,
+    columnDefs: [
+        { field: 'country', rowGroup: true },
+        { field: 'sport', pivot: true },
+        { field: 'gold', aggFunc: 'sum' }
+    ],
+    pivotRowTotals: 'before'  // Add row totals
+};
+```
+
+## Aggregation (Enterprise)
+
+Built-in functions: `sum`, `min`, `max`, `count`, `avg`, `first`, `last`
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        { field: 'gold', aggFunc: 'sum' },
+        { field: 'silver', aggFunc: 'avg' },
+        { field: 'count', aggFunc: 'count' }
+    ],
+    // Custom aggregation
+    aggFuncs: {
+        range: params => {
+            const values = params.values;
+            return Math.max(...values) - Math.min(...values);
+        }
+    }
+};
+```
+
+## Tree Data (Enterprise)
+
+### Path-Based Tree Data
+
+```javascript
+const gridOptions = {
+    treeData: true,
+    getDataPath: data => data.path,  // ['Group', 'SubGroup', 'Item']
+    autoGroupColumnDef: {
+        field: 'name'
+    }
+};
+
+const rowData = [
+    { path: ['USA', 'Swimming', 'Michael Phelps'], medals: 23 },
+    { path: ['USA', 'Swimming', 'Ryan Lochte'], medals: 12 }
+];
+```
+
+### Self-Referential Tree Data (Most Performant)
+
+```javascript
+const gridOptions = {
+    treeData: true,
+    treeDataParentIdField: 'parentId',
+    getRowId: params => params.data.id
+};
+
+const rowData = [
+    { id: '1', name: 'Root', parentId: null },
+    { id: '2', name: 'Child 1', parentId: '1' },
+    { id: '3', name: 'Child 2', parentId: '1' }
+];
+```
+
+## Master/Detail (Enterprise)
+
+```javascript
+const gridOptions = {
+    masterDetail: true,
+    detailCellRendererParams: {
+        detailGridOptions: {
+            columnDefs: [
+                { field: 'callId' },
+                { field: 'direction' },
+                { field: 'duration' }
+            ],
+            defaultColDef: { sortable: true, filter: true }
+        },
+        getDetailRowData: params => {
+            params.successCallback(params.data.callRecords);
+        }
+    },
+    detailRowHeight: 200,
+    keepDetailRows: true  // Cache detail rows
+};
+```
+
+## Pagination
+
+```javascript
+const gridOptions = {
+    pagination: true,
+    paginationPageSize: 100,
+    paginationAutoPageSize: true,        // Fit to grid height
+    paginationPageSizeSelector: [10, 25, 50, 100],
+    paginateChildRows: true              // Include children in count
+};
+
+// API
+api.paginationGoToPage(2);
+api.paginationGoToFirstPage();
+api.paginationGoToLastPage();
+api.paginationGetPageSize();
+```
+
+## Export
+
+### CSV Export
+
+```javascript
+api.exportDataAsCsv({
+    fileName: 'export.csv',
+    columnSeparator: ',',
+    onlySelected: true,
+    skipHeader: false,
+    columnKeys: ['athlete', 'age', 'country']
+});
+```
+
+### Excel Export (Enterprise)
+
+```javascript
+api.exportDataAsExcel({
+    fileName: 'export.xlsx',
+    sheetName: 'Data',
+    excelStyles: [
+        { id: 'header', font: { bold: true, color: '#ffffff' }, interior: { color: '#333333' } },
+        { id: 'currency', numberFormat: { format: '$#,##0.00' } }
+    ],
+    headerRowHeight: 30
+});
+```
+
+## Theming
+
+### Built-in Themes
+
+```javascript
+import { themeQuartz, themeBalham, themeMaterial, themeAlpine } from 'ag-grid-community';
+
+const gridOptions = { theme: themeQuartz };
+```
+
+### Theme Parameters
+
+```javascript
+import { themeQuartz } from 'ag-grid-community';
+
+const myTheme = themeQuartz.withParams({
+    // Colors
+    backgroundColor: '#ffffff',
+    foregroundColor: '#333333',
+    accentColor: '#2196f3',
+
+    // Spacing
+    spacing: 12,
+
+    // Borders
+    borderColor: '#e0e0e0',
+    rowBorder: { style: 'solid', width: 1, color: '#e0e0e0' },
+    headerRowBorder: false,
+    columnBorder: { style: 'dashed', width: 1 },
+
+    // Fonts
+    fontFamily: 'Roboto, sans-serif',
+    fontSize: 14,
+    headerFontFamily: 'Roboto Medium',
+
+    // Headers
+    headerBackgroundColor: '#f5f5f5',
+    headerTextColor: '#333',
+
+    // Selection
+    selectedRowBackgroundColor: '#e3f2fd',
+    rangeSelectionBorderColor: '#1976d2'
+});
+
+const gridOptions = { theme: myTheme };
+```
+
+### Theme Parts
+
+```javascript
+import { themeQuartz, iconSetMaterial, colorSchemeDark, inputStyleUnderlined } from 'ag-grid-community';
+
+const myTheme = themeQuartz
+    .withPart(iconSetMaterial)
+    .withPart(colorSchemeDark)
+    .withPart(inputStyleUnderlined)
+    .withoutPart('checkboxStyle')
+    .withParams({ accentColor: 'red' });
+```
+
+### Dark Mode
+
+```html
+<!-- CSS-based theme switching -->
+<body data-ag-theme-mode="dark">
+```
+
+```javascript
+// Theme with mode-specific params
+const myTheme = themeQuartz
+    .withParams({ backgroundColor: '#fff' }, 'light')
+    .withParams({ backgroundColor: '#1e1e1e' }, 'dark');
+```
+
+## Integrated Charts (Enterprise)
+
+```javascript
+const gridOptions = {
+    enableCharts: true,
+    chartThemeOverrides: {
+        common: {
+            title: { enabled: true, fontSize: 18 },
+            legend: { enabled: true, position: 'bottom' }
+        }
+    }
+};
+
+// Create chart from range
+api.createRangeChart({
+    chartType: 'line',           // 'column', 'bar', 'pie', 'scatter', etc.
+    cellRange: {
+        columns: ['country', 'gold', 'silver']
+    },
+    chartContainer: document.getElementById('chart-container'),
+    suppressChartRanges: true
+});
+```
+
+## Sparklines (Enterprise)
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'history',
+            cellRenderer: 'agSparklineCellRenderer',
+            cellRendererParams: {
+                sparklineOptions: {
+                    type: 'line',       // 'area', 'bar', 'column'
+                    line: {
+                        stroke: '#2196f3',
+                        strokeWidth: 2
+                    },
+                    marker: {
+                        enabled: true,
+                        size: 4
+                    }
+                }
+            }
+        }
+    ]
+};
+```
+
+## Tool Panels (Enterprise)
+
+```javascript
+const gridOptions = {
+    sideBar: {
+        toolPanels: [
+            {
+                id: 'columns',
+                labelDefault: 'Columns',
+                iconKey: 'columns',
+                toolPanel: 'agColumnsToolPanel',
+                toolPanelParams: {
+                    suppressRowGroups: true,
+                    suppressValues: true
+                }
+            },
+            {
+                id: 'filters',
+                labelDefault: 'Filters',
+                iconKey: 'filter',
+                toolPanel: 'agFilterToolPanel'
+            }
+        ],
+        defaultToolPanel: 'columns',
+        position: 'right'
+    }
+};
+```
+
+## Keyboard Navigation
+
+Default shortcuts:
+- **Arrow keys**: Cell navigation
+- **Tab**: Next/previous cell
+- **Enter/F2**: Start editing
+- **Escape**: Cancel editing
+- **Ctrl+C/V/X**: Clipboard (Enterprise)
+- **Space**: Checkbox toggle
+- **Home/End**: First/last cell
+- **Ctrl+Home/End**: First/last row
+- **Page Up/Down**: Scroll by page
+
+## Grid API Key Methods
+
+```javascript
+// === Data Operations ===
+api.setGridOption('rowData', newData)
+api.applyTransaction({ add, update, remove })
+api.applyTransactionAsync({ add }, callback)
+api.flushAsyncTransactions()
+api.getSelectedRows()
+api.getSelectedNodes()
+api.getRowNode(id)
+api.forEachNode(callback)
+api.forEachNodeAfterFilter(callback)
+
+// === Column Operations ===
+api.getColumnState()
+api.applyColumnState({ state, defaultState })
+api.resetColumnState()
+api.moveColumns(keys, toIndex)
+api.moveColumnByIndex(fromIndex, toIndex)
+api.autoSizeAllColumns(skipHeader)
+api.sizeColumnsToFit()
+
+// === Filter Operations ===
+api.getFilterModel()
+api.setFilterModel(model)
+api.getColumnFilterModel(colKey)
+api.setColumnFilterModel(colKey, model)
+api.onFilterChanged()
+api.isColumnFilterPresent(colKey)
+
+// === Sort Operations ===
+api.applyColumnState({ state: [{ colId, sort }] })
+api.getColumnState()
+
+// === Export ===
+api.exportDataAsCsv(params)
+api.exportDataAsExcel(params)  // Enterprise
+
+// === Refresh ===
+api.refreshCells({ columns, rowNodes, force })
+api.redrawRows({ rowNodes })
+api.refreshServerSide({ purge, route })  // SSRM
+
+// === Events ===
+api.addEventListener(eventName, callback)
+api.removeEventListener(eventName, callback)
+api.dispatchEvent(eventName)
+
+// === Grid Lifecycle ===
+api.sizeColumnsToFit()
+api.resetRowHeights()
+api.destroy()
+
+// === Pagination ===
+api.paginationGoToPage(index)
+api.paginationGetPageSize()
+api.paginationGetCurrentPage()
+
+// === Selection ===
+api.setNodesSelected({ nodes, newValue })
+api.selectAll()
+api.deselectAll()
+api.clearSelection()
+```
+
+## Key Events
+
+```javascript
+const gridOptions = {
+    // Lifecycle
+    onGridReady: (params) => { api = params.api; },
+    onFirstDataRendered: (params) => {},
+    onGridPreDestroyed: (params) => {},
+
+    // Data
+    onCellValueChanged: (event) => {},
+    onRowDataUpdated: (event) => {},
+    onCellValueChanged: (event) => {},
+
+    // Selection
+    onSelectionChanged: (event) => {},
+    onRowSelected: (event) => {},
+
+    // Filtering/Sorting
+    onFilterChanged: (event) => {},
+    onSortChanged: (event) => {},
+
+    // Cells
+    onCellClicked: (event) => {},
+    onCellDoubleClicked: (event) => {},
+    onCellMouseOver: (event) => {},
+    onCellMouseOut: (event) => {},
+
+    // Rows
+    onRowClicked: (event) => {},
+    onRowDoubleClicked: (event) => {},
+
+    // Columns
+    onColumnMoved: (event) => {},
+    onColumnResized: (event) => {},
+    onColumnVisibleChanged: (event) => {},
+    onColumnPinnedChanged: (event) => {},
+
+    // Editing
+    onCellEditingStarted: (event) => {},
+    onCellEditingStopped: (event) => {},
+    onRowEditingStarted: (event) => {},
+    onRowEditingStopped: (event) => {},
+
+    // Drag
+    onRowDragEnter: (event) => {},
+    onRowDragMove: (event) => {},
+    onRowDragLeave: (event) => {},
+    onRowDragEnd: (event) => {},
+
+    // Range Selection (Enterprise)
+    onRangeSelectionChanged: (event) => {},
+
+    // Charts (Enterprise)
+    onChartCreated: (event) => {},
+    onChartRangeSelectionChanged: (event) => {}
+};
+```
+
+## Performance Optimization
+
+```javascript
+const gridOptions = {
+    // Reduce row buffer
+    rowBuffer: 10,
+
+    // Suppress animations
+    animateRows: false,
+
+    // Suppress scroll on new data
+    suppressScrollOnNewData: true,
+
+    // Delta sorting for frequent updates
+    columnDefs: [
+        { field: 'price', sortable: true, comparator: customComparator, deltaSort: true }
+    ],
+
+    // Async transactions timing
+    asyncTransactionWaitMillis: 50,
+
+    // Suppress column virtualization for small column counts
+    suppressColumnVirtualisation: true,  // When columns < 100
+
+    // Suppress row virtualization for small row counts
+    suppressRowVirtualisation: true,  // When rows < 100
+};
+```
+
+## Cell Selection (Enterprise)
+
+```javascript
+const gridOptions = {
+    cellSelection: true,  // or object for config
+    // Cell selection config
+    cellSelection: {
+        suppressMultiRanges: true,        // Single range only
+        enableColumnSelection: true,      // Select via column header
+        enableRowSelection: true,         // Select via row header
+        enableHeaderHighlight: true       // Highlight headers in range
+    }
+};
+
+// API
+api.getCellRanges();
+api.clearRangeSelection();
+api.addCellRange({ rowStart, rowEnd, columns });
+```
+
+## Clipboard (Enterprise)
+
+```javascript
+const gridOptions = {
+    copyHeadersToClipboard: true,
+    copySelectedRows: true,
+    suppressClipboardPaste: false,
+    processCellForClipboard: (params) => params.value,
+    processDataFromClipboard: (params) => {
+        // Custom paste processing
+        return params.data;
+    }
+};
+
+// API
+api.copySelectedRangeToClipboard(includeHeader);
+api.copySelectedRowsToClipboard(includeHeader);
+```
+
+## Undo/Redo (Enterprise)
+
+```javascript
+const gridOptions = {
+    undoRedoCellEditing: true,
+    undoRedoCellEditingLimit: 20  // Max undo steps
+};
+
+// API
+api.undoCellEditing();
+api.redoCellEditing();
+```
+
+## Context Menu (Enterprise)
+
+```javascript
+const gridOptions = {
+    getContextMenuItems: (params) => {
+        const defaultItems = params.defaultItems;
+        return [
+            'copy',
+            'copyWithHeaders',
+            'separator',
+            {
+                name: 'Custom Action',
+                action: () => console.log('Custom action'),
+                icon: 'myIcon',
+                tooltip: 'Custom tooltip'
+            },
+            ...defaultItems
+        ];
+    },
+    suppressContextMenu: false
+};
+```
+
+## Overlays
+
+```javascript
+// Show loading overlay
+api.setGridOption('loading', true);
+
+// Show no rows overlay (automatic when rowData is empty)
+// Custom overlay text
+const gridOptions = {
+    overlayLoadingTemplate: '<div class="loading">Loading...</div>',
+    overlayNoRowsTemplate: '<div class="no-rows">No data available</div>'
+};
+
+// Custom overlay component
+const gridOptions = {
+    loadingOverlayComponent: CustomLoadingOverlay,
+    noRowsOverlayComponent: CustomNoRowsOverlay
+};
+
+// Active overlay (application-controlled)
+api.setGridOption('activeOverlay', 'statusOverlay');
+api.setGridOption('activeOverlayParams', { message: 'Processing...' });
+```
+
+## Find (Enterprise)
+
+```javascript
+const gridOptions = {
+    findSearchValue: 'search text',
+    findOptions: {
+        caseSensitive: true,
+        currentPageOnly: true
+    }
+};
+
+// API
+api.findNext();
+api.findPrevious();
+api.findGoTo(matchIndex);
+```

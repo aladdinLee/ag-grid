@@ -1,0 +1,782 @@
+# AG Grid JavaScript Data Grid
+
+> AG Grid vanilla JavaScript component for building high-performance tables without frameworks. See [llms-core.txt](llms-core.txt) for core concepts shared across all frameworks.
+
+## Installation
+
+### NPM Installation
+
+```bash
+npm install ag-grid-community
+```
+
+For Enterprise features:
+```bash
+npm install ag-grid-enterprise
+```
+
+### CDN Installation
+
+```html
+<!-- Community version -->
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+
+<!-- Enterprise version (includes Community) -->
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise/dist/ag-grid-enterprise.min.js"></script>
+```
+
+Note: CDN bundles include all modules by default - no registration required.
+
+## Module Registration
+
+NPM installations require module registration before grid instantiation.
+
+### Bundle Approach
+
+```javascript
+import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+
+ModuleRegistry.registerModules([AllCommunityModule]);
+```
+
+### Enterprise Bundle
+
+```javascript
+import { ModuleRegistry } from 'ag-grid-community';
+import { AllEnterpriseModule } from 'ag-grid-enterprise';
+
+ModuleRegistry.registerModules([AllEnterpriseModule]);
+```
+
+### Individual Modules
+
+```javascript
+import { ModuleRegistry, ClientSideRowModelModule, CsvExportModule } from 'ag-grid-community';
+import { ExcelExportModule, SetFilterModule, RowGroupingModule } from 'ag-grid-enterprise';
+
+ModuleRegistry.registerModules([
+    ClientSideRowModelModule,  // Required for default row model
+    CsvExportModule,
+    ExcelExportModule,
+    SetFilterModule,
+    RowGroupingModule
+]);
+```
+
+### Per-Grid Modules
+
+```javascript
+import { createGrid, ClientSideRowModelModule, CsvExportModule } from 'ag-grid-community';
+
+const gridOptions = {
+    rowData: [...],
+    columnDefs: [...]
+};
+
+createGrid(document.getElementById('myGrid'), gridOptions, {
+    modules: [ClientSideRowModelModule, CsvExportModule]
+});
+```
+
+### Validation Module (Development)
+
+```javascript
+import { ValidationModule } from 'ag-grid-community';
+
+if (process.env.NODE_ENV !== 'production') {
+    ModuleRegistry.registerModules([ValidationModule]);
+}
+```
+
+## Basic Grid
+
+### NPM/ESM Approach
+
+```javascript
+import { createGrid, AllCommunityModule } from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-quartz.css';
+
+const gridOptions = {
+    rowData: [
+        { make: "Tesla", model: "Model Y", price: 64950, electric: true },
+        { make: "Ford", model: "F-Series", price: 33850, electric: false },
+        { make: "Toyota", model: "Corolla", price: 29600, electric: false }
+    ],
+    columnDefs: [
+        { field: "make" },
+        { field: "model" },
+        { field: "price" },
+        { field: "electric" }
+    ]
+};
+
+const gridElement = document.getElementById('myGrid');
+const api = createGrid(gridElement, gridOptions);
+```
+
+### CDN/UMD Approach
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>AG Grid Example</title>
+    <!-- Include AG Grid -->
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+    <!-- Include styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-quartz.css">
+</head>
+<body>
+    <!-- Grid container - must have height -->
+    <div id="myGrid" class="ag-theme-quartz" style="height: 500px"></div>
+
+    <script>
+        const gridOptions = {
+            rowData: [
+                { make: "Tesla", model: "Model Y", price: 64950 },
+                { make: "Ford", model: "F-Series", price: 33850 }
+            ],
+            columnDefs: [
+                { field: "make" },
+                { field: "model" },
+                { field: "price" }
+            ]
+        };
+
+        // Create grid using global agGrid object
+        const api = agGrid.createGrid(document.getElementById('myGrid'), gridOptions);
+    </script>
+</body>
+</html>
+```
+
+## Grid Options Object
+
+All configuration is passed via the `gridOptions` object:
+
+```javascript
+const gridOptions = {
+    // Data
+    rowData: [],
+    columnDefs: [],
+    defaultColDef: {
+        sortable: true,
+        filter: true,
+        resizable: true
+    },
+
+    // Selection
+    rowSelection: { mode: 'multiRow' },
+
+    // Editing
+    editType: 'fullRow',
+
+    // Pagination
+    pagination: true,
+    paginationPageSize: 50,
+
+    // Theming
+    theme: themeQuartz,
+
+    // Callbacks/Events
+    onGridReady: (params) => { console.log('Grid ready'); },
+    onCellValueChanged: (event) => { console.log('Changed:', event); },
+    onSelectionChanged: (event) => { console.log('Selection changed'); },
+
+    // Row ID
+    getRowId: (params) => params.data.id
+};
+
+const api = createGrid(gridElement, gridOptions);
+```
+
+## Accessing Grid API
+
+The `createGrid` function returns the API directly:
+
+```javascript
+const api = createGrid(document.getElementById('myGrid'), gridOptions);
+
+// Use API directly
+api.exportDataAsCsv();
+api.getSelectedRows();
+```
+
+Or via `onGridReady` callback:
+
+```javascript
+let api;
+
+const gridOptions = {
+    onGridReady: (params) => {
+        api = params.api;
+    }
+};
+
+// Later...
+api.exportDataAsCsv();
+```
+
+## Updating Options After Creation
+
+Use `api.setGridOption` to update individual options:
+
+```javascript
+api.setGridOption('rowData', newData);
+api.setGridOption('quickFilterText', 'search');
+
+// Batch update
+api.updateGridOptions({
+    rowData: newData,
+    paginationPageSize: 100
+});
+```
+
+## Row IDs
+
+Critical for maintaining state across updates:
+
+```javascript
+const gridOptions = {
+    getRowId: (params) => params.data.id  // Must return unique string
+};
+
+const rowData = [
+    { id: '1', make: 'Tesla' },
+    { id: '2', make: 'Ford' }
+];
+```
+
+## Cell Renderers
+
+### Function Renderer
+
+```javascript
+const columnDefs = [
+    {
+        field: 'price',
+        cellRenderer: (params) => `$${params.value.toFixed(2)}`
+    }
+];
+```
+
+### Class Renderer
+
+```javascript
+class StatusRenderer {
+    init(params) {
+        this.eGui = document.createElement('span');
+        this.eGui.className = `status-${params.value}`;
+        this.eGui.textContent = params.value;
+    }
+
+    getGui() {
+        return this.eGui;
+    }
+
+    refresh(params) {
+        this.eGui.textContent = params.value;
+        return true;  // Return true to refresh in-place
+    }
+
+    destroy() {
+        // Cleanup
+    }
+}
+
+const columnDefs = [
+    { field: 'status', cellRenderer: StatusRenderer }
+];
+```
+
+### DOM Element Renderer
+
+```javascript
+const columnDefs = [
+    {
+        field: 'price',
+        cellRenderer: (params) => {
+            const span = document.createElement('span');
+            span.style.color = params.value > 1000 ? 'green' : 'red';
+            span.textContent = `$${params.value}`;
+            return span;
+        }
+    }
+];
+```
+
+### HTML String Renderer
+
+```javascript
+const columnDefs = [
+    {
+        field: 'price',
+        cellRenderer: (params) => `<b>$${params.value}</b>`
+    }
+];
+```
+
+## Cell Editors
+
+### Class Editor
+
+```javascript
+class CustomEditor {
+    init(params) {
+        this.params = params;
+        this.value = params.value;
+
+        this.eInput = document.createElement('input');
+        this.eInput.value = this.value;
+        this.eInput.addEventListener('input', this.onInput.bind(this));
+        this.eInput.addEventListener('keydown', this.onKeyDown.bind(this));
+    }
+
+    getGui() {
+        return this.eInput;
+    }
+
+    getValue() {
+        return this.eInput.value;
+    }
+
+    onInput(event) {
+        this.value = event.target.value;
+    }
+
+    onKeyDown(event) {
+        if (event.key === 'Enter') {
+            this.params.api.stopEditing();
+        } else if (event.key === 'Escape') {
+            this.params.api.stopEditing(true);  // Cancel
+        }
+    }
+
+    isPopup() {
+        return false;  // or true for popup editor
+    }
+
+    destroy() {
+        this.eInput.removeEventListener('input', this.onInput);
+        this.eInput.removeEventListener('keydown', this.onKeyDown);
+    }
+}
+
+const columnDefs = [
+    { field: 'name', cellEditor: CustomEditor }
+];
+```
+
+### Popup Editor
+
+```javascript
+class PopupEditor {
+    init(params) {
+        this.eGui = document.createElement('div');
+        this.eGui.style.padding = '10px';
+        this.eGui.innerHTML = `<textarea>${params.value}</textarea>`;
+    }
+
+    getGui() {
+        return this.eGui;
+    }
+
+    getValue() {
+        return this.eGui.querySelector('textarea').value;
+    }
+
+    isPopup() {
+        return true;
+    }
+
+    getPopupPosition() {
+        return 'under';  // 'over' or 'under'
+    }
+}
+
+const columnDefs = [
+    {
+        field: 'description',
+        cellEditor: PopupEditor,
+        cellEditorPopup: true,
+        cellEditorPopupPosition: 'under'
+    }
+];
+```
+
+## Updating Data
+
+### Replace All Data
+
+```javascript
+api.setGridOption('rowData', newData);
+```
+
+### Update Single Row/Cell
+
+```javascript
+const rowNode = api.getRowNode('row-id');
+rowNode.setDataValue('price', newPrice);  // Single cell
+rowNode.setData(newRowData);               // Entire row
+rowNode.updateData(partialData);           // Partial update
+```
+
+### Transaction Updates
+
+```javascript
+const result = api.applyTransaction({
+    add: [
+        { id: '4', make: 'BMW', model: 'X5', price: 50000 }
+    ],
+    addIndex: 2,  // Insert at position 2
+    update: [
+        { id: '1', price: 64000 }  // Partial update matched by id
+    ],
+    remove: [
+        { id: '3' }  // Remove matched by id
+    ]
+});
+
+console.log(result.add);    // Array of added row nodes
+console.log(result.update); // Array of updated row nodes
+console.log(result.remove); // Array of removed row nodes
+```
+
+### Async Transactions
+
+```javascript
+// Async for high-frequency updates
+api.applyTransactionAsync(
+    { add: [newRow] },
+    (result) => {
+        console.log('Update complete');
+    }
+);
+
+// Flush all pending transactions
+api.flushAsyncTransactions();
+```
+
+## Grid State
+
+### Saving/Restoring State
+
+```javascript
+// Save current state
+const state = api.getState();
+
+// Restore state
+api.setState(savedState);
+
+// Reset to initial state
+api.resetRowHeights();
+```
+
+### Initial State
+
+```javascript
+const gridOptions = {
+    initialState: {
+        filter: {
+            filterModel: { country: { values: ['USA'] } }
+        },
+        columnVisibility: {
+            hiddenColIds: ['notes']
+        },
+        sort: {
+            sortModel: [{ colId: 'price', sort: 'desc' }]
+        }
+    }
+};
+```
+
+## Theming
+
+### Built-in Theme
+
+```javascript
+import { themeQuartz } from 'ag-grid-community';
+
+const gridOptions = {
+    theme: themeQuartz
+};
+```
+
+### Custom Theme Parameters
+
+```javascript
+import { themeQuartz } from 'ag-grid-community';
+
+const myTheme = themeQuartz.withParams({
+    backgroundColor: '#ffffff',
+    foregroundColor: '#333333',
+    accentColor: '#2196f3',
+    spacing: 10
+});
+
+const gridOptions = {
+    theme: myTheme
+};
+```
+
+### Theme Parts
+
+```javascript
+import { themeQuartz, iconSetMaterial, colorSchemeDark } from 'ag-grid-community';
+
+const myTheme = themeQuartz
+    .withPart(iconSetMaterial)
+    .withPart(colorSchemeDark)
+    .withParams({ accentColor: 'red' });
+```
+
+### CSS Theme (Legacy)
+
+```html
+<link rel="stylesheet" href="ag-grid-community/styles/ag-theme-quartz.css">
+<div id="myGrid" class="ag-theme-quartz" style="height: 500px"></div>
+```
+
+## Master/Detail
+
+```javascript
+import { AllEnterpriseModule } from 'ag-grid-enterprise';
+ModuleRegistry.registerModules([AllEnterpriseModule]);
+
+const gridOptions = {
+    masterDetail: true,
+    columnDefs: [
+        { field: 'name' },
+        { field: 'account' }
+    ],
+    detailCellRendererParams: {
+        detailGridOptions: {
+            columnDefs: [
+                { field: 'callId' },
+                { field: 'direction' },
+                { field: 'duration' }
+            ],
+            defaultColDef: { sortable: true, filter: true }
+        },
+        getDetailRowData: (params) => {
+            params.successCallback(params.data.callRecords);
+        }
+    },
+    detailRowHeight: 200
+};
+```
+
+## Full Example (ESM)
+
+```javascript
+import { createGrid, AllCommunityModule } from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-quartz.css';
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    const gridOptions = {
+        rowData: [
+            { id: '1', make: 'Tesla', model: 'Model Y', price: 64950 },
+            { id: '2', make: 'Ford', model: 'F-Series', price: 33850 },
+            { id: '3', make: 'Toyota', model: 'Corolla', price: 29600 }
+        ],
+
+        columnDefs: [
+            { field: 'make', sortable: true, filter: true },
+            { field: 'model', sortable: true, filter: true },
+            { field: 'price', sortable: true, filter: 'agNumberColumnFilter' }
+        ],
+
+        defaultColDef: {
+            resizable: true,
+            minWidth: 100
+        },
+
+        getRowId: (params) => params.data.id,
+
+        rowSelection: { mode: 'multiRow' },
+
+        pagination: true,
+        paginationPageSize: 10,
+
+        onGridReady: (params) => {
+            console.log('Grid ready');
+        },
+
+        onCellValueChanged: (event) => {
+            console.log(`${event.colDef.field} changed:`, event.newValue);
+        }
+    };
+
+    const gridElement = document.getElementById('myGrid');
+    const api = createGrid(gridElement, gridOptions);
+
+    // Expose API for external use
+    window.gridApi = api;
+});
+
+// External functions
+function exportCsv() {
+    window.gridApi.exportDataAsCsv();
+}
+
+function addRow() {
+    window.gridApi.applyTransaction({
+        add: [{
+            id: Date.now().toString(),
+            make: 'New',
+            model: 'Car',
+            price: 0
+        }]
+    });
+}
+```
+
+## Full Example (CDN)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AG Grid CDN Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-quartz.css">
+</head>
+<body>
+    <div style="padding: 10px">
+        <button onclick="exportCsv()">Export CSV</button>
+        <button onclick="addRow()">Add Row</button>
+    </div>
+    <div id="myGrid" class="ag-theme-quartz" style="height: 500px; width: 100%"></div>
+
+    <script>
+        let api;
+
+        const rowData = [
+            { id: '1', make: 'Tesla', model: 'Model Y', price: 64950 },
+            { id: '2', make: 'Ford', model: 'F-Series', price: 33850 },
+            { id: '3', make: 'Toyota', model: 'Corolla', price: 29600 }
+        ];
+
+        const columnDefs = [
+            { field: 'make', sortable: true, filter: true },
+            { field: 'model', sortable: true, filter: true },
+            { field: 'price', sortable: true, filter: 'agNumberColumnFilter' }
+        ];
+
+        const gridOptions = {
+            rowData: rowData,
+            columnDefs: columnDefs,
+            defaultColDef: {
+                resizable: true,
+                minWidth: 100
+            },
+            getRowId: (params) => params.data.id,
+            rowSelection: { mode: 'multiRow' },
+            pagination: true,
+            paginationPageSize: 10,
+            onGridReady: (params) => {
+                api = params.api;
+            },
+            onCellValueChanged: (event) => {
+                console.log(event.colDef.field + ' changed to ' + event.newValue);
+            }
+        };
+
+        // Create grid
+        agGrid.createGrid(document.getElementById('myGrid'), gridOptions);
+
+        function exportCsv() {
+            api.exportDataAsCsv();
+        }
+
+        function addRow() {
+            api.applyTransaction({
+                add: [{
+                    id: Date.now().toString(),
+                    make: 'New',
+                    model: 'Car',
+                    price: 0
+                }]
+            });
+        }
+    </script>
+</body>
+</html>
+```
+
+## TypeScript
+
+```typescript
+import { createGrid, GridApi, GridOptions, ColDef, GridReadyEvent } from 'ag-grid-community';
+
+interface RowData {
+    id: string;
+    make: string;
+    model: string;
+    price: number;
+}
+
+const gridOptions: GridOptions<RowData> = {
+    rowData: [
+        { id: '1', make: 'Tesla', model: 'Model Y', price: 64950 }
+    ],
+
+    columnDefs: [
+        { field: 'make' },
+        { field: 'model' },
+        { field: 'price', type: 'numericColumn' }
+    ],
+
+    getRowId: (params): string => params.data.id,
+
+    onGridReady: (params: GridReadyEvent<RowData>) => {
+        const api: GridApi<RowData> = params.api;
+    }
+};
+
+const api: GridApi<RowData> = createGrid<RowData>(
+    document.getElementById('myGrid')!,
+    gridOptions
+);
+```
+
+## Global Grid Options
+
+Share configuration across multiple grids:
+
+```javascript
+import { provideGlobalGridOptions } from 'ag-grid-community';
+
+// Apply to all grids
+provideGlobalGridOptions({
+    theme: themeQuartz,
+    defaultColDef: {
+        sortable: true,
+        filter: true
+    }
+});
+```
+
+## Destroying the Grid
+
+```javascript
+// Clean up when removing grid from DOM
+api.destroy();
+
+// Or with cleanup callback
+api.destroy(() => {
+    console.log('Grid destroyed');
+});
+```
+
+## Checking Module Registration
+
+```javascript
+const isRegistered = api.isModuleRegistered('SetFilterModule');
+```

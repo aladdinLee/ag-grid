@@ -1,0 +1,684 @@
+# AG Grid Angular Data Grid
+
+> AG Grid Angular component for building high-performance Angular tables. See [llms-core.txt](llms-core.txt) for core concepts shared across all frameworks.
+
+## Installation
+
+```bash
+npm install ag-grid-angular
+```
+
+This installs `ag-grid-angular` and `ag-grid-community`.
+
+For Enterprise features:
+```bash
+npm install ag-grid-enterprise
+```
+
+## Module Registration
+
+Register modules globally before grid instantiation.
+
+### Bundle Approach
+
+```typescript
+import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+
+// Register in main.ts or app.component.ts
+ModuleRegistry.registerModules([AllCommunityModule]);
+```
+
+### Enterprise Bundle
+
+```typescript
+import { ModuleRegistry } from 'ag-grid-community';
+import { AllEnterpriseModule } from 'ag-grid-enterprise';
+
+ModuleRegistry.registerModules([AllEnterpriseModule]);
+```
+
+### Individual Modules
+
+```typescript
+import { ModuleRegistry, ClientSideRowModelModule, CsvExportModule } from 'ag-grid-community';
+import { ExcelExportModule, SetFilterModule, RowGroupingModule } from 'ag-grid-enterprise';
+
+ModuleRegistry.registerModules([
+    ClientSideRowModelModule,
+    CsvExportModule,
+    ExcelExportModule,
+    SetFilterModule,
+    RowGroupingModule
+]);
+```
+
+### Per-Grid Modules
+
+```typescript
+import { ClientSideRowModelModule, CsvExportModule } from 'ag-grid-community';
+
+@Component({
+    template: `
+        <ag-grid-angular
+            [modules]="modules"
+            [rowData]="rowData"
+            [columnDefs]="columnDefs"
+        />
+    `
+})
+export class GridComponent {
+    modules = [ClientSideRowModelModule, CsvExportModule];
+}
+```
+
+### Validation Module (Development)
+
+```typescript
+import { ValidationModule } from 'ag-grid-community';
+
+if (process.env.NODE_ENV !== 'production') {
+    ModuleRegistry.registerModules([ValidationModule]);
+}
+```
+
+## Basic Grid
+
+### Standalone Component (Recommended)
+
+```typescript
+import { Component } from '@angular/core';
+import { AgGridAngular } from 'ag-grid-angular';
+import type { ColDef } from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-quartz.css';
+
+@Component({
+    selector: 'app-grid',
+    standalone: true,
+    imports: [AgGridAngular],
+    template: `
+        <ag-grid-angular
+            class="ag-theme-quartz"
+            style="height: 500px"
+            [rowData]="rowData"
+            [columnDefs]="columnDefs"
+        />
+    `
+})
+export class GridComponent {
+    rowData = [
+        { make: "Tesla", model: "Model Y", price: 64950, electric: true },
+        { make: "Ford", model: "F-Series", price: 33850, electric: false },
+        { make: "Toyota", model: "Corolla", price: 29600, electric: false }
+    ];
+
+    columnDefs: ColDef[] = [
+        { field: "make" },
+        { field: "model" },
+        { field: "price" },
+        { field: "electric" }
+    ];
+}
+```
+
+### NgModule Component (Legacy)
+
+```typescript
+import { Component } from '@angular/core';
+import { AgGridModule } from 'ag-grid-angular';
+
+@Component({
+    selector: 'app-grid',
+    template: `
+        <ag-grid-angular
+            class="ag-theme-quartz"
+            style="height: 500px"
+            [rowData]="rowData"
+            [columnDefs]="columnDefs"
+        />
+    `
+})
+export class GridComponent {
+    rowData = [...];
+    columnDefs = [...];
+}
+
+@NgModule({
+    imports: [AgGridModule]
+})
+export class AppModule {}
+```
+
+## Grid Options as Bindings
+
+All grid options are bound to `ag-grid-angular` using standard Angular property binding:
+
+```typescript
+@Component({
+    template: `
+        <ag-grid-angular
+            [rowData]="rowData"
+            [columnDefs]="columnDefs"
+            [defaultColDef]="defaultColDef"
+            [rowSelection]="rowSelection"
+            [editType]="'fullRow'"
+            [pagination]="true"
+            [paginationPageSize]="50"
+            [theme]="theme"
+            (gridReady)="onGridReady($event)"
+            (cellValueChanged)="onCellValueChanged($event)"
+            (selectionChanged)="onSelectionChanged($event)"
+        />
+    `
+})
+export class GridComponent {
+    rowData = [...];
+    columnDefs: ColDef[] = [...];
+
+    defaultColDef: ColDef = {
+        sortable: true,
+        filter: true,
+        resizable: true
+    };
+
+    rowSelection = { mode: 'multiRow' };
+}
+```
+
+## Accessing Grid API
+
+Use `gridReady` event to access the API:
+
+```typescript
+@Component({
+    template: `
+        <button (click)="exportCsv()">Export CSV</button>
+        <ag-grid-angular
+            (gridReady)="onGridReady($event)"
+            [rowData]="rowData"
+            [columnDefs]="columnDefs"
+        />
+    `
+})
+export class GridComponent {
+    private api!: GridApi;
+
+    onGridReady(params: GridReadyEvent) {
+        this.api = params.api;
+    }
+
+    exportCsv() {
+        this.api.exportDataAsCsv();
+    }
+}
+```
+
+## Row IDs
+
+Critical for maintaining state across updates:
+
+```typescript
+@Component({
+    template: `
+        <ag-grid-angular
+            [getRowId]="getRowId"
+            [rowData]="rowData"
+        />
+    `
+})
+export class GridComponent {
+    rowData = [
+        { id: '1', make: 'Tesla' },
+        { id: '2', make: 'Ford' }
+    ];
+
+    getRowId = (params: GetRowIdParams) => params.data.id;
+}
+```
+
+## Cell Renderers
+
+### Inline Function Renderer
+
+```typescript
+columnDefs: ColDef[] = [
+    {
+        field: 'price',
+        cellRenderer: (params: ICellRendererParams) => `$${params.value}`
+    }
+];
+```
+
+### Angular Component Renderer
+
+```typescript
+// PriceRendererComponent
+@Component({
+    selector: 'app-price-renderer',
+    template: `<span class="price">${{value}}</span>`
+})
+export class PriceRendererComponent implements ICellRendererAngularComp {
+    value!: number;
+
+    agInit(params: ICellRendererParams): void {
+        this.value = params.value;
+    }
+
+    refresh(params: ICellRendererParams): boolean {
+        this.value = params.value;
+        return true;
+    }
+}
+
+// Grid component
+@Component({
+    template: `
+        <ag-grid-angular
+            [columnDefs]="columnDefs"
+            [rowData]="rowData"
+        />
+    `
+})
+export class GridComponent {
+    columnDefs: ColDef[] = [
+        { field: 'price', cellRenderer: PriceRendererComponent }
+    ];
+}
+```
+
+### Renderer with Parameters
+
+```typescript
+columnDefs: ColDef[] = [
+    {
+        field: 'price',
+        cellRenderer: PriceRendererComponent,
+        cellRendererParams: {
+            currency: 'EUR',
+            locale: 'de-DE'
+        }
+    }
+];
+```
+
+## Cell Editors
+
+### Angular Component Editor
+
+```typescript
+@Component({
+    selector: 'app-custom-editor',
+    template: `
+        <input
+            [value]="value"
+            (input)="onInput($event)"
+            (keydown)="onKeyDown($event)"
+        />
+    `
+})
+export class CustomEditorComponent implements ICellEditorAngularComp {
+    value!: string;
+    private params!: ICellEditorParams;
+
+    agInit(params: ICellEditorParams): void {
+        this.params = params;
+        this.value = params.value;
+    }
+
+    getValue(): any {
+        return this.value;
+    }
+
+    onInput(event: Event) {
+        this.value = (event.target as HTMLInputElement).value;
+    }
+
+    onKeyDown(event: KeyboardEvent) {
+        if (event.key === 'Enter') {
+            this.params.api.stopEditing();
+        }
+    }
+}
+
+// Usage
+columnDefs: ColDef[] = [
+    {
+        field: 'name',
+        cellEditor: CustomEditorComponent
+    }
+];
+```
+
+### Popup Editor
+
+```typescript
+columnDefs: ColDef[] = [
+    {
+        field: 'address',
+        cellEditor: AddressEditorComponent,
+        cellEditorPopup: true,
+        cellEditorPopupPosition: 'under'
+    }
+];
+```
+
+## Updating Data
+
+### Replace All Data
+
+```typescript
+@Component({...})
+export class GridComponent {
+    rowData: any[] = [];
+
+    loadNewData(newData: any[]) {
+        this.rowData = newData;  // Angular change detection triggers update
+    }
+}
+```
+
+### Update via API
+
+```typescript
+updateRow(id: string, newValue: number) {
+    const rowNode = this.api.getRowNode(id);
+    rowNode.setDataValue('price', newValue);
+}
+```
+
+### Transaction Updates
+
+```typescript
+addRows(newRows: any[]) {
+    this.api.applyTransaction({ add: newRows });
+}
+
+updateRows(updatedRows: any[]) {
+    this.api.applyTransaction({ update: updatedRows });
+}
+
+removeRows(ids: string[]) {
+    const toRemove = ids.map(id => ({ id }));
+    this.api.applyTransaction({ remove: toRemove });
+}
+```
+
+## Grid State
+
+### Saving/Restoring State
+
+```typescript
+@Component({...})
+export class GridComponent {
+    private savedState: any;
+
+    saveState() {
+        this.savedState = this.api.getState();
+    }
+
+    restoreState() {
+        if (this.savedState) {
+            this.api.setState(this.savedState);
+        }
+    }
+}
+```
+
+### Initial State
+
+```typescript
+@Component({
+    template: `
+        <ag-grid-angular
+            [initialState]="initialState"
+            [rowData]="rowData"
+        />
+    `
+})
+export class GridComponent {
+    initialState = {
+        filter: { filterModel: { country: { values: ['USA'] } } },
+        columnVisibility: { hiddenColIds: ['notes'] }
+    };
+}
+```
+
+## Theming
+
+### Built-in Theme
+
+```typescript
+import { themeQuartz } from 'ag-grid-community';
+
+@Component({
+    template: `
+        <ag-grid-angular [theme]="theme" />
+    `
+})
+export class GridComponent {
+    theme = themeQuartz;
+}
+```
+
+### Custom Theme Parameters
+
+```typescript
+import { themeQuartz } from 'ag-grid-community';
+
+@Component({...})
+export class GridComponent {
+    theme = themeQuartz.withParams({
+        backgroundColor: '#ffffff',
+        foregroundColor: '#333333',
+        accentColor: '#2196f3',
+        spacing: 10
+    });
+}
+```
+
+### Theme Parts
+
+```typescript
+import { themeQuartz, iconSetMaterial, colorSchemeDark } from 'ag-grid-community';
+
+theme = themeQuartz
+    .withPart(iconSetMaterial)
+    .withPart(colorSchemeDark)
+    .withParams({ accentColor: 'red' });
+```
+
+## Master/Detail
+
+```typescript
+@Component({
+    template: `
+        <ag-grid-angular
+            [masterDetail]="true"
+            [rowData]="rowData"
+            [columnDefs]="columnDefs"
+            [detailCellRendererParams]="detailCellRendererParams"
+        />
+    `
+})
+export class GridComponent {
+    columnDefs: ColDef[] = [
+        { field: 'name' },
+        { field: 'account' }
+    ];
+
+    detailColumnDefs: ColDef[] = [
+        { field: 'callId' },
+        { field: 'direction' },
+        { field: 'duration' }
+    ];
+
+    detailCellRendererParams = {
+        detailGridOptions: {
+            columnDefs: this.detailColumnDefs,
+            defaultColDef: { sortable: true, filter: true }
+        },
+        getDetailRowData: (params: any) => {
+            params.successCallback(params.data.callRecords);
+        }
+    };
+}
+```
+
+## Full Example
+
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { AgGridAngular } from 'ag-grid-angular';
+import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+import type { ColDef, GridApi, GridReadyEvent, CellValueChangedEvent } from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-quartz.css';
+
+// Register modules
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+@Component({
+    selector: 'app-grid-example',
+    standalone: true,
+    imports: [AgGridAngular],
+    template: `
+        <div style="padding: 10px">
+            <button (click)="exportCsv()">Export CSV</button>
+            <button (click)="addRow()">Add Row</button>
+        </div>
+        <ag-grid-angular
+            class="ag-theme-quartz"
+            style="height: 500px; width: 100%"
+            [rowData]="rowData"
+            [columnDefs]="columnDefs"
+            [defaultColDef]="defaultColDef"
+            [getRowId]="getRowId"
+            [rowSelection]="rowSelection"
+            [pagination]="true"
+            [paginationPageSize]="10"
+            (gridReady)="onGridReady($event)"
+            (cellValueChanged)="onCellValueChanged($event)"
+        />
+    `
+})
+export class GridExampleComponent implements OnInit {
+    private api!: GridApi;
+
+    rowData: any[] = [];
+
+    columnDefs: ColDef[] = [
+        { field: 'make', sortable: true, filter: true },
+        { field: 'model', sortable: true, filter: true },
+        { field: 'price', sortable: true, filter: 'agNumberColumnFilter' }
+    ];
+
+    defaultColDef: ColDef = {
+        resizable: true,
+        minWidth: 100
+    };
+
+    rowSelection = { mode: 'multiRow' };
+
+    getRowId = (params: GetRowIdParams) => params.data.id;
+
+    ngOnInit() {
+        this.rowData = [
+            { id: '1', make: 'Tesla', model: 'Model Y', price: 64950 },
+            { id: '2', make: 'Ford', model: 'F-Series', price: 33850 },
+            { id: '3', make: 'Toyota', model: 'Corolla', price: 29600 }
+        ];
+    }
+
+    onGridReady(params: GridReadyEvent) {
+        this.api = params.api;
+    }
+
+    onCellValueChanged(event: CellValueChangedEvent) {
+        console.log(`${event.colDef.field} changed:`, event.newValue);
+    }
+
+    exportCsv() {
+        this.api.exportDataAsCsv();
+    }
+
+    addRow() {
+        const newRow = {
+            id: Date.now().toString(),
+            make: 'New',
+            model: 'Car',
+            price: 0
+        };
+        this.api.applyTransaction({ add: [newRow] });
+    }
+}
+```
+
+## TypeScript Interfaces
+
+Import types for better type safety:
+
+```typescript
+import type {
+    ColDef,
+    ColGroupDef,
+    GridApi,
+    GridOptions,
+    GridReadyEvent,
+    CellValueChangedEvent,
+    SelectionChangedEvent,
+    ICellRendererParams,
+    ICellEditorParams,
+    GetRowIdParams,
+    IRowNode
+} from 'ag-grid-community';
+
+// Enterprise types
+import type {
+    SetFilterParams,
+    MasterDetailParams
+} from 'ag-grid-enterprise';
+```
+
+## Angular Signals (Angular 16+)
+
+```typescript
+import { Component, signal } from '@angular/core';
+
+@Component({
+    template: `
+        <ag-grid-angular
+            [rowData]="rowData()"
+            [columnDefs]="columnDefs()"
+        />
+    `
+})
+export class GridComponent {
+    rowData = signal<any[]>([]);
+    columnDefs = signal<ColDef[]>([
+        { field: 'make' },
+        { field: 'model' }
+    ]);
+
+    loadData(data: any[]) {
+        this.rowData.set(data);
+    }
+}
+```
+
+## Performance Tips
+
+```typescript
+@Component({...})
+export class GridComponent {
+    // Use trackBy for rowData updates
+    trackByFn = (index: number, item: any) => item.id;
+
+    // Disable change detection when possible
+    constructor(private cdr: ChangeDetectorRef) {}
+
+    // Manual change detection trigger
+    triggerUpdate() {
+        this.cdr.detectChanges();
+    }
+}
+```
