@@ -1,0 +1,998 @@
+# AG Grid Documentation
+
+> AG Grid is a high-performance, feature-rich JavaScript data grid component supporting React, Angular, Vue, and vanilla JavaScript. Available as Community (MIT licensed) and Enterprise (commercial) versions.
+
+## Project Overview
+
+AG Grid provides:
+- Virtual DOM rendering for high performance with large datasets
+- Column-based configuration with sorting, filtering, editing, and custom rendering
+- Multiple row models: Client-Side, Server-Side, Infinite, and Viewport
+- Enterprise features: Row Grouping, Pivoting, Aggregation, Tree Data, Master/Detail, Excel Export, Integrated Charts, Sparklines
+- Framework-specific wrappers for React, Angular, and Vue 3
+- Modular architecture for bundle size optimization
+
+## Installation
+
+```bash
+# React
+npm install ag-grid-react
+
+# Angular
+npm install ag-grid-angular
+
+# Vue 3
+npm install ag-grid-vue3
+
+# Vanilla JavaScript
+npm install ag-grid-community
+
+# Enterprise features
+npm install ag-grid-enterprise
+```
+
+## Module Registration
+
+AG Grid requires module registration for NPM installations. Use bundles for all features or cherry-pick modules for smaller bundles.
+
+```javascript
+// Bundle approach - all Community features
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+// Bundle approach - all Community + Enterprise features
+import { AllEnterpriseModule } from 'ag-grid-enterprise';
+ModuleRegistry.registerModules([AllEnterpriseModule]);
+
+// Individual modules for bundle optimization
+import { ClientSideRowModelModule, CsvExportModule } from 'ag-grid-community';
+import { SetFilterModule, ExcelExportModule } from 'ag-grid-enterprise';
+ModuleRegistry.registerModules([
+    ClientSideRowModelModule,
+    CsvExportModule,
+    SetFilterModule,
+    ExcelExportModule
+]);
+```
+
+React uses `AgGridProvider` for module injection:
+```jsx
+import { AllCommunityModule } from 'ag-grid-community';
+import { AgGridProvider, AgGridReact } from 'ag-grid-react';
+
+const modules = [AllCommunityModule];
+function App() {
+    return (
+        <AgGridProvider modules={modules}>
+            <AgGridReact rowData={rowData} columnDefs={columnDefs} />
+        </AgGridProvider>
+    );
+}
+```
+
+## Basic Grid Configuration
+
+### JavaScript
+```javascript
+const gridOptions = {
+    rowData: [
+        { make: "Tesla", model: "Model Y", price: 64950 },
+        { make: "Ford", model: "F-Series", price: 33850 }
+    ],
+    columnDefs: [
+        { field: "make" },
+        { field: "model" },
+        { field: "price" }
+    ]
+};
+
+const gridElement = document.querySelector('#myGrid');
+agGrid.createGrid(gridElement, gridOptions);
+```
+
+### React
+```jsx
+import { AgGridReact } from 'ag-grid-react';
+import { useState } from 'react';
+
+const GridExample = () => {
+    const [rowData, setRowData] = useState([
+        { make: "Tesla", model: "Model Y", price: 64950 }
+    ]);
+    const [columnDefs, setColumnDefs] = useState([
+        { field: "make" },
+        { field: "model" },
+        { field: "price" }
+    ]);
+
+    return (
+        <div style={{ height: 500 }}>
+            <AgGridReact rowData={rowData} columnDefs={columnDefs} />
+        </div>
+    );
+};
+```
+
+### Angular
+```typescript
+import { AgGridAngular } from 'ag-grid-angular';
+import type { ColDef } from 'ag-grid-community';
+
+@Component({
+    selector: 'app-root',
+    standalone: true,
+    imports: [AgGridAngular],
+    template: `
+        <ag-grid-angular
+            [rowData]="rowData"
+            [columnDefs]="colDefs"
+            style="height: 500px"
+        />
+    `
+})
+export class AppComponent {
+    rowData = [{ make: "Tesla", model: "Model Y", price: 64950 }];
+    colDefs: ColDef[] = [{ field: "make" }, { field: "model" }, { field: "price" }];
+}
+```
+
+### Vue 3
+```vue
+<template>
+    <ag-grid-vue
+        :rowData="rowData"
+        :columnDefs="colDefs"
+        style="height: 500px"
+    />
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { AgGridVue } from "ag-grid-vue3";
+
+const rowData = ref([{ make: "Tesla", model: "Model Y", price: 64950 }]);
+const colDefs = ref([{ field: "make" }, { field: "model" }, { field: "price" }]);
+</script>
+```
+
+## Column Definitions
+
+Columns are defined via `columnDefs` array. Each column has properties controlling sorting, filtering, editing, rendering, and more.
+
+```javascript
+const columnDefs = [
+    // Basic column
+    { field: 'athlete' },
+
+    // Custom header name
+    { field: 'age', headerName: 'Age (years)' },
+
+    // With sorting and filtering
+    { field: 'country', sortable: true, filter: true },
+
+    // With editing
+    { field: 'sport', editable: true },
+
+    // With custom cell renderer
+    { field: 'price', cellRenderer: params => `$${params.value}` },
+
+    // Pinned column
+    { field: 'id', pinned: 'left' },
+
+    // With width/flex
+    { field: 'description', width: 200 },
+    { field: 'notes', flex: 1, minWidth: 150 },
+
+    // Column grouping
+    {
+        headerName: 'Group',
+        children: [
+            { field: 'gold' },
+            { field: 'silver' }
+        ]
+    }
+];
+
+const gridOptions = {
+    columnDefs,
+    defaultColDef: {
+        sortable: true,
+        filter: true,
+        resizable: true
+    }
+};
+```
+
+### Column Types
+
+```javascript
+const gridOptions = {
+    columnTypes: {
+        currency: {
+            width: 150,
+            valueFormatter: params => `$${params.value}`
+        },
+        numeric: {
+            type: 'rightAligned',
+            filter: 'agNumberColumnFilter'
+        }
+    },
+    columnDefs: [
+        { field: 'price', type: ['currency', 'numeric'] }
+    ]
+};
+```
+
+### Column State
+
+```javascript
+// Get column state
+const state = api.getColumnState();
+
+// Apply column state
+api.applyColumnState({
+    state: [{ colId: 'athlete', sort: 'asc', width: 200 }],
+    defaultState: { sort: null }
+});
+```
+
+## Row Models
+
+### Client-Side Row Model (default)
+All data loaded into browser. Supports sorting, filtering, grouping locally.
+
+```javascript
+const gridOptions = {
+    rowModelType: 'clientSide', // default
+    rowData: dataArray
+};
+```
+
+### Server-Side Row Model (Enterprise)
+Lazy loading with server-side operations. Ideal for large datasets.
+
+```javascript
+const gridOptions = {
+    rowModelType: 'serverSide',
+    serverSideDatasource: {
+        getRows: (params) => {
+            fetch('/api/data', {
+                method: 'POST',
+                body: JSON.stringify(params.request)
+            })
+            .then(response => response.json())
+            .then(data => params.success({ rowData: data.rows }))
+            .catch(() => params.fail());
+        }
+    },
+    cacheBlockSize: 50
+};
+```
+
+### Infinite Row Model
+Lazy loading for large flat datasets. Server handles sorting/filtering.
+
+```javascript
+const gridOptions = {
+    rowModelType: 'infinite',
+    datasource: {
+        getRows: (params) => {
+            // params.startRow, params.endRow, params.sortModel, params.filterModel
+            fetchData(params.startRow, params.endRow).then(data => {
+                params.success(data.rows, data.lastRow);
+            });
+        }
+    }
+};
+```
+
+### Viewport Row Model
+Server-driven updates for real-time data streams.
+
+```javascript
+const gridOptions = {
+    rowModelType: 'viewport',
+    viewportDatasource: myDatasource
+};
+```
+
+## Row IDs
+
+Critical for maintaining state (selection, grouping) across data updates.
+
+```javascript
+const gridOptions = {
+    getRowId: (params) => params.data.id // Must return unique string
+};
+```
+
+## Data Updates
+
+### Client-Side Updates
+
+```javascript
+// Replace all data
+api.setGridOption('rowData', newData);
+
+// Update single row
+const rowNode = api.getRowNode('row-id');
+rowNode.setDataValue('price', newPrice);
+rowNode.setData(newRowData);
+rowNode.updateData(partialData);
+
+// Transaction updates (add/remove/update)
+api.applyTransaction({
+    add: [newRow1, newRow2],
+    update: [updatedRow],
+    remove: [rowToRemove]
+});
+
+// Async transactions for high-frequency updates
+api.applyTransactionAsync({ add: [row] }, callback);
+api.flushAsyncTransactions();
+```
+
+### Server-Side Updates
+
+```javascript
+// Refresh data
+api.refreshServerSide({ purge: true });
+
+// Transaction updates
+api.applyServerSideTransaction({
+    update: [{ data: newData, getRowId: () => 'id' }]
+});
+```
+
+## Row Selection
+
+```javascript
+const gridOptions = {
+    rowSelection: {
+        mode: 'singleRow', // or 'multiRow'
+        checkboxes: true,
+        enableClickSelection: true,
+        groupSelects: 'self' // for tree/grouped data
+    },
+    onSelectionChanged: (event) => {
+        const selectedRows = api.getSelectedRows();
+        const selectedNodes = api.getSelectedNodes();
+    }
+};
+```
+
+## Sorting
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        { field: 'age', sortable: true, sortingOrder: ['asc', 'desc'] }
+    ],
+    // Custom comparator
+    columnDefs: [
+        {
+            field: 'name',
+            comparator: (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
+        }
+    ]
+};
+
+// API methods
+api.applyColumnState({
+    state: [{ colId: 'age', sort: 'asc' }]
+});
+```
+
+## Filtering
+
+### Column Filters
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        // Text filter (default for strings)
+        { field: 'athlete', filter: true },
+
+        // Number filter
+        { field: 'age', filter: 'agNumberColumnFilter' },
+
+        // Date filter
+        { field: 'date', filter: 'agDateColumnFilter' },
+
+        // Set filter (Enterprise)
+        { field: 'country', filter: 'agSetColumnFilter' }
+    ]
+};
+```
+
+### Set Filter (Enterprise)
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'country',
+            filter: 'agSetColumnFilter',
+            filterParams: {
+                values: ['USA', 'UK', 'Canada'],
+                caseSensitive: false,
+                treeList: true // for hierarchical values
+            }
+        }
+    ]
+};
+```
+
+### Quick Filter
+
+```javascript
+const gridOptions = {
+    quickFilterText: 'search text',
+    cacheQuickFilter: true,
+    quickFilterParser: (text) => text.split(' ')
+};
+```
+
+### External Filter
+
+```javascript
+const gridOptions = {
+    isExternalFilterPresent: () => externalFilterActive,
+    doesExternalFilterPass: (params) => params.data.status === 'active'
+};
+```
+
+### Filter API
+
+```javascript
+// Get/set filter model
+const model = api.getFilterModel();
+api.setFilterModel(model);
+
+// Individual filter
+await api.setColumnFilterModel('country', { values: ['USA'] });
+api.onFilterChanged();
+```
+
+## Cell Editing
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        // Basic editable
+        { field: 'name', editable: true },
+
+        // Conditional editing
+        { field: 'age', editable: params => params.data.canEdit },
+
+        // With custom editor
+        { field: 'country', cellEditor: 'agRichSelectCellEditor', cellEditorParams: {
+            values: ['USA', 'UK']
+        }}
+    ],
+    onCellValueChanged: (event) => console.log('Changed:', event)
+};
+```
+
+### Provided Editors
+
+- `agTextCellEditor` - Text input (default for strings)
+- `agNumberCellEditor` - Numeric input
+- `agDateCellEditor` - Date picker
+- `agSelectCellEditor` - HTML select
+- `agRichSelectCellEditor` (Enterprise) - Enhanced select with search
+- `agLargeTextCellEditor` - Multi-line textarea
+- `agCheckboxCellEditor` - Checkbox
+
+### Custom Editor
+
+```javascript
+class CustomEditor {
+    agInit(params) {
+        this.params = params;
+        // Create DOM element
+    }
+    getGui() { return this.element; }
+    getValue() { return this.currentValue; }
+    isPopup() { return false; } // or true for popup
+}
+```
+
+## Cell Data Types
+
+Automatic type inference for proper rendering, editing, filtering.
+
+Built-in types: `text`, `number`, `bigint`, `boolean`, `date`, `dateString`, `dateTime`, `dateTimeString`, `object`
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        { field: 'price', cellDataType: 'number' },
+        { field: 'active', cellDataType: 'boolean' },
+        { field: 'created', cellDataType: 'date' }
+    ]
+};
+```
+
+## Cell Styling
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        // Static style
+        { field: 'status', cellStyle: { color: 'red' } },
+
+        // Dynamic style
+        {
+            field: 'value',
+            cellStyle: params => {
+                if (params.value > 100) return { backgroundColor: 'green' };
+                return null;
+            }
+        },
+
+        // CSS class rules
+        {
+            field: 'profit',
+            cellClassRules: {
+                'profit-positive': params => params.value > 0,
+                'profit-negative': params => params.value < 0
+            }
+        }
+    ]
+};
+```
+
+## Custom Components
+
+### Cell Renderer
+
+```javascript
+// Function renderer
+{ field: 'price', cellRenderer: params => `$${params.value}` }
+
+// Class renderer
+class StatusRenderer {
+    agInit(params) { this.params = params; }
+    getGui() {
+        const span = document.createElement('span');
+        span.textContent = this.params.value;
+        return span;
+    }
+}
+{ field: 'status', cellRenderer: StatusRenderer }
+
+// React inline
+{ field: 'name', cellRenderer: params => <b>{params.value}</b> }
+```
+
+### Dynamic Renderer Selection
+
+```javascript
+{
+    field: 'type',
+    cellRendererSelector: params => {
+        if (params.data.type === 'number') {
+            return { component: NumberRenderer, params: {} };
+        }
+        return { component: TextRenderer };
+    }
+}
+```
+
+## Row Grouping (Enterprise)
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        { field: 'country', rowGroup: true },
+        { field: 'sport', rowGroup: true },
+        { field: 'gold', aggFunc: 'sum' }
+    ],
+    groupDisplayType: 'singleColumn', // or 'multipleColumns', 'groupRows'
+    // Group panel for drag-and-drop grouping
+    rowGroupPanelShow: 'always'
+};
+```
+
+## Pivoting (Enterprise)
+
+```javascript
+const gridOptions = {
+    pivotMode: true,
+    columnDefs: [
+        { field: 'country', rowGroup: true },
+        { field: 'sport', pivot: true },
+        { field: 'gold', aggFunc: 'sum' }
+    ],
+    pivotRowTotals: 'before'
+};
+```
+
+## Aggregation (Enterprise)
+
+Built-in functions: `sum`, `min`, `max`, `count`, `avg`, `first`, `last`
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        { field: 'gold', aggFunc: 'sum' },
+        { field: 'silver', aggFunc: 'avg' }
+    ],
+    // Custom aggregation
+    aggFuncs: {
+        range: params => Math.max(...params.values) - Math.min(...params.values)
+    }
+};
+```
+
+## Tree Data (Enterprise)
+
+```javascript
+// Path-based
+const gridOptions = {
+    treeData: true,
+    getDataPath: data => data.path // ['Group', 'SubGroup', 'Item']
+};
+
+// Self-referential (most performant)
+const gridOptions = {
+    treeData: true,
+    treeDataParentIdField: 'parentId',
+    getRowId: params => params.data.id
+};
+```
+
+## Master/Detail (Enterprise)
+
+```javascript
+const gridOptions = {
+    masterDetail: true,
+    detailCellRendererParams: {
+        detailGridOptions: {
+            columnDefs: [{ field: 'callId' }]
+        },
+        getDetailRowData: params => {
+            params.successCallback(params.data.callRecords);
+        }
+    }
+};
+```
+
+## Pagination
+
+```javascript
+const gridOptions = {
+    pagination: true,
+    paginationPageSize: 100,
+    paginationAutoPageSize: true, // fit to grid height
+    paginationPageSizeSelector: [10, 25, 50, 100]
+};
+```
+
+## Export
+
+### CSV Export
+
+```javascript
+api.exportDataAsCsv({
+    columnSeparator: ',',
+    fileName: 'data.csv',
+    onlySelected: true
+});
+```
+
+### Excel Export (Enterprise)
+
+```javascript
+api.exportDataAsExcel({
+    fileName: 'data.xlsx',
+    sheetName: 'Sheet1',
+    excelStyles: [
+        { id: 'header', font: { bold: true } }
+    ]
+});
+```
+
+## Theming
+
+### Built-in Themes
+
+```javascript
+import { themeQuartz, themeBalham, themeMaterial, themeAlpine } from 'ag-grid-community';
+
+const gridOptions = {
+    theme: themeQuartz
+};
+```
+
+### Theme Parameters
+
+```javascript
+import { themeQuartz } from 'ag-grid-community';
+
+const myTheme = themeQuartz.withParams({
+    // Colors
+    backgroundColor: '#ffffff',
+    foregroundColor: '#000000',
+    accentColor: '#2196f3',
+
+    // Spacing
+    spacing: 10,
+
+    // Borders
+    rowBorder: { style: 'solid', width: 1, color: '#e0e0e0' },
+
+    // Fonts
+    fontFamily: 'Roboto',
+    fontSize: 14,
+
+    // Header
+    headerBackgroundColor: '#f5f5f5',
+    headerTextColor: '#333',
+
+    // Selection
+    selectedRowBackgroundColor: '#e3f2fd'
+});
+
+const gridOptions = { theme: myTheme };
+```
+
+### Theme Parts
+
+Mix elements from different themes:
+
+```javascript
+import { themeQuartz, iconSetMaterial, colorSchemeDark } from 'ag-grid-community';
+
+const myTheme = themeQuartz
+    .withPart(iconSetMaterial)
+    .withPart(colorSchemeDark)
+    .withParams({ accentColor: 'red' });
+```
+
+### Dark Mode
+
+```javascript
+// CSS-based switching
+<body data-ag-theme-mode="dark">
+
+// Or with theme params
+const myTheme = themeQuartz
+    .withParams({ /* light params */ }, 'light')
+    .withParams({ /* dark params */ }, 'dark');
+```
+
+## Integrated Charts (Enterprise)
+
+```javascript
+const gridOptions = {
+    enableCharts: true,
+    chartThemeOverrides: {
+        common: {
+            title: { enabled: true }
+        }
+    }
+};
+
+// API: create chart from range
+api.createRangeChart({
+    chartType: 'line',
+    cellRange: { columns: ['country', 'gold'] }
+});
+```
+
+## Sparklines (Enterprise)
+
+```javascript
+const gridOptions = {
+    columnDefs: [
+        {
+            field: 'trend',
+            cellRenderer: 'agSparklineCellRenderer',
+            cellRendererParams: {
+                sparklineOptions: {
+                    type: 'line',
+                    line: { stroke: '#2196f3' }
+                }
+            }
+        }
+    ]
+};
+```
+
+## Tool Panels (Enterprise)
+
+```javascript
+const gridOptions = {
+    sideBar: {
+        toolPanels: [
+            {
+                id: 'columns',
+                labelDefault: 'Columns',
+                iconKey: 'columns',
+                toolPanel: 'agColumnsToolPanel'
+            },
+            {
+                id: 'filters',
+                labelDefault: 'Filters',
+                iconKey: 'filter',
+                toolPanel: 'agFilterToolPanel'
+            }
+        ],
+        defaultToolPanel: 'columns'
+    }
+};
+```
+
+## Keyboard Navigation
+
+Default keyboard shortcuts:
+- Arrow keys: Cell navigation
+- Tab: Next/previous cell
+- Enter/F2: Start editing
+- Escape: Cancel editing
+- Ctrl+C/V/X: Clipboard operations
+- Space: Checkbox toggle
+- Home/End: First/last cell
+
+## Grid API Key Methods
+
+```javascript
+// Data operations
+api.setGridOption('rowData', newData)
+api.applyTransaction({ add, update, remove })
+api.getSelectedRows()
+api.getSelectedNodes()
+api.getRowNode(id)
+
+// Column operations
+api.getColumnState()
+api.applyColumnState({ state })
+api.moveColumns(keys, toIndex)
+api.autoSizeAllColumns()
+
+// Filter operations
+api.getFilterModel()
+api.setFilterModel(model)
+api.onFilterChanged()
+
+// Export
+api.exportDataAsCsv(params)
+api.exportDataAsExcel(params) // Enterprise
+
+// Refresh
+api.refreshCells({ columns, force })
+api.redrawRows({ rowNodes })
+api.refreshServerSide({ purge }) // SSRM
+
+// Events
+api.addEventListener(eventName, callback)
+api.removeEventListener(eventName, callback)
+
+// Grid lifecycle
+api.sizeColumnsToFit()
+api.destroy()
+```
+
+## Key Events
+
+```javascript
+const gridOptions = {
+    // Lifecycle
+    onGridReady: (params) => { /* grid initialized */ },
+    onFirstDataRendered: (params) => { /* first render */ },
+
+    // Data
+    onCellValueChanged: (event) => { /* cell edited */ },
+    onRowDataUpdated: (event) => { /* rowData changed */ },
+
+    // Selection
+    onSelectionChanged: (event) => { /* selection changed */ },
+    onRowSelected: (event) => { /* row selected/deselected */ },
+
+    // Filtering/Sorting
+    onFilterChanged: (event) => { /* filter changed */ },
+    onSortChanged: (event) => { /* sort changed */ },
+
+    // Cells
+    onCellClicked: (event) => { /* cell clicked */ },
+    onCellDoubleClicked: (event) => { /* cell double-clicked */ },
+
+    // Rows
+    onRowClicked: (event) => { /* row clicked */ },
+    onRowDoubleClicked: (event) => { /* row double-clicked */ },
+
+    // Columns
+    onColumnMoved: (event) => { /* column moved */ },
+    onColumnResized: (event) => { /* column resized */ },
+
+    // Drag
+    onRowDragEnter: (event) => { /* drag start */ },
+    onRowDragEnd: (event) => { /* drag end */ }
+};
+```
+
+## React Best Practices
+
+```jsx
+// Use hooks for stable references
+const [rowData, setRowData] = useState(data);
+const [columnDefs, setColumnDefs] = useState(cols);
+const defaultColDef = useMemo(() => ({ filter: true }), []);
+const isRowSelectable = useCallback((node) => node.data.active, []);
+
+// Use getRowId for state preservation
+const getRowId = useCallback((params) => params.data.id, []);
+
+// Debug mode for diagnosing issues
+<AgGridReact debug />
+```
+
+## Performance Optimization
+
+```javascript
+const gridOptions = {
+    // Reduce row buffer for large datasets
+    rowBuffer: 10,
+
+    // Suppress animations
+    animateRows: false,
+
+    // Debounce scroll
+    suppressScrollOnNewData: true,
+
+    // Use delta sorting for frequent updates
+    columnDefs: [
+        { field: 'price', deltaSort: true }
+    ],
+
+    // Async transactions
+    asyncTransactionWaitMillis: 50
+};
+```
+
+## Community vs Enterprise
+
+| Feature | Community | Enterprise |
+|---------|-----------|------------|
+| Basic Grid | ✓ | ✓ |
+| Sorting | ✓ | ✓ |
+| Filtering (Text, Number, Date) | ✓ | ✓ |
+| Editing | ✓ | ✓ |
+| Selection | ✓ | ✓ |
+| Pagination | ✓ | ✓ |
+| Column Pinning | ✓ | ✓ |
+| Column Groups | ✓ | ✓ |
+| Row Grouping | - | ✓ |
+| Pivoting | - | ✓ |
+| Aggregation | - | ✓ |
+| Tree Data | - | ✓ |
+| Master/Detail | - | ✓ |
+| Set Filter | - | ✓ |
+| Excel Export | - | ✓ |
+| Integrated Charts | - | ✓ |
+| Sparklines | - | ✓ |
+| Clipboard | - | ✓ |
+| Range Selection | - | ✓ |
+| Undo/Redo | - | ✓ |
+| Context Menu | - | ✓ |
+
+## License (Enterprise)
+
+```javascript
+import { LicenseManager } from 'ag-grid-enterprise';
+LicenseManager.setLicenseKey('your-license-key');
+```
+
+Or via environment variable:
+```bash
+AG_GRID_LICENSE_KEY=your-license-key
+```
+
+## Additional Resources
+
+- Official Documentation: https://ag-grid.com/documentation/
+- API Reference: https://ag-grid.com/javascript-data-grid/grid-api/
+- Examples: https://ag-grid.com/example/
+- GitHub: https://github.com/ag-grid/ag-grid
